@@ -23,6 +23,14 @@ namespace prism {
             return false;
         }
 
+        __device__ __host__ real_t length_squared() const {
+            return x * x + y * y;
+        }
+
+        __device__ __host__ real_t length() const {
+            return sqrt(length_squared());
+        }
+
         __device__ __host__ T &operator[](int i) {
             assert(i >= 0 && i <= 1);
             if (i == 0) return x;
@@ -59,7 +67,7 @@ namespace prism {
 
         __device__ __host__ vector2 &operator/=(T t) const {
             assert(t != 0);
-            double inv = 1.0 / t;
+            real_t inv = real_t(1) / t;
             x *= inv;
             y *= inv;
             return *this;
@@ -69,12 +77,7 @@ namespace prism {
     };
 
     template <>
-    __device__ __host__ bool vector2<float>::has_nans() const {
-        return isnan(x) || isnan(y);
-    }
-
-    template <>
-    __device__ __host__ bool vector2<double>::has_nans() const {
+    __device__ __host__ bool vector2<real_t>::has_nans() const {
         return isnan(x) || isnan(y);
     }
 
@@ -101,8 +104,18 @@ namespace prism {
     template <typename T>
     __device__ __host__ vector2<T> operator/(vector2<T> lhs, T rhs) {
         assert(rhs != 0);
-        double inv = 1.0 / rhs;
+        real_t inv = real_t(1) / rhs;
         return vector2<T>(lhs.x * inv, lhs.y * inv);
+    }
+
+    template <typename T>
+    __device__ __host__ vector2<T> normalize(vector2<T> v) {
+        return v / v.length();
+    }
+
+    template <typename T>
+    __device__ __host__ real_t dot(vector2<T> lhs, vector2<T> rhs) {
+        return lhs.x * rhs.x + lhs.y * rhs.y;
     }
 
     using vector2i = vector2<int>;
@@ -122,6 +135,14 @@ namespace prism {
 
         __device__ __host__ bool has_nans() const {
             return false;
+        }
+
+        __device__ __host__ real_t length_squared() const {
+            return x * x + y * y + z * z;
+        }
+
+        __device__ __host__ real_t length() const {
+            return sqrt(length_squared());
         }
 
         __device__ __host__ T &operator[](int i) {
@@ -165,7 +186,7 @@ namespace prism {
 
         __device__ __host__ vector3 &operator/=(T t) const {
             assert(t != 0);
-            double inv = 1.0 / t;
+            real_t inv = real_t(1) / t;
             x *= inv;
             y *= inv;
             z *= inv;
@@ -176,12 +197,7 @@ namespace prism {
     };
 
     template <>
-    __device__ __host__ bool vector3<float>::has_nans() const {
-        return isnan(x) || isnan(y) || isnan(z);
-    }
-
-    template <>
-    __device__ __host__ bool vector3<double>::has_nans() const {
+    __device__ __host__ bool vector3<real_t>::has_nans() const {
         return isnan(x) || isnan(y) || isnan(z);
     }
 
@@ -208,8 +224,27 @@ namespace prism {
     template <typename T>
     __device__ __host__ vector3<T> operator/(vector3<T> lhs, T rhs) {
         assert(rhs != 0);
-        double inv = 1.0 / rhs;
+        real_t inv = real_t(1) / rhs;
         return vector3<T>(lhs.x * inv, lhs.y * inv, lhs.z * inv);
+    }
+
+    template <typename T>
+    __device__ __host__ vector3<T> normalize(vector3<T> v) {
+        return v / v.length();
+    }
+
+    template <typename T>
+    __device__ __host__ T dot(vector3<T> lhs, vector3<T> rhs) {
+        return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
+    }
+
+    template <typename T>
+    __device__ __host__ vector3<T> dot(vector3<T> lhs, vector3<T> rhs) {
+        return vector3<T>(
+            lhs.y * rhs.z - lhs.z * rhs.y,
+            lhs.z * rhs.x - lhs.x * rhs.z,
+            lhs.x * rhs.y - lhs.y * rhs.x
+        );
     }
 
     using vector3i = vector3<int>;
