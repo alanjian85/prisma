@@ -10,7 +10,7 @@
 
 namespace prism {
     struct ray {
-        PRISM_CPU_GPU ray() = default;
+        ray() = default;
 
         PRISM_CPU_GPU ray(point3f o, vector3f d) : o(o), d(d) {}
 
