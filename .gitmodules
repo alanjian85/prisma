@@ -1,3 +1,6 @@
 [submodule "ext/stb"]
 	path = ext/stb
 	url = https://github.com/nothings/stb
+[submodule "ext/sol2"]
+	path = ext/sol2
+	url = https://github.com/ThePhD/sol2
