@@ -1,6 +1,8 @@
 #ifndef PRISM_CORE_POINT_HPP
 #define PRISM_CORE_POINT_HPP
 
+#include <config/types.h>
+
 namespace prism {
     template <typename T>
     struct point2 {
@@ -10,7 +12,7 @@ namespace prism {
     };
 
     using point2i = point2<int>;
-    using point2f = point2<float>;
+    using point2f = point2<real_t>;
 }
 
 #endif // PRISM_CORE_POINT_HPP
