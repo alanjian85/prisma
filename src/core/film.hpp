@@ -12,7 +12,11 @@ namespace prism {
     class film {
     public:
         film(int width, int height) : width(width), height(height) {
-            cudaMallocManaged(&pixels, width * height * 3);
+            assert(width >= 0);
+            assert(height >= 0);
+            cudaError_t error = cudaMallocManaged(&pixels, width * height * 3);
+            if (error != cudaSuccess)
+                throw std::bad_alloc();
         }
 
         void free() const {
