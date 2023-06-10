@@ -4,7 +4,7 @@
 #include <config/types.h>
 #include <core/film.hpp>
 #include <core/utils.h>
-#include <shapes/sphere.hpp>
+#include <shapes/triangle.hpp>
 
 const int tileSize = 16;
 
@@ -14,10 +14,12 @@ PRISM_KERNEL void render(prism::film film) {
     int y = blockIdx.x / nTilesX * tileSize + threadIdx.x / tileSize;
     float u = static_cast<real_t>(x) / (film.width - 1);
     float v = static_cast<real_t>(y) / (film.height - 1);
-    prism::sphere sphere(prism::point3f(0, 0, 1), 0.5);
-    prism::ray ray(prism::point3f(u - 0.5, v - 0.5, 0),
+    prism::triangle triangle(prism::point3f(-1, -1, 1),
+                             prism::point3f( 1, -1, 1),
+                             prism::point3f( 0,  1, 1));
+    prism::ray ray(prism::point3f(u * 2 - 1, 1 - v * 2, 0),
                    prism::vector3f(0, 0, 1));
-    if (sphere.intersect(ray)) {
+    if (triangle.intersect(ray)) {
         film.add_sample(prism::point2i(x, y), prism::color(u, v, 0.25));
     } else {
         film.add_sample(prism::point2i(x, y), prism::color(0, 0, 0));

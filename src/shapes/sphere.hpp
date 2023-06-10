@@ -21,6 +21,7 @@ namespace prism {
             return solve_quadratic_equation(a, b, c);
         }
 
+    private:
         point3f origin;
         real_t radius;
     };
