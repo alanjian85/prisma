@@ -6,14 +6,16 @@
 
 #include <config/types.h>
 
+#include "utils.h"
+
 namespace prism {
     struct color {
-        __device__ __host__ color(real_t r, real_t g, real_t b)
+        PRISM_CPU_GPU color(real_t r, real_t g, real_t b)
                                 : r(r), g(g), b(b) {
             assert(!has_nans());
         }
 
-        __device__ __host__ bool has_nans() {
+        PRISM_CPU_GPU bool has_nans() {
             return isnan(r) || isnan(g) || isnan(b);
         }
 

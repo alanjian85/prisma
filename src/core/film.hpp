@@ -5,8 +5,9 @@
 
 #include <stb_image_write.h>
 
-#include "point.hpp"
 #include "color.hpp"
+#include "point.hpp"
+#include "utils.h"
 
 namespace prism {
     class film {
@@ -23,7 +24,7 @@ namespace prism {
             cudaFree(pixels);
         }
 
-        __device__ void add_sample(point2i p, color c) {
+        PRISM_GPU void add_sample(point2i p, color c) {
             int idx = p.y * width + p.x;
             pixels[idx * 3 + 0] = c.r * 255;
             pixels[idx * 3 + 1] = c.g * 255;
