@@ -1,3 +1,6 @@
+// Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
+// SPDX-License-Identifier: MIT
+
 #ifndef PRISM_CORE_VECTOR_HPP
 #define PRISM_CORE_VECTOR_HPP
 
@@ -241,7 +244,7 @@ namespace prism {
     }
 
     template <typename T>
-    PRISM_CPU_GPU vector3<T> dot(vector3<T> lhs, vector3<T> rhs) {
+    PRISM_CPU_GPU vector3<T> cross(vector3<T> lhs, vector3<T> rhs) {
         return vector3<T>(
             lhs.y * rhs.z - lhs.z * rhs.y,
             lhs.z * rhs.x - lhs.x * rhs.z,
