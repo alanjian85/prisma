@@ -17,8 +17,8 @@ PRISM_KERNEL void construct_objects(prism::persp_camera *camera,
     new (camera) prism::persp_camera(pixels, width, height); 
     camera->o = prism::point3f(1, 0, 0);
     camera->d = prism::vector3f(-1, 0, 1);
-    camera->near = 1;
-    camera->far = 1000;
+    camera->focal = 1;
+    camera->fov = prism::radians(90);
 }
 
 PRISM_KERNEL void render(prism::camera &camera) {

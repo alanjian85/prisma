@@ -12,8 +12,14 @@
 #define PRISM_CPU_GPU __device__ __host__
 
 namespace prism {
+    const real_t pi = 3.141592653589793238463;
+
     PRISM_CPU_GPU bool solve_quadratic_equation(real_t a, real_t b, real_t c) {
         return b * b - 4 * a * c >= 0;
+    }
+
+    PRISM_CPU_GPU real_t radians(real_t degrees) {
+        return degrees / 180 * pi;
     }
 }
 

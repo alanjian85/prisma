@@ -52,25 +52,25 @@ namespace prism {
             return vector2(-x, -y);
         }
 
-        PRISM_CPU_GPU vector2 &operator+=(vector2 v) const {
+        PRISM_CPU_GPU vector2 &operator+=(vector2 v) {
             x += v.x;
             y += v.y;
             return *this;
         }
 
-        PRISM_CPU_GPU vector2 &operator-=(vector2 v) const {
+        PRISM_CPU_GPU vector2 &operator-=(vector2 v) {
             x -= v.x;
             y -= v.y;
             return *this;
         }
 
-        PRISM_CPU_GPU vector2 &operator*=(T t) const {
+        PRISM_CPU_GPU vector2 &operator*=(T t) {
             x *= t;
             y *= t;
             return *this;
         }
 
-        PRISM_CPU_GPU vector2 &operator/=(T t) const {
+        PRISM_CPU_GPU vector2 &operator/=(T t) {
             assert(t != 0);
             real_t inv = real_t(1) / t;
             x *= inv;
@@ -182,28 +182,28 @@ namespace prism {
             return vector3(-x, -y, -z);
         }
 
-        PRISM_CPU_GPU vector3 &operator+=(vector3 v) const {
+        PRISM_CPU_GPU vector3 &operator+=(vector3 v) {
             x += v.x;
             y += v.y;
             z += v.z;
             return *this;
         }
 
-        PRISM_CPU_GPU vector3 &operator-=(vector3 v) const {
+        PRISM_CPU_GPU vector3 &operator-=(vector3 v) {
             x -= v.x;
             y -= v.y;
             z -= v.z;
             return *this;
         }
 
-        PRISM_CPU_GPU vector3 &operator*=(T t) const {
+        PRISM_CPU_GPU vector3 &operator*=(T t) {
             x *= t;
             y *= t;
             z *= t;
             return *this;
         }
 
-        PRISM_CPU_GPU vector3 &operator/=(T t) const {
+        PRISM_CPU_GPU vector3 &operator/=(T t) {
             assert(t != 0);
             real_t inv = real_t(1) / t;
             x *= inv;

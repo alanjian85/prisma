@@ -19,17 +19,19 @@ namespace prism {
         PRISM_CPU_GPU ray generate_ray(point2i p) const override {
             vector3f right = normalize(cross(vector3f(0, 1, 0), d));
             vector3f up = cross(d, right);
-            real_t u = static_cast<real_t>(p.x) / (film.width - 1) - 0.5;
-            real_t v = 0.5 - static_cast<real_t>(p.y) / (film.height - 1);
+            right *= focal * tan(fov * 0.5);
+            up *= focal * tan(fov * 0.5);
+            real_t u = static_cast<real_t>(p.x) / (film.width - 1) * 2 - 1;
+            real_t v = 1 - static_cast<real_t>(p.y) / (film.height - 1) * 2;
             ray r;
             r.o = o;
-            r.d = normalize(near * d + u * right + v * up);
+            r.d = normalize(focal * d + u * right + v * up);
             return r;
         }
 
         point3f o;
         vector3f d;
-        real_t near, far;
+        real_t focal, fov;
     };
 }
 
