@@ -3,7 +3,7 @@
 
 #include <cameras/persp_camera.hpp>
 #include <core/utils.h>
-#include <shapes/sphere.hpp>
+#include <shapes/triangle.hpp>
 
 const int tileSize = 16;
 
@@ -21,10 +21,12 @@ PRISM_KERNEL void render(prism::camera &camera) {
     int nTilesX = (camera.film.width + tileSize - 1) / tileSize;
     int x = blockIdx.x % nTilesX * tileSize + threadIdx.x % tileSize;
     int y = blockIdx.x / nTilesX * tileSize + threadIdx.x / tileSize;
-    prism::sphere sphere(prism::point3f(0, 0, 2), 0.5);
+    prism::triangle triangle(prism::point3f(-1, -1, -2),
+                             prism::point3f( 1, -1, -2),
+                             prism::point3f( 0,  1, -2));
     prism::ray ray = camera.generate_ray(prism::point2i(x, y));
     prism::interaction interaction;
-    if (sphere.intersect(ray, interaction)) {
+    if (triangle.intersect(ray, interaction)) {
         camera.film.add_sample(prism::point2i(x, y), prism::normal_to_color(interaction.n));
     } else {
         camera.film.add_sample(prism::point2i(x, y), prism::color(0, 0, 0));

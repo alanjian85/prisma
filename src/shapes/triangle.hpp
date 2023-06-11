@@ -15,7 +15,7 @@ namespace prism {
         PRISM_CPU_GPU triangle(point3f a, point3f b, point3f c)
                           : a(a), b(b), c(c)
         {
-            n = normalize(cross(c - a, b - a));
+            n = normalize(cross(b - a, c - a));
         }
 
         PRISM_CPU_GPU bool intersect(const ray &r, interaction &i) const override {

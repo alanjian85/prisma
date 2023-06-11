@@ -16,7 +16,7 @@ namespace prism {
                           : camera(pixels, width, height) {}
 
         PRISM_CPU_GPU ray generate_ray(point2i p) const override {
-            vector3f right = normalize(cross(vector3f(0, 1, 0), d));
+            vector3f right = normalize(cross(d, vector3f(0, 1, 0)));
             vector3f up = cross(d, right);
             right *= focal * tan(fov * 0.5);
             up *= focal * tan(fov * 0.5);
