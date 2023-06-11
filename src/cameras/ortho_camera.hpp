@@ -11,8 +11,8 @@
 namespace prism {
     class ortho_camera : public camera {
     public:
-        PRISM_GPU ortho_camera(void *pixels, int width, int height)
-                      : camera(pixels, width, height) {}
+        PRISM_CPU_GPU ortho_camera(void *pixels, int width, int height)
+                          : camera(pixels, width, height) {}
 
         PRISM_CPU_GPU ray generate_ray(point2i p) const override {
             vector3f right = normalize(cross(vector3f(0, 1, 0), d));

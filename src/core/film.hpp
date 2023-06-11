@@ -14,22 +14,22 @@
 namespace prism {
     class film {
     public:
-        PRISM_GPU film(void *pixels, int width, int height)
-                      : width(width), height(height) {
+        PRISM_CPU_GPU film(void *pixels, int width, int height)
+                          : width(width), height(height) {
             assert(pixels != nullptr);
             this->pixels = static_cast<unsigned char*>(pixels);
             assert(width >= 0);
             assert(height >= 0);
         }
 
-        PRISM_GPU void add_sample(point2i p, color c) {
+        PRISM_CPU_GPU void add_sample(point2i p, color c) {
             int idx = p.y * width + p.x;
             pixels[idx * 3 + 0] = c.r * 255;
             pixels[idx * 3 + 1] = c.g * 255;
             pixels[idx * 3 + 2] = c.b * 255;
         }
 
-        void write_image(const std::string &path) const {
+        PRISM_CPU void write_image(const std::string &path) const {
             stbi_write_png(path.c_str(), width, height, 3, pixels, 0);
         }
 

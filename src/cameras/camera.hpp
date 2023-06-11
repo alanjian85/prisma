@@ -11,8 +11,8 @@
 namespace prism {
     class camera {
     public:
-        PRISM_GPU camera(void *pixels, int width, int height)
-                      : film(pixels, width, height) {}
+        PRISM_CPU_GPU camera(void *pixels, int width, int height)
+                          : film(pixels, width, height) {}
 
         PRISM_CPU_GPU virtual ray generate_ray(point2i p) const = 0;
 
