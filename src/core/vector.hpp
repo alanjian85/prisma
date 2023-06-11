@@ -9,6 +9,7 @@
 
 #include <config/types.h>
 
+#include "color.hpp"
 #include "utils.h"
 
 namespace prism {
@@ -34,6 +35,11 @@ namespace prism {
 
         PRISM_CPU_GPU real_t length() const {
             return sqrt(length_squared());
+        }
+
+        PRISM_CPU_GPU int max_dim() const {
+            if (x > y) return 0;
+            return 1;
         }
 
         PRISM_CPU_GPU T &operator[](int i) {
@@ -123,6 +129,11 @@ namespace prism {
         return lhs.x * rhs.x + lhs.y * rhs.y;
     }
 
+    template <typename T>
+    PRISM_CPU_GPU vector2<T> permute(vector2<T> v, int x, int y) {
+        return vector2<T>(v[x], v[y]);
+    }
+
     using point2i = vector2<int>;
     using point2f = vector2<real_t>;
     using vector2i = vector2<int>;
@@ -154,8 +165,7 @@ namespace prism {
 
         PRISM_CPU_GPU int max_dim() const {
             if (x > y) {
-                if (x > z)
-                    return 0;
+                if (x > z) return 0;
                 else
                     return 2;
             } else {
@@ -271,6 +281,15 @@ namespace prism {
     template <typename T>
     PRISM_CPU_GPU vector3<T> permute(vector3<T> v, int x, int y, int z) {
         return vector3<T>(v[x], v[y], v[z]);
+    }
+
+    template <typename T>
+    PRISM_CPU_GPU color normal_to_color(vector3<T> n) {
+        return color(
+            n.x * 0.5 + 0.5,
+            n.y * 0.5 + 0.5,
+            n.z * 0.5 + 0.5
+        );
     }
 
     using point3i = vector3<int>;

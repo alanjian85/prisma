@@ -13,6 +13,10 @@ namespace prism {
 
         PRISM_CPU_GPU ray(point3f o, vector3f d) : o(o), d(d) {}
 
+        PRISM_CPU_GPU vector3f operator()(real_t t) const {
+            return o + t * d;
+        }
+
         point3f o;
         vector3f d;
     };

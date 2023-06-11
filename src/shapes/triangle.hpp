@@ -13,9 +13,12 @@ namespace prism {
     class triangle : public shape {
     public:
         PRISM_CPU_GPU triangle(point3f a, point3f b, point3f c)
-                          : a(a), b(b), c(c) {}
+                          : a(a), b(b), c(c)
+        {
+            n = normalize(cross(c - a, b - a));
+        }
 
-        PRISM_CPU_GPU bool intersect(const ray &r) const override {
+        PRISM_CPU_GPU bool intersect(const ray &r, interaction &i) const override {
             point3f ap = a - r.o;
             point3f bp = b - r.o;
             point3f cp = c - r.o;
@@ -37,11 +40,16 @@ namespace prism {
             real_t a0 = ap.x * bp.y - ap.y * bp.x;
             real_t a1 = bp.x * cp.y - bp.y * cp.x;
             real_t a2 = cp.x * ap.y - cp.y * ap.x;
-            return a0 > 0 && a1 > 0 && a2 > 0;
+            if (a0 > 0 && a1 > 0 && a2 > 0) {
+                i.n = n;
+                return true;
+            }
+            return false;
         }
 
     private:
         point3f a, b, c;
+        vector3f n;
     };
 }
 
