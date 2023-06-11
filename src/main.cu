@@ -1,11 +1,7 @@
 // Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
 // SPDX-License-Identifier: MIT
 
-#include <thrust/device_new.h>
-
 #include <cameras/persp_camera.hpp>
-#include <config/types.h>
-#include <core/film.hpp>
 #include <core/utils.h>
 #include <shapes/triangle.hpp>
 

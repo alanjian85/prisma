@@ -4,6 +4,7 @@
 #ifndef PRISM_SHAPES_TRIANGLE_HPP
 #define PRISM_SHAPES_TRIANGLE_HPP
 
+#include <config/types.h>
 #include <core/vector.hpp>
 
 #include "shape.hpp"

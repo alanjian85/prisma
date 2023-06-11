@@ -4,6 +4,7 @@
 #ifndef PRISM_CAMERAS_ORTHO_CAMERA_HPP
 #define PRISM_CAMERAS_ORTHO_CAMERA_HPP
 
+#include <config/types.h>
 #include <core/vector.hpp>
 
 #include "camera.hpp"

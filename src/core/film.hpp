@@ -3,6 +3,7 @@
 
 #ifndef PRISM_CORE_FILM_HPP
 #define PRISM_CORE_FILM_HPP
+
 #include <string>
 
 #include <stb_image_write.h>
