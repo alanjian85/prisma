@@ -18,14 +18,16 @@ namespace prism {
         film(int width, int height) : width(width), height(height) {
             assert(width >= 0);
             assert(height >= 0);
-            cudaError_t error = cudaMallocManaged(&pixels, width * height * 3);
-            if (error != cudaSuccess)
-                throw std::bad_alloc();
+            cudaMallocManaged(&pixels, width * height * 3);
         }
 
-        void free() const {
+        ~film() {
             cudaFree(pixels);
         }
+
+        film(const film&) = delete;
+
+        film &operator=(const film&) = delete;
 
         PRISM_GPU void add_sample(point2i p, color c) {
             int idx = p.y * width + p.x;

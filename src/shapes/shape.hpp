@@ -1,3 +1,6 @@
+// Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
+// SPDX-License-Identifier: MIT
+
 #ifndef PRISM_SHAPES_SHAPE_HPP
 #define PRISM_SHAPES_SHAPE_HPP
 
