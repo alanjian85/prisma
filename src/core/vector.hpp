@@ -150,6 +150,20 @@ namespace prism {
             return sqrt(length_squared());
         }
 
+        PRISM_CPU_GPU int max_dim() const {
+            if (x > y) {
+                if (x > z)
+                    return 0;
+                else
+                    return 2;
+            } else {
+                if (y > z)
+                    return 1;
+                else
+                    return 2;
+            }
+        }
+
         PRISM_CPU_GPU T &operator[](int i) {
             assert(i >= 0 && i <= 2);
             if (i == 0) return x;
@@ -250,6 +264,11 @@ namespace prism {
             lhs.z * rhs.x - lhs.x * rhs.z,
             lhs.x * rhs.y - lhs.y * rhs.x
         );
+    }
+
+    template <typename T>
+    PRISM_CPU_GPU vector3<T> permute(vector3<T> v, int x, int y, int z) {
+        return vector3<T>(v[x], v[y], v[z]);
     }
 
     using vector3i = vector3<int>;

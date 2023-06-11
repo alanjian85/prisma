@@ -7,7 +7,7 @@
 #include <config/types.h>
 #include <core/film.hpp>
 #include <core/utils.h>
-#include <shapes/sphere.hpp>
+#include <shapes/triangle.hpp>
 
 const int tileSize = 16;
 
@@ -15,8 +15,8 @@ PRISM_KERNEL void construct_objects(prism::persp_camera *camera,
                       void *pixels, int width, int height)
 {
     new (camera) prism::persp_camera(pixels, width, height); 
-    camera->o = prism::point3f(0, 0, 0);
-    camera->d = prism::vector3f(0, 0, 1);
+    camera->o = prism::point3f(1, 0, 0);
+    camera->d = prism::vector3f(-1, 0, 1);
     camera->near = 1;
     camera->far = 1000;
 }
@@ -25,9 +25,11 @@ PRISM_KERNEL void render(prism::camera &camera) {
     int nTilesX = (camera.film.width + tileSize - 1) / tileSize;
     int x = blockIdx.x % nTilesX * tileSize + threadIdx.x % tileSize;
     int y = blockIdx.x / nTilesX * tileSize + threadIdx.x / tileSize;
-    prism::sphere sphere(prism::point3f(0, 0, 2), 0.5);
+    prism::triangle triangle(prism::point3f( 0,  1, 2),
+                             prism::point3f(-1, -1, 2),
+                             prism::point3f( 1, -1, 2));
     prism::ray ray = camera.generate_ray(prism::point2i(x, y));
-    if (sphere.intersect(ray)) {
+    if (triangle.intersect(ray)) {
         camera.film.add_sample(prism::point2i(x, y), prism::color(1, 1, 1));
     } else {
         camera.film.add_sample(prism::point2i(x, y), prism::color(0, 0, 0));
@@ -35,7 +37,7 @@ PRISM_KERNEL void render(prism::camera &camera) {
 }
 
 int main() {
-    const int width = 256, height = 256;
+    const int width = 1024, height = 1024;
     void *pixels;
     cudaMallocManaged(&pixels, width * height * 3);
     prism::persp_camera *camera;
