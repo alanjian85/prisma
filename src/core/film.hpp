@@ -3,7 +3,6 @@
 
 #ifndef PRISM_CORE_FILM_HPP
 #define PRISM_CORE_FILM_HPP
-
 #include <string>
 
 #include <stb_image_write.h>
@@ -15,19 +14,13 @@
 namespace prism {
     class film {
     public:
-        film(int width, int height) : width(width), height(height) {
+        PRISM_GPU film(void *pixels, int width, int height)
+                      : width(width), height(height) {
+            assert(pixels != nullptr);
+            this->pixels = static_cast<unsigned char*>(pixels);
             assert(width >= 0);
             assert(height >= 0);
-            cudaMallocManaged(&pixels, width * height * 3);
         }
-
-        ~film() {
-            cudaFree(pixels);
-        }
-
-        film(const film&) = delete;
-
-        film &operator=(const film&) = delete;
 
         PRISM_GPU void add_sample(point2i p, color c) {
             int idx = p.y * width + p.x;

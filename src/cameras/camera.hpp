@@ -5,11 +5,17 @@
 #define PRISM_CAMERAS_CAMERA_HPP
 
 #include <core/film.hpp>
+#include <core/point.hpp>
+#include <core/ray.hpp>
+#include <core/utils.h>
 
 namespace prism {
     class camera {
     public:
-        camera(int width, int height) : film(width, height) {}
+        PRISM_GPU camera(void *pixels, int width, int height)
+                      : film(pixels, width, height) {}
+
+        PRISM_CPU_GPU virtual ray generate_ray(point2i p) const = 0;
 
         prism::film film;
     };
