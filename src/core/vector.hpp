@@ -123,6 +123,8 @@ namespace prism {
         return lhs.x * rhs.x + lhs.y * rhs.y;
     }
 
+    using point2i = vector2<int>;
+    using point2f = vector2<real_t>;
     using vector2i = vector2<int>;
     using vector2f = vector2<real_t>;
 
@@ -271,6 +273,8 @@ namespace prism {
         return vector3<T>(v[x], v[y], v[z]);
     }
 
+    using point3i = vector3<int>;
+    using point3f = vector3<real_t>;
     using vector3i = vector3<int>;
     using vector3f = vector3<real_t>;
 }

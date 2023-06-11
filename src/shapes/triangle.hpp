@@ -4,7 +4,7 @@
 #ifndef PRISM_SHAPES_TRIANGLE_HPP
 #define PRISM_SHAPES_TRIANGLE_HPP
 
-#include <core/point.hpp>
+#include <core/vector.hpp>
 
 #include "shape.hpp"
 
@@ -15,9 +15,9 @@ namespace prism {
                           : a(a), b(b), c(c) {}
 
         PRISM_CPU_GPU bool intersect(const ray &r) const override {
-            vector3f ap = a - r.o;
-            vector3f bp = b - r.o;
-            vector3f cp = c - r.o;
+            point3f ap = a - r.o;
+            point3f bp = b - r.o;
+            point3f cp = c - r.o;
             int z = r.d.max_dim();
             int x = (z + 1) % 3, y = (z + 2) % 3;
             ap = permute(ap, x, y, z);

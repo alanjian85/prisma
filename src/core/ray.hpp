@@ -4,7 +4,6 @@
 #ifndef PRISM_CORE_RAY_HPP
 #define PRISM_CORE_RAY_HPP
 
-#include "point.hpp"
 #include "utils.h"
 #include "vector.hpp"
 

@@ -8,8 +8,8 @@
 #include <stb_image_write.h>
 
 #include "color.hpp"
-#include "point.hpp"
 #include "utils.h"
+#include "vector.hpp"
 
 namespace prism {
     class film {

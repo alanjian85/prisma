@@ -5,7 +5,7 @@
 #define PRISM_SHAPES_SPHERE_HPP
 
 #include <config/types.h>
-#include <core/point.hpp>
+#include <core/vector.hpp>
 
 #include "shape.hpp"
 
@@ -17,10 +17,8 @@ namespace prism {
 
         PRISM_CPU_GPU bool intersect(const ray &r) const override {
             real_t a = dot(r.d, r.d);
-            real_t b = 2 * (dot(vector3f(r.o), r.d) - dot(r.d, vector3f(origin)));
-            real_t c = dot(vector3f(r.o), vector3f(r.o)) +
-                       dot(vector3f(origin), vector3f(origin)) -
-                       radius * radius;
+            real_t b = 2 * (dot(r.o, r.d) - dot(r.d, origin));
+            real_t c = dot(r.o, r.o) + dot(origin, origin) - radius * radius;
             return solve_quadratic_equation(a, b, c);
         }
 

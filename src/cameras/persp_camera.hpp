@@ -5,7 +5,6 @@
 #define PRISM_CAMERAS_PERSP_CAMERA_HPP
 
 #include <config/types.h>
-#include <core/point.hpp>
 #include <core/vector.hpp>
 
 #include "camera.hpp"

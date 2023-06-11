@@ -5,7 +5,6 @@
 #define PRISM_CAMERAS_CAMERA_HPP
 
 #include <core/film.hpp>
-#include <core/point.hpp>
 #include <core/ray.hpp>
 #include <core/utils.h>
 
