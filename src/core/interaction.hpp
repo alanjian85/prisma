@@ -7,10 +7,8 @@
 #include "utils.h"
 #include "vector.hpp"
 
-namespace prism {
-    struct interaction {
-        vector3f n;
-    };
-}
+struct Interaction {
+    Vector3f n;
+};
 
 #endif // PRISM_CORE_INTERACTION_HPP

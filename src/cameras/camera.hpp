@@ -8,16 +8,14 @@
 #include <core/ray.hpp>
 #include <core/utils.h>
 
-namespace prism {
-    class camera {
-    public:
-        PRISM_CPU_GPU camera(void *pixels, int width, int height)
-                          : film(pixels, width, height) {}
+class Camera {
+public:
+    PRISM_CPU_GPU Camera(void *pixels, int width, int height)
+                      : film(pixels, width, height) {}
 
-        PRISM_CPU_GPU virtual ray generate_ray(point2i p) const = 0;
+    PRISM_CPU_GPU virtual Ray generateRay(Point2i p) const = 0;
 
-        prism::film film;
-    };
-}
+    Film film;
+};
 
 #endif // PRISM_CAMERAS_CAMERA_HPP

@@ -9,26 +9,24 @@
 
 #include "camera.hpp"
 
-namespace prism {
-    class ortho_camera : public camera {
-    public:
-        PRISM_CPU_GPU ortho_camera(void *pixels, int width, int height)
-                          : camera(pixels, width, height) {}
+class OrthoCamera : public Camera {
+public:
+    PRISM_CPU_GPU OrthoCamera(void *pixels, int width, int height)
+                     : Camera(pixels, width, height) {}
 
-        PRISM_CPU_GPU ray generate_ray(point2i p) const override {
-            vector3f right = normalize(cross(d, vector3f(0, 1, 0)));
-            vector3f up = cross(d, right);
-            real_t u = static_cast<real_t>(p.x) / (film.width - 1) - 0.5;
-            real_t v = 0.5 - static_cast<real_t>(p.y) / (film.height - 1);
-            ray r;
-            r.o = o + u * right + v * up;
-            r.d = d;
-            return r;
-        }
+    PRISM_CPU_GPU Ray generateRay(Point2i p) const override {
+        Vector3f right = normalize(cross(d, Vector3f(0, 1, 0)));
+        Vector3f up = cross(d, right);
+        Real u = static_cast<Real>(p.x) / (film.width - 1) - 0.5;
+        Real v = 0.5 - static_cast<Real>(p.y) / (film.height - 1);
+        Ray r;
+        r.o = o + u * right + v * up;
+        r.d = d;
+        return r;
+    }
 
-        point3f o;
-        vector3f d;
-    };
-}
+    Point3f o;
+    Vector3f d;
+};
 
 #endif // PRISM_CAMERAS_ORTHO_CAMERA_HPP

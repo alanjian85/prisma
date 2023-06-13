@@ -9,29 +9,27 @@
 
 #include "camera.hpp"
 
-namespace prism {
-    class persp_camera : public camera {
-    public:
-        PRISM_CPU_GPU persp_camera(void *pixels, int width, int height)
-                          : camera(pixels, width, height) {}
+class PerspCamera : public Camera {
+public:
+    PRISM_CPU_GPU PerspCamera(void *pixels, int width, int height)
+                      : Camera(pixels, width, height) {}
 
-        PRISM_CPU_GPU ray generate_ray(point2i p) const override {
-            vector3f right = normalize(cross(d, vector3f(0, 1, 0)));
-            vector3f up = cross(d, right);
-            right *= focal * tan(fov * 0.5);
-            up *= focal * tan(fov * 0.5);
-            real_t u = static_cast<real_t>(p.x) / (film.width - 1) * 2 - 1;
-            real_t v = 1 - static_cast<real_t>(p.y) / (film.height - 1) * 2;
-            ray r;
-            r.o = o;
-            r.d = normalize(focal * d + u * right + v * up);
-            return r;
-        }
+    PRISM_CPU_GPU Ray generateRay(Point2i p) const override {
+        Vector3f right = normalize(cross(d, Vector3f(0, 1, 0)));
+        Vector3f up = cross(d, right);
+        right *= focal * tan(fov * 0.5);
+        up *= focal * tan(fov * 0.5);
+        Real u = static_cast<Real>(p.x) / (film.width() - 1) * 2 - 1;
+        Real v = 1 - static_cast<Real>(p.y) / (film.height() - 1) * 2;
+        Ray r;
+        r.o = o;
+        r.d = normalize(focal * d + u * right + v * up);
+        return r;
+    }
 
-        point3f o;
-        vector3f d;
-        real_t focal, fov;
-    };
-}
+    Point3f o;
+    Vector3f d;
+    Real focal, fov;
+};
 
 #endif // PRISM_CAMERAS_PERSP_CAMERA_HPP

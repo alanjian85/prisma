@@ -7,19 +7,17 @@
 #include "utils.h"
 #include "vector.hpp"
 
-namespace prism {
-    struct ray {
-        ray() = default;
+struct Ray {
+    Ray() = default;
 
-        PRISM_CPU_GPU ray(point3f o, vector3f d) : o(o), d(d) {}
+    PRISM_CPU_GPU Ray(Point3f o, Vector3f d) : o(o), d(d) {}
 
-        PRISM_CPU_GPU vector3f operator()(real_t t) const {
-            return o + t * d;
-        }
+    PRISM_CPU_GPU Vector3f operator()(Real t) const {
+        return o + t * d;
+    }
 
-        point3f o;
-        vector3f d;
-    };
-}
+    Point3f o;
+    Vector3f d;
+};
 
 #endif // PRISM_CORE_RAY_HPP

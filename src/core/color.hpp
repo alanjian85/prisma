@@ -11,19 +11,17 @@
 
 #include "utils.h"
 
-namespace prism {
-    struct color {
-        PRISM_CPU_GPU color(real_t r, real_t g, real_t b)
-                                : r(r), g(g), b(b) {
-            assert(!has_nans());
-        }
+struct Color {
+    PRISM_CPU_GPU Color(Real r, Real g, Real b)
+                      : r(r), g(g), b(b) {
+        assert(!hasNaNs());
+    }
 
-        PRISM_CPU_GPU bool has_nans() {
-            return isnan(r) || isnan(g) || isnan(b);
-        }
+    PRISM_CPU_GPU bool hasNaNs() {
+        return isnan(r) || isnan(g) || isnan(b);
+    }
 
-        real_t r, g, b;
-    };
-}
+    Real r, g, b;
+};
 
 #endif // PRISM_CORE_COLOR_HPP

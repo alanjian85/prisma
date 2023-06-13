@@ -7,29 +7,29 @@
 
 const int tileSize = 16;
 
-PRISM_KERNEL void construct_objects(prism::persp_camera *camera,
+PRISM_KERNEL void constructObjects(PerspCamera *camera,
                       void *pixels, int width, int height)
 {
-    new (camera) prism::persp_camera(pixels, width, height); 
-    camera->o = prism::point3f(0, 0, 0);
-    camera->d = prism::vector3f(0, 0, 1);
+    new (camera) PerspCamera(pixels, width, height); 
+    camera->o = Point3f(0, 0, 0);
+    camera->d = Vector3f(0, 0, 1);
     camera->focal = 1;
-    camera->fov = prism::radians(90);
+    camera->fov = radians(90);
 }
 
-PRISM_KERNEL void render(prism::camera &camera) {
-    int nTilesX = (camera.film.width + tileSize - 1) / tileSize;
+PRISM_KERNEL void render(Camera &camera) {
+    int nTilesX = (camera.film.width() + tileSize - 1) / tileSize;
     int x = blockIdx.x % nTilesX * tileSize + threadIdx.x % tileSize;
     int y = blockIdx.x / nTilesX * tileSize + threadIdx.x / tileSize;
-    prism::triangle triangle(prism::point3f(-1, -1, -2),
-                             prism::point3f( 1, -1, -2),
-                             prism::point3f( 0,  1, -2));
-    prism::ray ray = camera.generate_ray(prism::point2i(x, y));
-    prism::interaction interaction;
+    Triangle triangle(Point3f(-1, -1, -2),
+                      Point3f( 1, -1, -2),
+                      Point3f( 0,  1, -2));
+    Ray ray = camera.generateRay(Point2i(x, y));
+    Interaction interaction;
     if (triangle.intersect(ray, interaction)) {
-        camera.film.add_sample(prism::point2i(x, y), prism::normal_to_color(interaction.n));
+        camera.film.addSample(Point2i(x, y), normalToColor(interaction.n));
     } else {
-        camera.film.add_sample(prism::point2i(x, y), prism::color(0, 0, 0));
+        camera.film.addSample(Point2i(x, y), Color(0, 0, 0));
     }
 }
 
@@ -37,15 +37,15 @@ int main() {
     const int width = 1024, height = 1024;
     void *pixels;
     cudaMallocManaged(&pixels, width * height * 3);
-    prism::persp_camera *camera;
-    cudaMallocManaged(&camera, sizeof(prism::persp_camera));
-    construct_objects<<<1, 1>>>(camera, pixels, width, height);
+    PerspCamera *camera;
+    cudaMallocManaged(&camera, sizeof(PerspCamera));
+    constructObjects<<<1, 1>>>(camera, pixels, width, height);
     cudaDeviceSynchronize();
-    int nTiles = ((camera->film.width + tileSize - 1) / tileSize) *
-                 ((camera->film.height + tileSize - 1) / tileSize);
+    int nTiles = ((camera->film.width() + tileSize - 1) / tileSize) *
+                 ((camera->film.height() + tileSize - 1) / tileSize);
     render<<<nTiles, tileSize * tileSize>>>(*camera);
     cudaDeviceSynchronize();
-    camera->film.write_image("image.png");
+    camera->film.writeImage("image.png");
     cudaFree(camera);
     cudaFree(pixels); 
     return 0;
