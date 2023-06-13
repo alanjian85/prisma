@@ -133,6 +133,11 @@ PRISM_CPU_GPU Vector2<T> permute(Vector2<T> v, int x, int y) {
     return Vector2<T>(v[x], v[y]);
 }
 
+template <typename T>
+PRISM_CPU_GPU Vector2<T> abs(Vector2<T> v) {
+    return Vector2<T>(abs(v.x), abs(v.y));
+}
+
 using Point2i = Vector2<int>;
 using Point2f = Vector2<Real>;
 using Vector2i = Vector2<int>;
@@ -286,6 +291,11 @@ PRISM_CPU_GPU Color normalToColor(Vector3<T> n) {
         n.y * 0.5 + 0.5,
         n.z * 0.5 + 0.5
     );
+}
+
+template <typename T>
+PRISM_CPU_GPU Vector3<T> abs(Vector3<T> v) {
+    return Vector3<T>(abs(v.x), abs(v.y), abs(v.z));
 }
 
 using Point3i = Vector3<int>;

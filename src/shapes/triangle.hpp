@@ -21,7 +21,7 @@ public:
         Point3f ap = a - ray.o;
         Point3f bp = b - ray.o;
         Point3f cp = c - ray.o;
-        int z = ray.d.maxDim();
+        int z = abs(ray.d).maxDim();
         if (ray.d[z] == 0)
             return false;
         int x = (z + 1) % 3, y = (z + 2) % 3;
