@@ -14,15 +14,13 @@ public:
     PRISM_CPU_GPU PerspCamera(void *pixels, int width, int height)
                       : Camera(pixels, width, height) {}
 
-    PRISM_CPU_GPU Ray generateRay(Point2i p) const override {
+    PRISM_CPU_GPU Ray generateRay(Point2f p) const override {
         Real tangent = tan(fov * 0.5);
         Vector3f right = normalize(cross(d, Vector3f(0, 1, 0))) * tangent;
-        Vector3f up = cross(right, d) * tangent;
-        Real u = static_cast<Real>(p.x) / (film.width() - 1) * 2 - 1;
-        Real v = 1 - static_cast<Real>(p.y) / (film.height() - 1) * 2;
+        Vector3f up = cross(right, d);
         Ray r;
         r.o = o;
-        r.d = normalize(d + u * right + v * up);
+        r.d = normalize(d + (p.x * 2 - 1) * right + (p.y * 2 - 1) * up);
         return r;
     }
 

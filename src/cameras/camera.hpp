@@ -13,7 +13,7 @@ public:
     PRISM_CPU_GPU Camera(void *pixels, int width, int height)
                       : film(pixels, width, height) {}
 
-    PRISM_CPU_GPU virtual Ray generateRay(Point2i p) const = 0;
+    PRISM_CPU_GPU virtual Ray generateRay(Point2f p) const = 0;
 
     Film film;
 };

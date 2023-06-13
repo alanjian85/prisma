@@ -16,8 +16,7 @@ class Film {
 public:
     PRISM_CPU_GPU Film(void *pixels, int width, int height)
                       : width_(width), height_(height) {
-        assert(pixels != nullptr);
-        this->pixels = static_cast<unsigned char*>(pixels);
+        assert(pixels != nullptr); this->pixels = static_cast<unsigned char*>(pixels);
         assert(width >= 0);
         assert(height >= 0);
     }
@@ -30,8 +29,9 @@ public:
         return height_;
     }
 
-    PRISM_CPU_GPU void addSample(Point2i p, Color color) {
-        int idx = p.y * width_ + p.x;
+    PRISM_CPU_GPU void addSample(Point2f p, Color color) {
+        int idx = static_cast<int>(p.y * (height_ - 1)) * width_ +
+                  p.x * (width_ - 1);
         pixels[idx * 3 + 0] = color.r * 255;
         pixels[idx * 3 + 1] = color.g * 255;
         pixels[idx * 3 + 2] = color.b * 255;

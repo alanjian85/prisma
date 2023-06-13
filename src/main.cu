@@ -31,16 +31,18 @@ PRISM_KERNEL void render(Camera &camera) {
     int nTilesX = (camera.film.width() + tileSize - 1) / tileSize;
     int x = blockIdx.x % nTilesX * tileSize + threadIdx.x % tileSize;
     int y = blockIdx.x / nTilesX * tileSize + threadIdx.x / tileSize;
+    Real u = static_cast<Real>(x) / (camera.film.width() - 1);
+    Real v = static_cast<Real>(y) / (camera.film.height() - 1);
     //Sphere sphere(Point3f(0, 0, -1), 0.5);
     Triangle triangle(Point3f(-1, -1, -1),
                       Point3f( 1, -1, -1),
                       Point3f( 0,  1, -1));
-    Ray ray = camera.generateRay(Point2i(x, y));
+    Ray ray = camera.generateRay(Point2f(u, 1 - v));
     Interaction interaction;
     if (triangle.intersect(ray, interaction)) {
-        camera.film.addSample(Point2i(x, y), normalToColor(interaction.n));
+        camera.film.addSample(Point2f(u, v), normalToColor(interaction.n));
     } else {
-        camera.film.addSample(Point2i(x, y), Color(0, 0, 0));
+        camera.film.addSample(Point2f(u, v), Color(0, 0, 0));
     }
 }
 
