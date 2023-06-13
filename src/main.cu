@@ -12,7 +12,7 @@ PRISM_KERNEL void constructObjects(PerspCamera *camera,
 {
     new (camera) PerspCamera(pixels, width, height); 
     camera->o = Point3f(0, 0, 0);
-    camera->d = Vector3f(0, 0, 1);
+    camera->d = Vector3f(0, 0, -1);
     camera->focal = 1;
     camera->fov = radians(90);
 }
@@ -21,6 +21,7 @@ PRISM_KERNEL void render(Camera &camera) {
     int nTilesX = (camera.film.width() + tileSize - 1) / tileSize;
     int x = blockIdx.x % nTilesX * tileSize + threadIdx.x % tileSize;
     int y = blockIdx.x / nTilesX * tileSize + threadIdx.x / tileSize;
+    // Sphere sphere(Point3f(0, 0, -2), 0.5);
     Triangle triangle(Point3f(-1, -1, -2),
                       Point3f( 1, -1, -2),
                       Point3f( 0,  1, -2));

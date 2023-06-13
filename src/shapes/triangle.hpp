@@ -22,28 +22,32 @@ public:
         Point3f bp = b - ray.o;
         Point3f cp = c - ray.o;
         int z = ray.d.maxDim();
+        if (ray.d[z] == 0)
+            return false;
         int x = (z + 1) % 3, y = (z + 2) % 3;
         ap = permute(ap, x, y, z);
         bp = permute(bp, x, y, z);
         cp = permute(cp, x, y, z);
-        Real iz = 1 / ray.d.z;
-        ap.z *= iz;
-        ap.x -= ray.d.x * ap.z;
-        ap.y -= ray.d.y * ap.z;
-        bp.z *= iz;
-        bp.x -= ray.d.x * bp.z;
-        bp.y -= ray.d.y * bp.z;
-        cp.z *= iz;
-        cp.x -= ray.d.x * cp.z;
-        cp.y -= ray.d.y * cp.z;
+        Real ix = ray.d[x] / ray.d[z];
+        Real iy = ray.d[y] / ray.d[z];
+        ap.x -= ap.z * ix;
+        ap.y -= ap.z * iy;
+        bp.x -= bp.z * ix;
+        bp.y -= bp.z * iy;
+        cp.x -= cp.z * ix;
+        cp.y -= cp.z * iy;
         Real a0 = ap.x * bp.y - ap.y * bp.x;
         Real a1 = bp.x * cp.y - bp.y * cp.x;
         Real a2 = cp.x * ap.y - cp.y * ap.x;
-        if (a0 > 0 && a1 > 0 && a2 > 0) {
-            interaction.n = n;
-            return true;
-        }
-        return false;
+        if (a0 > 0 && (a1 < 0 || a2 < 0) ||
+            a0 < 0 && (a1 > 0 || a2 > 0))
+            return false;
+        Real a = a0 + a1 + a2;
+        Real t = (cp.z * a0 + ap.z * a1 + bp.z * a2) / ray.d[z];
+        if (a == 0 || a > 0 && t <= 0 || a < 0 && t >= 0)
+            return false;
+        interaction.n = n;
+        return true;
     }
 
 private:

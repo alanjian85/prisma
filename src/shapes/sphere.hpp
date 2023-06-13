@@ -18,10 +18,16 @@ public:
         Real a = dot(ray.d, ray.d);
         Real b = 2 * (dot(ray.o, ray.d) - dot(ray.d, o));
         Real c = dot(ray.o, ray.o) + dot(o, o) - r * r;
-        Real t0, t1;
-        if (!solve_quadratic_equation(a, b, c, t0, t1))
+        Real t0, t1, t;
+        if (!solveQuadraticEquation(a, b, c, t0, t1))
             return false;
-        interaction.n = normalize(ray(t0) - origin);
+        t = t0;
+        if (t <= 0) {
+            t = t1;
+            if (t <= 0)
+                return false;
+        }
+        interaction.n = normalize(ray(t) - o);
         return true;
     }
 

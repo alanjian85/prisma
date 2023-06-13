@@ -16,7 +16,7 @@ public:
 
     PRISM_CPU_GPU Ray generateRay(Point2i p) const override {
         Vector3f right = normalize(cross(d, Vector3f(0, 1, 0)));
-        Vector3f up = cross(d, right);
+        Vector3f up = cross(right, d);
         Real u = static_cast<Real>(p.x) / (film.width - 1) - 0.5;
         Real v = 0.5 - static_cast<Real>(p.y) / (film.height - 1);
         Ray r;
