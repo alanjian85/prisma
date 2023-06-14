@@ -24,8 +24,8 @@ PRISM_CPU_GPU bool solveQuadraticEquation(Real a, Real b, Real c,
         return false;
     discr = sqrt(discr);
     Real i2a = 1 / (2 * a);
-    r1 = (-b - discr) / i2a;
-    r2 = (-b + discr) / i2a;
+    r1 = (-b - discr) * i2a;
+    r2 = (-b + discr) * i2a;
     if (r1 > r2) {
         Real temp = r1;
         r1 = r2;
