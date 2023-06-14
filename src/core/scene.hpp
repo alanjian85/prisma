@@ -30,11 +30,12 @@ public:
     }
 
     PRISM_CPU_GPU bool intersect(const Ray &ray, Interaction &interaction) const {
+        bool intersected = false;
         for (auto iter = begin; iter != end; ++iter) {
-            if ((static_cast<Shape*>(*iter))->intersect(ray, interaction))
-                return true;
+            if (static_cast<Shape*>(*iter)->intersect(ray, interaction))
+                intersected = true;
         }
-        return false;
+        return intersected;
     }
 
     thrust::device_vector<Shape*> shapes;

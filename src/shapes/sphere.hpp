@@ -22,11 +22,12 @@ public:
         if (!solveQuadraticEquation(a, b, c, t0, t1))
             return false;
         t = t0;
-        if (t <= 0) {
+        if (t <= 0 || t >= ray.tMax) {
             t = t1;
-            if (t <= 0)
+            if (t <= 0 || t >= ray.tMax)
                 return false;
         }
+        ray.tMax = t;
         interaction.n = normalize(ray(t) - o);
         return true;
     }

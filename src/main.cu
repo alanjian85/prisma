@@ -18,7 +18,7 @@ PRISM_KERNEL void constructObjects(PerspCamera *camera, void *pixels, int width,
     camera->fov = radians(90);
     new (static_cast<Shape*>(*begin)) Triangle(Point3f(1, -1, -3),
                                                Point3f(3, -1, -3),
-                                               Point3f(2,  1, -3));
+                                               Point3f(0,  1, -3));
     new (static_cast<Shape*>(*(begin + 1))) Sphere(Point3f(0, 0, -3), 0.5);
 }
 

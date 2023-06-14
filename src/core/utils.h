@@ -5,6 +5,7 @@
 #define PRISM_CORE_UTILS_H
 
 #include <cmath>
+#include <limits>
 #include <utility>
 
 #include "config/types.h"
@@ -15,6 +16,8 @@
 #define PRISM_CPU_GPU __device__ __host__
 
 const Real pi = Real(3.141592653589793238463);
+
+const Real inf = std::numeric_limits<Real>::infinity();
 
 PRISM_CPU_GPU bool solveQuadraticEquation(Real a, Real b, Real c,
                                           Real &r1, Real &r2)

@@ -46,6 +46,10 @@ public:
         Real t = (cp.z * a0 + ap.z * a1 + bp.z * a2) / ray.d[z];
         if (a == 0 || a > 0 && t <= 0 || a < 0 && t >= 0)
             return false;
+        t /= a;
+        if (t >= ray.tMax)
+            return false;
+        ray.tMax = t;
         interaction.n = n;
         return true;
     }

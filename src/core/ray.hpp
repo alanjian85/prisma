@@ -18,6 +18,7 @@ struct Ray {
 
     Point3f o;
     Vector3f d;
+    mutable Real tMax = inf;
 };
 
 #endif // PRISM_CORE_RAY_HPP
