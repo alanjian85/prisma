@@ -24,7 +24,8 @@ public:
         cudaFree(ptr);
     }
 
-    PRISM_CPU void finishLoading() {
+    PRISM_CPU void addShape(Shape *shape) {
+        shapes.push_back(shape);
         begin = shapes.begin();
         end = shapes.end();
     }

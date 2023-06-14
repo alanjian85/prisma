@@ -42,10 +42,9 @@ int main() {
     // Shape allocation begin
     Shape *ptr;
     cudaMallocManaged(&ptr, sizeof(Triangle));
-    scene->shapes.push_back(ptr);
+    scene->addShape(ptr);
     cudaMallocManaged(&ptr, sizeof(Sphere));
-    scene->shapes.push_back(ptr);
-    scene->finishLoading();
+    scene->addShape(ptr);
     // Shape allocation end
 
     const int width = 1024, height = 1024;
