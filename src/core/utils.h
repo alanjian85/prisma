@@ -14,7 +14,7 @@
 #define PRISM_GPU __device__
 #define PRISM_CPU_GPU __device__ __host__
 
-const Real pi = 3.141592653589793238463;
+const Real pi = Real(3.141592653589793238463);
 
 PRISM_CPU_GPU bool solveQuadraticEquation(Real a, Real b, Real c,
                                           Real &r1, Real &r2)
@@ -23,8 +23,9 @@ PRISM_CPU_GPU bool solveQuadraticEquation(Real a, Real b, Real c,
     if (discr < 0)
         return false;
     discr = sqrt(discr);
-    r1 = (-b - discr) / (2 * a);
-    r2 = (-b + discr) / (2 * a);
+    Real i2a = 1 / (2 * a);
+    r1 = (-b - discr) / i2a;
+    r2 = (-b + discr) / i2a;
     if (r1 > r2) {
         Real temp = r1;
         r1 = r2;

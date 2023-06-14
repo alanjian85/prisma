@@ -15,7 +15,7 @@ public:
                       : Camera(pixels, width, height) {}
 
     PRISM_CPU_GPU Ray generateRay(Point2f p) const override {
-        Real tangent = tan(fov * 0.5);
+        Real tangent = tan(fov * Real(0.5));
         Vector3f right = normalize(cross(d, Vector3f(0, 1, 0))) * tangent;
         Vector3f up = cross(right, d);
         Ray r;
