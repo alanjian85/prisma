@@ -26,19 +26,19 @@ public:
         if (!solveQuadraticEquation(a, b, c, t0, t1))
             return false;
         t = t0;
-        if (t <= 0 || t > ray.tMax) {
+        Vector3f p = ray(t);
+        if (t <= 0 || t > ray.tMax || p.y < yMin || p.y > yMax) {
             t = t1;
-            if (t <= 0 || t > ray.tMax)
+            p = ray(t);
+            if (t <= 0 || t > ray.tMax || p.y < yMin || p.y > yMax)
                 return false;
         }
-        Vector3f p = ray(t);
-        if (p.y < yMin || p.y > yMax)
-            return false;
+        interaction.n = Vector3f(0, 0, 1);
         Real r = Vector2f(p.x - o.x, p.z - o.z).length();
         if (p.y > o.y)
-            interaction.n = normalize(Vector3f(p.x - o.x, -r, p.z - o.z));
+            interaction.setNormal(ray, Vector3f(p.x - o.x, -r, p.z - o.z));
         else
-            interaction.n = normalize(Vector3f(p.x - o.x, r, p.z - o.z));
+            interaction.setNormal(ray, Vector3f(p.x - o.x, r, p.z - o.z));
         return true; 
     }
 

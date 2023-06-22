@@ -28,7 +28,7 @@ public:
                 return false;
         }
         ray.tMax = t;
-        interaction.n = normalize(ray(t) - o);
+        interaction.setNormal(ray, ray(t) - o);
         return true;
     }
 
