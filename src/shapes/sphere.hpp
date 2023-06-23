@@ -17,7 +17,7 @@ public:
     PRISM_CPU_GPU bool intersect(const Ray &ray, Interaction &interaction) const override {
         Real a = dot(ray.d, ray.d);
         Real b = 2 * (dot(ray.o, ray.d) - dot(ray.d, o));
-        Real c = dot(ray.o, ray.o) + dot(o, o) - r * r;
+        Real c = dot(ray.o, ray.o) + dot(o, o) - 2 * dot(ray.o, o) - r * r;
         Real t0, t1, t;
         if (!solveQuadraticEquation(a, b, c, t0, t1))
             return false;

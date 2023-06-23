@@ -14,14 +14,14 @@ PRISM_KERNEL void constructObjects(PerspCamera *camera, void *pixels, int width,
                                    int height, decltype(Scene::shapes)::iterator begin)
 {
     new (camera) PerspCamera(pixels, width, height);
-    camera->o = Point3f(0, 2, 0);
-    camera->d = Vector3f(0, -1, -1);
+    camera->o = Point3f(0, 2, 1);
+    camera->d = normalize(Vector3f(0, -1, -1));
     camera->fov = radians(90);
-//    new (static_cast<Shape*>(*begin)) Triangle(Point3f(1, -1, -3),
-//                                               Point3f(3, -1, -3),
-//                                               Point3f(0,  1, -3));
-//    new (static_cast<Shape*>(*(begin + 1))) Sphere(Point3f(0, 0, -3), 0.5);
-    new (static_cast<Shape*>(*begin)) Cone(Point3f(0, 0, -3), -1, -0.5);
+    new (static_cast<Shape*>(*begin)) Triangle(Point3f(1, -1, -3),
+                                               Point3f(3, -1, -3),
+                                               Point3f(2,  1, -3));
+    new (static_cast<Shape*>(*(begin + 1))) Sphere(Point3f(0, 0, -3), 1);
+    new (static_cast<Shape*>(*(begin + 2))) Cone(Point3f(-2, 0, -3), -1, 1);
 }
 
 PRISM_KERNEL void render(Camera &camera, Scene &scene) {
@@ -43,10 +43,10 @@ int main() {
     Scene *scene = new Scene();
     // Shape allocation begin
     Shape *ptr;
-    //cudaMallocManaged(&ptr, sizeof(Triangle));
-    //scene->addShape(ptr);
-    //cudaMallocManaged(&ptr, sizeof(Sphere));
-    //scene->addShape(ptr);
+    cudaMallocManaged(&ptr, sizeof(Triangle));
+    scene->addShape(ptr);
+    cudaMallocManaged(&ptr, sizeof(Sphere));
+    scene->addShape(ptr);
     cudaMallocManaged(&ptr, sizeof(Cone));
     scene->addShape(ptr);
     // Shape allocation end

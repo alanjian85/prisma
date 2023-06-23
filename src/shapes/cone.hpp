@@ -33,6 +33,7 @@ public:
             if (t <= 0 || t > ray.tMax || p.y < yMin || p.y > yMax)
                 return false;
         }
+        ray.tMax = t;
         interaction.n = Vector3f(0, 0, 1);
         Real r = Vector2f(p.x - o.x, p.z - o.z).length();
         if (p.y > o.y)
