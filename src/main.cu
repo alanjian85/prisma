@@ -3,25 +3,17 @@
 
 #include <cameras/persp_camera.hpp>
 #include <core/utils.h>
-#include <shapes/cone.hpp>
-#include <shapes/triangle.hpp>
-#include <shapes/sphere.hpp>
 #include <core/scene.hpp>
 
 const int tileSize = 16;
 
-PRISM_KERNEL void constructObjects(PerspCamera *camera, void *pixels, int width,
-                                   int height, decltype(Scene::shapes)::iterator begin)
+PRISM_KERNEL void constructObjects(PerspCamera *camera, void *pixels,
+                                   int width, int height)
 {
     new (camera) PerspCamera(pixels, width, height);
     camera->o = Point3f(0, 2, 1);
     camera->d = normalize(Vector3f(0, -1, -1));
     camera->fov = radians(90);
-    new (static_cast<Shape*>(*begin)) Triangle(Point3f(1, -1, -3),
-                                               Point3f(3, -1, -3),
-                                               Point3f(2,  1, -3));
-    new (static_cast<Shape*>(*(begin + 1))) Sphere(Point3f(0, 0, -3), 1);
-    new (static_cast<Shape*>(*(begin + 2))) Cone(Point3f(-2, 0, -3), -1, 1);
 }
 
 PRISM_KERNEL void render(Camera &camera, Scene &scene) {
@@ -41,22 +33,16 @@ PRISM_KERNEL void render(Camera &camera, Scene &scene) {
 
 int main() {
     Scene *scene = new Scene();
-    // Shape allocation begin
-    Shape *ptr;
-    cudaMallocManaged(&ptr, sizeof(Triangle));
-    scene->addShape(ptr);
-    cudaMallocManaged(&ptr, sizeof(Sphere));
-    scene->addShape(ptr);
-    cudaMallocManaged(&ptr, sizeof(Cone));
-    scene->addShape(ptr);
-    // Shape allocation end
+    scene->addTriangle(Triangle(Vector3f(-1, -1, -1),
+                                Vector3f( 1, -1, -1),
+                                Vector3f( 0,  1, -1)));
 
     const int width = 1024, height = 1024;
     void *pixels;
     cudaMallocManaged(&pixels, width * height * 3);
     PerspCamera *camera;
     cudaMallocManaged(&camera, sizeof(PerspCamera));
-    constructObjects<<<1, 1>>>(camera, pixels, width, height, scene->shapes.begin());
+    constructObjects<<<1, 1>>>(camera, pixels, width, height);
     cudaDeviceSynchronize();
 
     int nTiles = ((camera->film.width() + tileSize - 1) / tileSize) *

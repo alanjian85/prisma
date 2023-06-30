@@ -5,19 +5,21 @@
 #define PRISM_SHAPES_TRIANGLE_HPP
 
 #include <config/types.h>
-#include <core/vector.hpp>
 
-#include "shape.hpp"
+#include "interaction.hpp"
+#include "vector.hpp"
 
-class Triangle : public Shape {
+class Triangle {
 public:
+    Triangle() = default;
+
     PRISM_CPU_GPU Triangle(Point3f a, Point3f b, Point3f c)
                       : a(a), b(b), c(c)
     {
         n = normalize(cross(b - a, c - a));
     }
 
-    PRISM_CPU_GPU bool intersect(const Ray &ray, Interaction &interaction) const override {
+    PRISM_CPU_GPU bool intersect(const Ray &ray, Interaction &interaction) const {
         Point3f ap = a - ray.o;
         Point3f bp = b - ray.o;
         Point3f cp = c - ray.o;

@@ -8,7 +8,7 @@
 
 #include <thrust/device_vector.h>
 
-#include <shapes/shape.hpp>
+#include "triangle.hpp"
 
 struct Scene {
 public:
@@ -24,25 +24,24 @@ public:
         cudaFree(ptr);
     }
 
-    PRISM_CPU void addShape(Shape *shape) {
-        shapes.push_back(shape);
-        begin = shapes.begin();
-        end = shapes.end();
+    PRISM_CPU void addTriangle(Triangle triangle) {
+        triangles.push_back(triangle);
+        begin = triangles.begin();
+        end = triangles.end();
     }
 
     PRISM_CPU_GPU bool intersect(const Ray &ray, Interaction &interaction) const {
         bool intersected = false;
         for (auto iter = begin; iter != end; ++iter) {
-            if (static_cast<Shape*>(*iter)->intersect(ray, interaction))
+            if (static_cast<Triangle>(*iter).intersect(ray, interaction))
                 intersected = true;
         }
         return intersected;
     }
 
-    thrust::device_vector<Shape*> shapes;
-
 private:
-    thrust::device_vector<Shape*>::iterator begin, end;
+    thrust::device_vector<Triangle> triangles;
+    thrust::device_vector<Triangle>::iterator begin, end;
 };
 
 #endif // PRISM_CORE_SCENE_HPP
