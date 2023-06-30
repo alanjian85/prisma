@@ -1,20 +1,11 @@
 // Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
 // SPDX-License-Identifier: MIT
 
-#include <cameras/persp_camera.hpp>
-#include <core/utils.h>
+#include <core/camera.hpp>
 #include <core/scene.hpp>
+#include <core/utils.h>
 
 const int tileSize = 16;
-
-PRISM_KERNEL void constructObjects(PerspCamera *camera, void *pixels,
-                                   int width, int height)
-{
-    new (camera) PerspCamera(pixels, width, height);
-    camera->o = Point3f(0, 2, 1);
-    camera->d = normalize(Vector3f(0, -1, -1));
-    camera->fov = radians(90);
-}
 
 PRISM_KERNEL void render(Camera &camera, Scene &scene) {
     int nTilesX = (camera.film.width() + tileSize - 1) / tileSize;
@@ -33,17 +24,16 @@ PRISM_KERNEL void render(Camera &camera, Scene &scene) {
 
 int main() {
     Scene *scene = new Scene();
-    scene->addTriangle(Triangle(Vector3f(-1, -1, -1),
-                                Vector3f( 1, -1, -1),
-                                Vector3f( 0,  1, -1)));
+    scene->addTriangle(Triangle(Vector3f(-1, -1, -2),
+                                Vector3f( 1, -1, -2),
+                                Vector3f( 0,  1, -2)));
 
     const int width = 1024, height = 1024;
-    void *pixels;
-    cudaMallocManaged(&pixels, width * height * 3);
-    PerspCamera *camera;
-    cudaMallocManaged(&camera, sizeof(PerspCamera));
-    constructObjects<<<1, 1>>>(camera, pixels, width, height);
-    cudaDeviceSynchronize();
+    Camera *camera = new Camera(width, height);
+    camera->type = CameraType::Ortho;
+    camera->o = Vector3f(0, 0, 0);
+    camera->d = Vector3f(0, 0, -1);
+    camera->fov = radians(90);
 
     int nTiles = ((camera->film.width() + tileSize - 1) / tileSize) *
                  ((camera->film.height() + tileSize - 1) / tileSize);
@@ -52,7 +42,6 @@ int main() {
     camera->film.writeImage("image.png");
 
     delete scene;
-    cudaFree(camera);
-    cudaFree(pixels); 
+    delete camera;
     return 0;
 }

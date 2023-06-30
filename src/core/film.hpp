@@ -14,11 +14,16 @@
 
 class Film {
 public:
-    PRISM_CPU_GPU Film(void *pixels, int width, int height)
-                      : width_(width), height_(height) {
-        assert(pixels != nullptr); this->pixels = static_cast<unsigned char*>(pixels);
+    PRISM_CPU Film(int width, int height)
+                  : width_(width), height_(height)
+    {
         assert(width >= 0);
         assert(height >= 0);
+        cudaMallocManaged(&pixels, width * height * 3);
+    }
+
+    PRISM_CPU ~Film() {
+        cudaFree(pixels);
     }
 
     PRISM_CPU_GPU int width() const {

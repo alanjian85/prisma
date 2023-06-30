@@ -1,8 +1,8 @@
 // Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
 // SPDX-License-Identifier: MIT
 
-#ifndef PRISM_SHAPES_TRIANGLE_HPP
-#define PRISM_SHAPES_TRIANGLE_HPP
+#ifndef PRISM_CORE_TRIANGLE_HPP
+#define PRISM_CORE_TRIANGLE_HPP
 
 #include <config/types.h>
 
@@ -61,4 +61,4 @@ private:
     Vector3f n;
 };
 
-#endif // PRISM_SHAPES_TRIANGLE_HPP
+#endif // PRISM_CORE_TRIANGLE_HPP
