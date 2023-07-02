@@ -25,7 +25,7 @@ struct Vector2 {
     }
 
     PRISM_CPU_GPU bool hasNaNs() const {
-        return false;
+        return isnan(Real(x)) || isnan(Real(y));
     }
 
     PRISM_CPU_GPU Real lengthSquared() const {
@@ -85,11 +85,6 @@ struct Vector2 {
 
     T x, y;
 };
-
-template <>
-PRISM_CPU_GPU bool Vector2<Real>::hasNaNs() const {
-    return isnan(x) || isnan(y);
-}
 
 template <typename T>
 PRISM_CPU_GPU Vector2<T> operator+(Vector2<T> lhs, Vector2<T> rhs) {
@@ -156,7 +151,7 @@ struct Vector3 {
     }
 
     PRISM_CPU_GPU bool hasNaNs() const {
-        return false;
+        return isnan(Real(x)) || isnan(Real(y)) || isnan(Real(z));
     }
 
     PRISM_CPU_GPU Real lengthSquared() const {
@@ -228,11 +223,6 @@ struct Vector3 {
     T x, y, z;
 };
 
-template <>
-PRISM_CPU_GPU bool Vector3<Real>::hasNaNs() const {
-    return isnan(x) || isnan(y) || isnan(z);
-}
-
 template <typename T>
 PRISM_CPU_GPU Vector3<T> operator+(Vector3<T> lhs, Vector3<T> rhs) {
     return Vector3<T>(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z);
@@ -298,6 +288,22 @@ PRISM_CPU_GPU Vector3<T> abs(Vector3<T> v) {
     return Vector3<T>(abs(v.x), abs(v.y), abs(v.z));
 }
 
+template <typename T>
+PRISM_CPU_GPU Vector3<T> min(Vector3<T> lhs, Vector3<T> rhs) {
+    return Vector3<T>(fmin(lhs.x, rhs.x),
+                      fmin(lhs.y, rhs.y),
+                      fmin(lhs.z, rhs.z));
+}
+
+template <typename T>
+PRISM_CPU_GPU Vector3<T> max(Vector3<T> lhs, Vector3<T> rhs) {
+    return Vector3<T>(fmax(lhs.x, rhs.x),
+                      fmax(lhs.y, rhs.y),
+                      fmax(lhs.z, rhs.z));
+}
+
+template <typename T>
+using Point3 = Vector3<T>;
 using Point3i = Vector3<int>;
 using Point3f = Vector3<Real>;
 using Vector3i = Vector3<int>;

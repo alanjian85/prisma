@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include <core/camera.hpp>
-#include <core/scene.hpp>
+#include <scene/scene.hpp>
 #include <core/utils.h>
 
 const int tileSize = 16;
@@ -23,14 +23,18 @@ PRISM_KERNEL void render(Camera &camera, Scene &scene) {
 }
 
 int main() {
-    Scene *scene = new Scene();
-    scene->addTriangle(Triangle(Vector3f(-1, -1, -2),
-                                Vector3f( 1, -1, -2),
-                                Vector3f( 0,  1, -2)));
+    std::vector<Triangle> primitives;
+    primitives.push_back(Triangle(Vector3f(-2, -1, -3),
+                                  Vector3f( 0, -1, -1),
+                                  Vector3f(-1,  1, -2)));
+    primitives.push_back(Triangle(Vector3f( 0, -1, -1),
+                                  Vector3f( 2, -1, -3),
+                                  Vector3f( 1,  1, -2)));
+    Scene *scene = new Scene(primitives);
 
     const int width = 1024, height = 1024;
     Camera *camera = new Camera(width, height);
-    camera->type = CameraType::Ortho;
+    camera->type = CameraType::Persp;
     camera->o = Vector3f(0, 0, 0);
     camera->d = Vector3f(0, 0, -1);
     camera->fov = radians(90);
@@ -41,7 +45,7 @@ int main() {
     cudaDeviceSynchronize();
     camera->film.writeImage("image.png");
 
-    delete scene;
     delete camera;
+    delete scene;
     return 0;
 }

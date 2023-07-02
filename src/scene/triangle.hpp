@@ -1,13 +1,13 @@
 // Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
 // SPDX-License-Identifier: MIT
 
-#ifndef PRISM_CORE_TRIANGLE_HPP
-#define PRISM_CORE_TRIANGLE_HPP
+#ifndef PRISM_SCENE_TRIANGLE_HPP
+#define PRISM_SCENE_TRIANGLE_HPP
 
 #include <config/types.h>
-
-#include "interaction.hpp"
-#include "vector.hpp"
+#include <core/bound.hpp>
+#include <core/interaction.hpp>
+#include <core/vector.hpp>
 
 class Triangle {
 public:
@@ -56,9 +56,13 @@ public:
         return true;
     }
 
+    PRISM_CPU_GPU Bound3f worldBound() const {
+        return boundUnion(Bound3f(a, b), c);
+    }
+
 private:
     Point3f a, b, c;
     Vector3f n;
 };
 
-#endif // PRISM_CORE_TRIANGLE_HPP
+#endif // PRISM_SCENE_TRIANGLE_HPP
