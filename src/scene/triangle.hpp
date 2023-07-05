@@ -52,7 +52,7 @@ public:
         if (t > ray.tMax)
             return false;
         ray.tMax = t;
-        interaction.setNormal(ray, n);
+        interaction.n = n;
         return true;
     }
 

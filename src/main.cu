@@ -62,12 +62,9 @@ int main() {
     auto scene = std::make_unique<Scene>(primitives);
 
     const int width = 1024, height = 1024;
-    auto camera = std::make_unique<Camera>(width, height);
-    camera->type = CameraType::Persp;
-    camera->o = Vector3f(2, 0, 2);
-    camera->d = normalize(Vector3f(-1, 0, -1));
-    camera->up = Vector3f(0, 0, 1);
-    camera->fov = radians(90);
+    auto camera = std::make_unique<Camera>(width, height, CameraType::Persp,
+                      Vector3f(2, 0, 2), Vector3f(-1, 0, -1), Vector3f(0, 0, 1),
+                      radians(90));
 
     int nTiles = ((camera->film.width() + tileSize - 1) / tileSize) *
                  ((camera->film.height() + tileSize - 1) / tileSize);

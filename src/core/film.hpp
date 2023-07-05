@@ -17,8 +17,8 @@ public:
     PRISM_CPU Film(int width, int height)
                   : width_(width), height_(height)
     {
-        assert(width >= 0);
-        assert(height >= 0);
+        assert(width > 0);
+        assert(height > 0);
         cudaMallocManaged(&pixels, width * height * 3);
     }
 

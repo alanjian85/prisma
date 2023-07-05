@@ -8,12 +8,6 @@
 #include "vector.hpp"
 
 struct Interaction {
-    PRISM_CPU_GPU void setNormal(Ray ray, Vector3f n) {
-        this->n = normalize(n);
-        if (dot(ray.d, n) > 0)
-            this->n = -this->n;
-    }
-
     Vector3f n;
 };
 

@@ -83,6 +83,10 @@ struct Vector2 {
         return *this;
     }
 
+    PRISM_CPU_GPU bool normalized() const {
+        return lengthSquared() == 1;
+    }
+
     T x, y;
 };
 
@@ -218,6 +222,10 @@ struct Vector3 {
         y *= inv;
         z *= inv;
         return *this;
+    }
+
+    PRISM_CPU_GPU bool normalized() const {
+        return lengthSquared() == 1;
     }
 
     T x, y, z;

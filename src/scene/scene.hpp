@@ -14,12 +14,14 @@ public:
 
     PRISM_CPU static void *operator new(std::size_t count) {
         Scene *ptr;
-        cudaMallocManaged(&ptr, count);
+        cudaError_t status = cudaMallocManaged(&ptr, count);
+        assert(status == cudaSuccess);
         return ptr;
     }
 
     PRISM_CPU static void operator delete(void *ptr) {
-        cudaFree(ptr);
+        cudaError_t status = cudaFree(ptr);
+        assert(status == cudaSuccess);
     }
 
     PRISM_GPU bool intersect(const Ray &ray, Interaction &interaction) const {

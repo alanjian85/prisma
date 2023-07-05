@@ -5,6 +5,7 @@
 #define PRISM_SCENE_BVH_HPP
 
 #include <cstddef>
+#include <memory>
 #include <vector>
 
 #include <thrust/device_vector.h>
@@ -13,25 +14,25 @@
 
 #include "triangle.hpp"
 
-struct BVHNode {
-    size_t rightOffset;
-    Bound3f bound;
-    size_t primitive;
-};
-
 class BVH {
 public:
+    struct BVHNode {
+        size_t rightOffset;
+        Bound3f bound;
+        size_t primitive;
+    };
+
     PRISM_CPU BVH(std::vector<Triangle> &primitives) : primitives(primitives) {
         if (primitives.empty()) {
             primitivesPtr = nullptr;
             nodesPtr = nullptr;
             return;
         }
-        BVHBuildNode *root = recursiveBuild(primitives, 0, primitives.size());
+        auto root = recursiveBuild(primitives, 0, primitives.size());
         std::vector<BVHNode> nodes(nodeCount);
         size_t idx = 0;
-        flattenBVHBuildTree(root, nodes, idx);
-        freeBVHBuildTree(root);
+        flattenBVHBuildTree(root.get(), nodes, idx);
+        root.reset();
         this->nodes = nodes;
         primitivesPtr = thrust::raw_pointer_cast(this->primitives.data());
         nodesPtr = thrust::raw_pointer_cast(this->nodes.data());
@@ -67,15 +68,15 @@ public:
 
 private:
     struct BVHBuildNode {
-        BVHBuildNode *left, *right;
+        std::unique_ptr<BVHBuildNode> left, right;
         Bound3f bound;
         size_t primitive;
     };
 
-    PRISM_CPU BVHBuildNode *recursiveBuild(std::vector<Triangle> &primitives, size_t begin, size_t end)
+    PRISM_CPU std::unique_ptr<BVHBuildNode> recursiveBuild(std::vector<Triangle> &primitives, size_t begin, size_t end)
     {
         ++nodeCount;
-        BVHBuildNode *node = new BVHBuildNode();
+        auto node = std::make_unique<BVHBuildNode>();
         Bound3f bound;
         for (size_t i = begin; i < end; ++i) {
             Bound3f primitiveBound = primitives[i].worldBound();
@@ -103,20 +104,9 @@ private:
             node.primitive = buildNode->primitive;
             return currIdx;
         }
-        flattenBVHBuildTree(buildNode->left, nodes, idx);
-        node.rightOffset = flattenBVHBuildTree(buildNode->right, nodes, idx);
+        flattenBVHBuildTree(buildNode->left.get(), nodes, idx);
+        node.rightOffset = flattenBVHBuildTree(buildNode->right.get(), nodes, idx);
         return currIdx;
-    }
-
-    PRISM_CPU void freeBVHBuildTree(BVHBuildNode *node) {
-        if (node == nullptr)
-            return;
-        if (node->left == nullptr) {
-            cudaFree(node);
-            return;
-        }
-        freeBVHBuildTree(node->left);
-        freeBVHBuildTree(node->right);
     }
 
     thrust::device_vector<Triangle> primitives;
