@@ -4,3 +4,6 @@
 [submodule "ext/sol2"]
 	path = ext/sol2
 	url = https://github.com/ThePhD/sol2
+[submodule "ext/tinyobjloader"]
+	path = ext/tinyobjloader
+	url = https://github.com/tinyobjloader/tinyobjloader

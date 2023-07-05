@@ -22,7 +22,7 @@ public:
         cudaFree(ptr);
     }
 
-    PRISM_CPU_GPU bool intersect(const Ray &ray, Interaction &interaction) const {
+    PRISM_GPU bool intersect(const Ray &ray, Interaction &interaction) const {
         return bvh.intersect(ray, interaction);
     }
 
