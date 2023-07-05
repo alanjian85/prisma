@@ -32,17 +32,17 @@ public:
 
     PRISM_CPU_GPU Ray generateRay(Point2f p) const {
         Ray r;
-        Vector3f right = normalize(cross(d, Vector3f(0, 1, 0)));
-        Vector3f up = cross(right, d);
+        Vector3f right = normalize(cross(d, up));
+        Vector3f newUp = cross(right, d);
         if (type == CameraType::Persp) {
             Real tangent = tan(fov * Real(0.5));
             right *= tangent;
-            up *= tangent;
+            newUp *= tangent;
             r.o = o;
-            r.d = normalize(d + (p.x * 2 - 1) * right + (p.y * 2 - 1) * up);
+            r.d = normalize(d + (p.x * 2 - 1) * right + (p.y * 2 - 1) * newUp);
         }
         else {
-            r.o = o + (p.x * 2 - 1) * right + (p.y * 2 - 1) * up;
+            r.o = o + (p.x * 2 - 1) * right + (p.y * 2 - 1) * newUp;
             r.d = d;
         }
         return r;
@@ -52,6 +52,7 @@ public:
     CameraType type;
     Point3f o;
     Vector3f d;
+    Vector3f up;
     Real fov;
 };
 
