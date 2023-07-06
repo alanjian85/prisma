@@ -4,7 +4,6 @@
 #ifndef PRISM_CORE_INTERACTION_HPP
 #define PRISM_CORE_INTERACTION_HPP
 
-#include "utils.h"
 #include "vector.hpp"
 
 struct Interaction {

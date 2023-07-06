@@ -7,8 +7,6 @@
 #include <cassert>
 #include <cmath>
 
-#include <config/types.h>
-
 #include "utils.h"
 
 struct Color {

@@ -4,7 +4,10 @@
 #ifndef PRISM_SCENE_SCENE_HPP
 #define PRISM_SCENE_SCENE_HPP
 
+#include <cassert>
 #include <cstddef>
+
+#include "core/utils.h"
 
 #include "bvh.hpp"
 
@@ -12,7 +15,7 @@ struct Scene {
 public:
     PRISM_CPU Scene(std::vector<Triangle> &primitives) : bvh(primitives) {}
 
-    PRISM_CPU static void *operator new(std::size_t count) {
+    PRISM_CPU static void *operator new(size_t count) {
         Scene *ptr;
         cudaError_t status = cudaMallocManaged(&ptr, count);
         assert(status == cudaSuccess);

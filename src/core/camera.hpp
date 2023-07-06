@@ -4,10 +4,13 @@
 #ifndef PRISM_CORE_CAMERA_HPP
 #define PRISM_CORE_CAMERA_HPP
 
-#include <config/types.h>
+#include <cassert>
+#include <cmath>
+#include <cstddef>
 
 #include "film.hpp"
 #include "ray.hpp"
+#include "utils.h"
 #include "vector.hpp"
 
 enum class CameraType {
@@ -25,7 +28,7 @@ public:
         assert(cross(d, up).length() != 0);
     }
 
-    PRISM_CPU static void *operator new(std::size_t count) {
+    PRISM_CPU static void *operator new(size_t count) {
         Camera *camera;
         cudaError_t status = cudaMallocManaged(&camera, sizeof(Camera));
         assert(status == cudaSuccess);

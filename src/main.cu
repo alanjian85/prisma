@@ -6,9 +6,9 @@
 
 #include <tiny_obj_loader.h>
 
-#include <core/camera.hpp>
-#include <scene/scene.hpp>
-#include <core/utils.h>
+#include "core/camera.hpp"
+#include "core/utils.h"
+#include "scene/scene.hpp"
 const int tileSize = 16;
 
 PRISM_KERNEL void render(Camera &camera, Scene &scene) {

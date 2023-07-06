@@ -10,7 +10,8 @@
 
 #include <thrust/device_vector.h>
 
-#include <core/interaction.hpp>
+#include "core/bound.hpp"
+#include "core/utils.h"
 
 #include "triangle.hpp"
 

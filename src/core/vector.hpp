@@ -7,8 +7,6 @@
 #include <cassert>
 #include <cmath>
 
-#include <config/types.h>
-
 #include "color.hpp"
 #include "utils.h"
 

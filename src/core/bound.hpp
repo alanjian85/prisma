@@ -5,9 +5,6 @@
 #define PRISM_CORE_BOUND_HPP
 
 #include <cuda/std/utility>
-#include <thrust/swap.h>
-
-#include <config/types.h>
 
 #include "ray.hpp"
 #include "utils.h"

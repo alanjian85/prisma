@@ -4,10 +4,11 @@
 #ifndef PRISM_SCENE_TRIANGLE_HPP
 #define PRISM_SCENE_TRIANGLE_HPP
 
-#include <config/types.h>
-#include <core/bound.hpp>
-#include <core/interaction.hpp>
-#include <core/vector.hpp>
+#include "core/bound.hpp"
+#include "core/ray.hpp"
+#include "core/interaction.hpp"
+#include "core/utils.h"
+#include "core/vector.hpp"
 
 class Triangle {
 public:
