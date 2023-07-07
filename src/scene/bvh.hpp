@@ -29,6 +29,7 @@ public:
             nodesPtr = nullptr;
             return;
         }
+        nodeCount = 0;
         auto root = recursiveBuild(primitives, 0, primitives.size());
         std::vector<BVHNode> nodes(nodeCount);
         size_t idx = 0;

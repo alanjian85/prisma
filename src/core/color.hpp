@@ -19,6 +19,13 @@ struct Color {
         return isnan(r) || isnan(g) || isnan(b);
     }
 
+    PRISM_CPU_GPU Color &operator*=(Color color) {
+        r *= color.r;
+        g *= color.g;
+        b *= color.b;
+        return *this;
+    }
+
     Real r, g, b;
 };
 

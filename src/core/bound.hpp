@@ -28,7 +28,7 @@ struct Bound3f {
     PRISM_CPU_GPU bool intersect(Ray ray) const {
         if (min.x > max.x || min.y > max.y || min.z > max.z)
             return false;
-        Real t0 = 0, t1 = ray.tMax;
+        Real t0 = ray.tMin, t1 = ray.tMax;
         for (int i = 0; i < 3; ++i) {
             Real tmin = (min[i] - ray.o[i]) / ray.d[i];
             Real tmax = (max[i] - ray.o[i]) / ray.d[i];

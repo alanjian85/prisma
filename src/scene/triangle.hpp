@@ -39,21 +39,18 @@ public:
         bp.y -= bp.z * iy;
         cp.x -= cp.z * ix;
         cp.y -= cp.z * iy;
-        Real a0 = ap.x * bp.y - ap.y * bp.x;
-        Real a1 = bp.x * cp.y - bp.y * cp.x;
-        Real a2 = cp.x * ap.y - cp.y * ap.x;
-        if (a0 > 0 && (a1 < 0 || a2 < 0) ||
-            a0 < 0 && (a1 > 0 || a2 > 0))
+        Real a0 = bp.x * cp.y - bp.y * cp.x;
+        Real a1 = cp.x * ap.y - cp.y * ap.x;
+        Real a2 = ap.x * bp.y - ap.y * bp.x;
+        if ((a0 < 0 || a1 < 0 || a2 < 0) && (a0 > 0 || a1 > 0 || a2 > 0))
             return false;
         Real a = a0 + a1 + a2;
-        Real t = (cp.z * a0 + ap.z * a1 + bp.z * a2) / ray.d[z];
-        if (a == 0 || a > 0 && t <= 0 || a < 0 && t >= 0)
-            return false;
-        t /= a;
-        if (t > ray.tMax)
+        Real t = (ap.z * a0 + bp.z * a1 + cp.z * a2) / (ray.d[z] * a);
+        if (t < ray.tMin || t > ray.tMax)
             return false;
         ray.tMax = t;
         interaction.n = n;
+        interaction.p = (this->a * a0 + this->b * a1 + this->c * a2) / a;
         return true;
     }
 

@@ -18,6 +18,7 @@ struct Ray {
 
     Point3f o;
     Vector3f d;
+    Real tMin = 0.001;
     mutable Real tMax = inf;
 };
 

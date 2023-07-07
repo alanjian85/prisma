@@ -8,6 +8,7 @@
 
 struct Interaction {
     Vector3f n;
+    Point3f p;
 };
 
 #endif // PRISM_CORE_INTERACTION_HPP
