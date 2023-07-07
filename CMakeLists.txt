@@ -3,9 +3,15 @@ project(prism LANGUAGES CXX CUDA)
 
 add_executable(prism
     src/main.cu
+    src/core/bound.cu
+    src/core/camera.cu
+    src/core/utils.cu
+    src/scene/bvh.cu
+    src/scene/triangle.cu
 )
 target_include_directories(prism PRIVATE src)
 target_compile_features(prism PUBLIC cxx_std_11)
+set_target_properties(prism PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 add_subdirectory(ext)
 target_link_libraries(prism PRIVATE ext)

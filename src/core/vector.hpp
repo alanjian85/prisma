@@ -315,7 +315,7 @@ using Point3f = Vector3<Real>;
 using Vector3i = Vector3<int>;
 using Vector3f = Vector3<Real>;
 
-PRISM_CPU_GPU Vector3f reflect(Vector3f i, Vector3f n) {
+PRISM_CPU_GPU inline Vector3f reflect(Vector3f i, Vector3f n) {
     return i - Real(2.0) * n * dot(i, n);
 }
 

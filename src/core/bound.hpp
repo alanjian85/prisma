@@ -25,21 +25,7 @@ struct Bound3f {
         return max - min;
     }
 
-    PRISM_CPU_GPU bool intersect(Ray ray) const {
-        if (min.x > max.x || min.y > max.y || min.z > max.z)
-            return false;
-        Real t0 = ray.tMin, t1 = ray.tMax;
-        for (int i = 0; i < 3; ++i) {
-            Real tmin = (min[i] - ray.o[i]) / ray.d[i];
-            Real tmax = (max[i] - ray.o[i]) / ray.d[i];
-            if (tmin > tmax)
-                cuda::std::swap(tmin, tmax);
-            t0 = t0 < tmin ? tmin : t0;
-            t1 = tmax < t1 ? tmax : t1;
-            if (t0 > t1) return false;
-        }
-        return true;
-    }
+    PRISM_CPU_GPU bool intersect(Ray ray) const;
 
     Vector3f min, max;
 };
