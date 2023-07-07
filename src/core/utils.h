@@ -19,9 +19,6 @@ const Real pi = Real(3.141592653589793238463);
 
 const Real inf = std::numeric_limits<Real>::infinity();
 
-PRISM_CPU_GPU bool solveQuadraticEquation(Real a, Real b, Real c,
-                                          Real &r1, Real &r2);
-
 PRISM_CPU_GPU inline Real radians(Real degrees) {
     return degrees / 180 * pi;
 }

@@ -5,7 +5,6 @@ add_executable(prism
     src/main.cu
     src/core/bound.cu
     src/core/camera.cu
-    src/core/utils.cu
     src/scene/bvh.cu
     src/scene/triangle.cu
 )

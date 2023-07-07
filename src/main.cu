@@ -27,7 +27,7 @@ PRISM_KERNEL void render(Camera &camera, Scene &scene) {
             interaction.n = -interaction.n;
         color *= normalToColor(interaction.n);
         ray.o = interaction.p;
-        ray.d = normalize(reflect(ray.d, interaction.n));
+        ray.d = reflect(ray.d, interaction.n);
         ray.tMax = inf;
     }
     camera.film.addSample(Point2f(u, v), color);
