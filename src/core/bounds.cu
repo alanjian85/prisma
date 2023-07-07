@@ -1,9 +1,9 @@
 // Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
 // SPDX-License-Identifier: MIT
 
-#include "bound.hpp"
+#include "bounds.hpp"
 
-PRISM_CPU_GPU bool Bound3f::intersect(Ray ray) const {
+PRISM_CPU_GPU bool Bounds3f::intersect(Ray ray) const {
     if (min.x > max.x || min.y > max.y || min.z > max.z)
         return false;
     Real t0 = ray.tMin, t1 = ray.tMax;

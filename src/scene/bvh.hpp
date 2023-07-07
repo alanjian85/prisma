@@ -10,7 +10,7 @@
 
 #include <thrust/device_vector.h>
 
-#include "core/bound.hpp"
+#include "core/bounds.hpp"
 #include "core/utils.h"
 
 #include "triangle.hpp"
@@ -19,7 +19,7 @@ class BVH {
 public:
     struct BVHNode {
         size_t rightOffset;
-        Bound3f bound;
+        Bounds3f bound;
         size_t primitive;
     };
 
@@ -30,7 +30,7 @@ public:
 private:
     struct BVHBuildNode {
         std::unique_ptr<BVHBuildNode> left, right;
-        Bound3f bound;
+        Bounds3f bound;
         size_t primitive;
     };
 

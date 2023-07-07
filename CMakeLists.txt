@@ -3,7 +3,7 @@ project(prism LANGUAGES CXX CUDA)
 
 add_executable(prism
     src/main.cu
-    src/core/bound.cu
+    src/core/bounds.cu
     src/core/camera.cu
     src/scene/bvh.cu
     src/scene/triangle.cu

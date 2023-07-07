@@ -4,7 +4,7 @@
 #ifndef PRISM_SCENE_TRIANGLE_HPP
 #define PRISM_SCENE_TRIANGLE_HPP
 
-#include "core/bound.hpp"
+#include "core/bounds.hpp"
 #include "core/ray.hpp"
 #include "core/interaction.hpp"
 #include "core/utils.h"
@@ -22,8 +22,8 @@ public:
 
     PRISM_CPU_GPU bool intersect(const Ray &ray, Interaction &interaction) const;
 
-    PRISM_CPU_GPU Bound3f worldBound() const {
-        return boundUnion(Bound3f(a, b), c);
+    PRISM_CPU_GPU Bounds3f worldBound() const {
+        return boundUnion(Bounds3f(a, b), c);
     }
 
 private:

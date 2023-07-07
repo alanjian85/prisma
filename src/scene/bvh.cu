@@ -51,9 +51,9 @@ PRISM_CPU_GPU bool BVH::intersect(const Ray &ray, Interaction &interaction) cons
 PRISM_CPU auto BVH::recursiveBuild(std::vector<Triangle> &primitives, size_t begin, size_t end) -> std::unique_ptr<BVHBuildNode>{
     ++nodeCount;
     auto node = std::make_unique<BVHBuildNode>();
-    Bound3f bound;
+    Bounds3f bound;
     for (size_t i = begin; i < end; ++i) {
-        Bound3f primitiveBound = primitives[i].worldBound();
+        Bounds3f primitiveBound = primitives[i].worldBound();
         bound = boundUnion(bound, primitiveBound);
     }
     node->bound = bound;
