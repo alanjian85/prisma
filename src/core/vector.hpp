@@ -80,10 +80,6 @@ struct Vector2 {
         return *this;
     }
 
-    PRISM_CPU_GPU bool normalized() const {
-        return lengthSquared() == 1;
-    }
-
     T x, y;
 };
 
@@ -132,6 +128,23 @@ PRISM_CPU_GPU Vector2<T> permute(Vector2<T> v, int x, int y) {
 template <typename T>
 PRISM_CPU_GPU Vector2<T> abs(Vector2<T> v) {
     return Vector2<T>(abs(v.x), abs(v.y));
+}
+
+template <typename T>
+PRISM_CPU_GPU Vector2<T> min(Vector2<T> lhs, Vector2<T> rhs) {
+    return Vector2<T>(fmin(lhs.x, rhs.x), fmax(lhs.y, rhs.y));
+}
+
+template <typename T>
+PRISM_CPU_GPU Vector2<T> max(Vector2<T> lhs, Vector2<T> rhs) {
+    return Vector2<T>(fmax(lhs.x, rhs.x), fmax(lhs.y, rhs.y));
+}
+
+template <typename T>
+PRISM_CPU_GPU Vector2<T> clamp(Vector2<T> v, Vector2<T> min, Vector2<T> max) {
+    v = ::max(v, min);
+    v = ::min(v, max);
+    return v;
 }
 
 using Point2i = Vector2<int>;
@@ -226,10 +239,6 @@ struct Vector3 {
         y *= inv;
         z *= inv;
         return *this;
-    }
-
-    PRISM_CPU_GPU bool normalized() const {
-        return lengthSquared() == 1;
     }
 
     T x, y, z;
