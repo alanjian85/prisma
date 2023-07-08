@@ -18,24 +18,23 @@ PRISM_KERNEL void render(Camera &camera, Scene &scene) {
     Real u = static_cast<Real>(x) / (camera.film.width() - 1);
     Real v = static_cast<Real>(y) / (camera.film.height() - 1);
     Ray ray = camera.generateRay(Point2f(u, 1 - v));
-    Color color(1, 1, 1);
-    for (int i = 0; i < 5; ++i) {
-        Interaction interaction;
-        if (!scene.intersect(ray, interaction))
-           break;
-        if (dot(ray.d, interaction.n) > 0)
-            interaction.n = -interaction.n;
-        color *= normalToColor(interaction.n);
-        ray.o = interaction.p;
-        ray.d = reflect(ray.d, interaction.n);
-        ray.tMax = inf;
-    }
+    Interaction interaction;
+    scene.intersect(ray, interaction);
+    if (dot(ray.d, interaction.n) > 0)
+        interaction.n = -interaction.n;
+    Real attenuation = 1 / (camera.o - interaction.p).lengthSquared();
+    Vector3f lightDir = normalize(camera.o - interaction.p);
+    Vector3f halfwayDir = lightDir;
+    Real diffuse = dot(interaction.n, lightDir);
+    Real specular = pow(dot(interaction.n, halfwayDir), 32);
+    Color color = (diffuse * normalToColor(interaction.n) + specular * Color(1, 1, 1)) * attenuation;
+    color = clamp(color, Color(0), Color(1));
     camera.film.addSample(Point2f(u, v), color);
 }
 
 int main() {
     tinyobj::ObjReader reader;
-    reader.ParseFromFile("sphere.obj");
+    reader.ParseFromFile("viking_room.obj");
 
     std::vector<Triangle> primitives;
     auto& attrib = reader.GetAttrib();
@@ -70,7 +69,7 @@ int main() {
 
     const int width = 1024, height = 1024;
     auto camera = std::make_unique<Camera>(width, height, CameraType::Persp,
-                      Vector3f(0, 3, 0), Vector3f(0, -1, 0), Vector3f(0, 0, 1),
+                      Vector3f(1, 0, 1), Vector3f(-1, 0, -1), Vector3f(0, 0, 1),
                       radians(90));
 
     int nTiles = ((camera->film.width() + tileSize - 1) / tileSize) *

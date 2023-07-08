@@ -23,9 +23,10 @@ public:
     PRISM_CPU Camera(int width, int height, CameraType type, Point3f o,
                      Vector3f d, Vector3f up = Vector3f(0, 1, 0), Real fov = 90)
                   : film(width, height), type(type), o(o), d(normalize(d)),
-                    up(up), fov(fov)
+                    up(up), tanHalfFov(tan(Real(0.5) * fov))
     {
         assert(cross(d, up).length() != 0);
+        assert(0 < fov && fov < 2 * pi);
     }
 
     PRISM_CPU static void *operator new(size_t count) {
@@ -43,13 +44,13 @@ public:
     PRISM_CPU_GPU Ray generateRay(Point2f p) const;
 
     Film film;
-
-private:
     CameraType type;
     Point3f o;
-    Vector3f d;
     Vector3f up;
-    Real fov;
+
+private:
+    Vector3f d;
+    Real tanHalfFov;
 };
 
 #endif // PRISM_CORE_CAMERA_HPP

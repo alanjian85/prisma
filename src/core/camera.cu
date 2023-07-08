@@ -8,10 +8,8 @@ PRISM_CPU_GPU Ray Camera::generateRay(Point2f p) const {
     Vector3f right = normalize(cross(d, up));
     Vector3f newUp = cross(right, d);
     if (type == CameraType::Persp) {
-        assert(0 < fov && fov < 2 * pi);
-        Real tangent = tan(fov * Real(0.5));
-        right *= tangent;
-        newUp *= tangent;
+        right *= tanHalfFov;
+        newUp *= tanHalfFov;
         r.o = o;
         r.d = d + (p.x * 2 - 1) * right + (p.y * 2 - 1) * newUp;
     }

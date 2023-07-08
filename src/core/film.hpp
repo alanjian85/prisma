@@ -9,7 +9,6 @@
 
 #include <stb_image_write.h>
 
-#include "color.hpp"
 #include "utils.h"
 #include "vector.hpp"
 

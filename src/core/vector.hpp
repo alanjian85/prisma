@@ -7,7 +7,6 @@
 #include <cassert>
 #include <cmath>
 
-#include "color.hpp"
 #include "utils.h"
 
 template <typename T>
@@ -192,6 +191,13 @@ struct Vector3 {
         return Vector3(-x, -y, -z);
     }
 
+    PRISM_CPU_GPU Vector3 &operator=(Vector3 v) {
+        x = v.x;
+        y = v.y;
+        z = v.z;
+        return *this;
+    }
+
     PRISM_CPU_GPU Vector3 &operator+=(Vector3 v) {
         x += v.x;
         y += v.y;
@@ -227,6 +233,7 @@ struct Vector3 {
     }
 
     T x, y, z;
+    T &r = x, &g = y, &b = z;
 };
 
 template <typename T>
@@ -281,15 +288,6 @@ PRISM_CPU_GPU Vector3<T> permute(Vector3<T> v, int x, int y, int z) {
 }
 
 template <typename T>
-PRISM_CPU_GPU Color normalToColor(Vector3<T> n) {
-    return Color(
-        n.x * 0.5 + 0.5,
-        n.y * 0.5 + 0.5,
-        n.z * 0.5 + 0.5
-    );
-}
-
-template <typename T>
 PRISM_CPU_GPU Vector3<T> abs(Vector3<T> v) {
     return Vector3<T>(abs(v.x), abs(v.y), abs(v.z));
 }
@@ -309,14 +307,31 @@ PRISM_CPU_GPU Vector3<T> max(Vector3<T> lhs, Vector3<T> rhs) {
 }
 
 template <typename T>
+PRISM_CPU_GPU Vector3<T> clamp(Vector3<T> v, Vector3<T> min, Vector3<T> max) {
+    v = ::max(v, min);
+    v = ::min(v, max);
+    return v;
+}
+
+template <typename T>
 using Point3 = Vector3<T>;
 using Point3i = Vector3<int>;
 using Point3f = Vector3<Real>;
 using Vector3i = Vector3<int>;
 using Vector3f = Vector3<Real>;
+using Color = Vector3<Real>;
 
 PRISM_CPU_GPU inline Vector3f reflect(Vector3f i, Vector3f n) {
     return i - Real(2.0) * n * dot(i, n);
+}
+
+template <typename T>
+PRISM_CPU_GPU Color normalToColor(Vector3<T> n) {
+    return Color(
+        n.x * 0.5 + 0.5,
+        n.y * 0.5 + 0.5,
+        n.z * 0.5 + 0.5
+    );
 }
 
 #endif // PRISM_CORE_POINT_HPP
