@@ -23,7 +23,7 @@ PRISM_CPU BVH::BVH(std::vector<Triangle> &primitives) : primitives(primitives) {
 PRISM_CPU_GPU bool BVH::intersect(const Ray &ray, Interaction &interaction) const {
     if (nodesPtr == nullptr)
         return false;
-    size_t nodesToVisit[64];
+    size_t nodesToVisit[bvh_traverse_length];
     size_t toVisitIdx = 0, currIdx = 0;
     bool intersected = false;
     while (true) {

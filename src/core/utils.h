@@ -8,6 +8,7 @@
 #include <limits>
 #include <utility>
 
+#include "config/constants.h"
 #include "config/types.h"
 
 #define PRISM_KERNEL __global__
