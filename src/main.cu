@@ -4,6 +4,11 @@
 #include <iostream>
 #include <memory>
 
+extern "C" {
+#include <lauxlib.h>
+#include <lua.h>
+#include <lualib.h>
+}
 #include <tiny_obj_loader.h>
 
 #include "core/camera.hpp"
@@ -32,7 +37,11 @@ PRISM_KERNEL void render(Camera &camera, Scene &scene) {
     camera.film.addSample(Point2f(u, v), color);
 }
 
-int main() {
+int main(int argc, char **argv) {
+    lua_State *L = luaL_newstate();
+    luaL_openlibs(L);
+    luaL_dofile(L, "script.lua");
+
     tinyobj::ObjReader reader;
     reader.ParseFromFile("viking_room.obj");
 
