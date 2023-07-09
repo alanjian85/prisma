@@ -1,8 +1,7 @@
 // Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
 // SPDX-License-Identifier: MIT
 
-#ifndef PRISM_CORE_BOUNDS_HPP
-#define PRISM_CORE_BOUNDS_HPP
+#pragma once
 
 #include <cuda/std/utility>
 
@@ -41,5 +40,3 @@ PRISM_CPU_GPU inline Bounds3f boundUnion(Bounds3f bound, Bounds3f other) {
     bound.max = ::max(bound.max, other.max);
     return bound;
 }
-
-#endif // PRISM_CORE_BOUNDS_HPP

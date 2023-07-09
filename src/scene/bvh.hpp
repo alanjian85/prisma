@@ -1,8 +1,7 @@
 // Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
 // SPDX-License-Identifier: MIT
 
-#ifndef PRISM_SCENE_BVH_HPP
-#define PRISM_SCENE_BVH_HPP
+#pragma once
 
 #include <cstddef>
 #include <memory>
@@ -44,5 +43,3 @@ private:
     BVHNode *nodesPtr;
     size_t nodeCount;
 };
-
-#endif // PRISM_SCENE_BVH_HPP

@@ -1,8 +1,7 @@
 // Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
 // SPDX-License-Identifier: MIT
 
-#ifndef PRISM_CAMERA_CAMERA_HPP
-#define PRISM_CAMERA_CAMERA_HPP
+#pragma once
 
 #include <cassert>
 #include <cmath>
@@ -52,5 +51,3 @@ private:
     Vector3f d;
     Real tanHalfFov;
 };
-
-#endif // PRISM_CAMERA_CAMERA_HPP

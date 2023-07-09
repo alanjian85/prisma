@@ -1,8 +1,7 @@
 // Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
 // SPDX-License-Identifier: MIT
 
-#ifndef PRISM_CORE_INTERACTION_HPP
-#define PRISM_CORE_INTERACTION_HPP
+#pragma once
 
 #include "vector.hpp"
 
@@ -10,5 +9,3 @@ struct Interaction {
     Vector3f n;
     Point3f p;
 };
-
-#endif // PRISM_CORE_INTERACTION_HPP

@@ -1,8 +1,7 @@
 // Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
 // SPDX-License-Identifier: MIT
 
-#ifndef PRISM_SCENE_SCENE_HPP
-#define PRISM_SCENE_SCENE_HPP
+#pragma once
 
 #include <cassert>
 #include <cstddef>
@@ -34,5 +33,3 @@ public:
 private:
     BVH bvh;
 };
-
-#endif // PRISM_SCENE_SCENE_HPP

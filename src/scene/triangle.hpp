@@ -1,8 +1,7 @@
 // Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
 // SPDX-License-Identifier: MIT
 
-#ifndef PRISM_SCENE_TRIANGLE_HPP
-#define PRISM_SCENE_TRIANGLE_HPP
+#pragma once
 
 #include "core/bounds.hpp"
 #include "core/ray.hpp"
@@ -30,5 +29,3 @@ private:
     Point3f a, b, c;
     Vector3f n;
 };
-
-#endif // PRISM_SCENE_TRIANGLE_HPP

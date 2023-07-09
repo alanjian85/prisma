@@ -1,8 +1,7 @@
 // Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
 // SPDX-License-Identifier: MIT
 
-#ifndef PRISM_CAMERA_FILM_HPP
-#define PRISM_CAMERA_FILM_HPP
+#pragma once
 
 #include <cassert>
 #include <string>
@@ -50,5 +49,3 @@ private:
     unsigned char *pixels;
     int width_, height_;
 };
-
-#endif // PRISM_CAMERA_FILM_HPP

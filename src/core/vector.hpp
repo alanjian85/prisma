@@ -1,8 +1,7 @@
 // Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
 // SPDX-License-Identifier: MIT
 
-#ifndef PRISM_CORE_VECTOR_HPP
-#define PRISM_CORE_VECTOR_HPP
+#pragma once
 
 #include <cassert>
 #include <cmath>
@@ -342,5 +341,3 @@ PRISM_CPU_GPU Color normalToColor(Vector3<T> n) {
         n.z * 0.5 + 0.5
     );
 }
-
-#endif // PRISM_CORE_POINT_HPP

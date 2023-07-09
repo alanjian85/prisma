@@ -1,8 +1,7 @@
 // Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
 // SPDX-License-Identifier: MIT
 
-#ifndef PRISM_CORE_UTILS_H
-#define PRISM_CORE_UTILS_H
+#pragma once
 
 #include <cmath>
 #include <limits>
@@ -23,5 +22,3 @@ const Real inf = std::numeric_limits<Real>::infinity();
 PRISM_CPU_GPU inline Real radians(Real degrees) {
     return degrees / 180 * pi;
 }
-
-#endif // PRISM_CORE_UTILS_H
