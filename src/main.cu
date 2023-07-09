@@ -11,7 +11,7 @@ extern "C" {
 }
 #include <tiny_obj_loader.h>
 
-#include "core/camera.hpp"
+#include "camera/camera.hpp"
 #include "core/utils.h"
 #include "scene/scene.hpp"
 const int tileSize = 16;

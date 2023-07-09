@@ -1,16 +1,16 @@
 // Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
 // SPDX-License-Identifier: MIT
 
-#ifndef PRISM_CORE_FILM_HPP
-#define PRISM_CORE_FILM_HPP
+#ifndef PRISM_CAMERA_FILM_HPP
+#define PRISM_CAMERA_FILM_HPP
 
 #include <cassert>
 #include <string>
 
 #include <stb_image_write.h>
 
-#include "utils.h"
-#include "vector.hpp"
+#include "core/utils.h"
+#include "core/vector.hpp"
 
 class Film {
 public:
@@ -51,4 +51,4 @@ private:
     int width_, height_;
 };
 
-#endif // PRISM_CORE_FILM_HPP
+#endif // PRISM_CAMERA_FILM_HPP

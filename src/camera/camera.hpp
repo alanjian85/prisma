@@ -1,17 +1,17 @@
 // Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
 // SPDX-License-Identifier: MIT
 
-#ifndef PRISM_CORE_CAMERA_HPP
-#define PRISM_CORE_CAMERA_HPP
+#ifndef PRISM_CAMERA_CAMERA_HPP
+#define PRISM_CAMERA_CAMERA_HPP
 
 #include <cassert>
 #include <cmath>
 #include <cstddef>
 
+#include "core/ray.hpp"
+#include "core/utils.h"
+#include "core/vector.hpp"
 #include "film.hpp"
-#include "ray.hpp"
-#include "utils.h"
-#include "vector.hpp"
 
 enum class CameraType {
     Persp,
@@ -53,4 +53,4 @@ private:
     Real tanHalfFov;
 };
 
-#endif // PRISM_CORE_CAMERA_HPP
+#endif // PRISM_CAMERA_CAMERA_HPP
