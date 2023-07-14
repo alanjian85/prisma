@@ -11,7 +11,7 @@ PRISM_CPU_GPU Ray Camera::generateRay(Point2f p) const {
         right *= tanHalfFov;
         newUp *= tanHalfFov;
         r.o = o;
-        r.d = d + (p.x * 2 - 1) * right + (p.y * 2 - 1) * newUp;
+        r.d = normalize(d + (p.x * 2 - 1) * right + (p.y * 2 - 1) * newUp);
     }
     else {
         r.o = o + (p.x * 2 - 1) * right + (p.y * 2 - 1) * newUp;

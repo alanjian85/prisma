@@ -1,6 +1,7 @@
 // Copyright (C) 2023 Alan Jian (alanjian85@outlook.com)
 // SPDX-License-Identifier: MIT
 
+#include <cstdlib>
 #include <iostream>
 #include <memory>
 
@@ -24,26 +25,34 @@ PRISM_KERNEL void render(Camera &camera, Scene &scene) {
     Real v = static_cast<Real>(y) / (camera.film.height() - 1);
     Ray ray = camera.generateRay(Point2f(u, 1 - v));
     Interaction interaction;
-    scene.intersect(ray, interaction);
+    if (!scene.intersect(ray, interaction)) {
+        camera.film.addSample(Point2f(u, v), Color(0, 0, 0));
+        return;
+    }
     if (dot(ray.d, interaction.n) > 0)
         interaction.n = -interaction.n;
     Real attenuation = 1 / (camera.o - interaction.p).lengthSquared();
     Vector3f lightDir = normalize(camera.o - interaction.p);
     Vector3f halfwayDir = lightDir;
-    Real diffuse = dot(interaction.n, lightDir);
-    Real specular = pow(dot(interaction.n, halfwayDir), 32);
+    Real diffuse = fmax(dot(interaction.n, lightDir), Real(0.0));
+    Real specular = pow(fmax(dot(interaction.n, halfwayDir), Real(0.0)), 32);
     Color color = (diffuse * normalToColor(interaction.n) + specular * Color(1, 1, 1)) * attenuation;
     color = clamp(color, Color(0), Color(1));
     camera.film.addSample(Point2f(u, v), color);
 }
 
 int main(int argc, char **argv) {
+    if (argc != 2) {
+        std::cerr << "Usage: prism <scene>.lua\n";
+        return EXIT_FAILURE;
+    }
+
     lua_State *L = luaL_newstate();
     luaL_openlibs(L);
-    luaL_dofile(L, "script.lua");
+    luaL_dofile(L, argv[1]);
 
     tinyobj::ObjReader reader;
-    reader.ParseFromFile("viking_room.obj");
+    reader.ParseFromFile("scene/viking_room.obj");
 
     std::vector<Triangle> primitives;
     auto& attrib = reader.GetAttrib();
@@ -87,5 +96,5 @@ int main(int argc, char **argv) {
     cudaDeviceSynchronize();
     camera->film.writeImage("image.png");
 
-    return 0;
+    return EXIT_SUCCESS;
 }
