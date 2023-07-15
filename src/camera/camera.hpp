@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <memory>
 
 #include "core/ray.hpp"
 #include "core/utils.h"
@@ -51,3 +52,5 @@ private:
     Vector3f d;
     Real tanHalfFov;
 };
+
+PRISM_CPU std::unique_ptr<Camera> makeCamera(lua_State *lua, const char *name);

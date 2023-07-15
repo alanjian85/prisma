@@ -6,6 +6,10 @@
 #include <cassert>
 #include <cmath>
 
+extern "C" {
+#include <lua.h>
+}
+
 #include "utils.h"
 
 template <typename T>
@@ -340,4 +344,15 @@ PRISM_CPU_GPU Color normalToColor(Vector3<T> n) {
         n.y * 0.5 + 0.5,
         n.z * 0.5 + 0.5
     );
+}
+
+PRISM_CPU inline Vector3f getLuaVector3f(lua_State *lua) {
+    lua_rawgeti(lua, -1, 1);
+    Real x = lua_tonumber(lua, -1);
+    lua_rawgeti(lua, -2, 2);
+    Real y = lua_tonumber(lua, -1);
+    lua_rawgeti(lua, -3, 3);
+    Real z = lua_tonumber(lua, -1);
+    lua_pop(lua, 3);
+    return Vector3f(x, y, z);
 }

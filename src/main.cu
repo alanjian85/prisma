@@ -43,13 +43,16 @@ PRISM_KERNEL void render(Camera &camera, Scene &scene) {
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        std::cerr << "Usage: prism <scene>.lua\n";
+        std::cerr << "Usage: prism <script>.lua\n";
         return EXIT_FAILURE;
     }
 
-    lua_State *L = luaL_newstate();
-    luaL_openlibs(L);
-    luaL_dofile(L, argv[1]);
+    lua_State *lua = luaL_newstate();
+    luaL_openlibs(lua);
+    if (luaL_dofile(lua, argv[1])) {
+        std::cerr << lua_tostring(lua, -1) << '\n';
+        return EXIT_FAILURE;
+    }
 
     tinyobj::ObjReader reader;
     reader.ParseFromFile("scene/viking_room.obj");
@@ -84,11 +87,7 @@ int main(int argc, char **argv) {
         }
     }
     auto scene = std::make_unique<Scene>(primitives);
-
-    const int width = 1024, height = 1024;
-    auto camera = std::make_unique<Camera>(width, height, CameraType::Persp,
-                      Vector3f(1, 0, 1), Vector3f(-1, 0, -1), Vector3f(0, 0, 1),
-                      radians(90));
+    auto camera = makeCamera(lua, "camera");
 
     int nTiles = ((camera->film.width() + tileSize - 1) / tileSize) *
                  ((camera->film.height() + tileSize - 1) / tileSize);
