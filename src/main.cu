@@ -5,16 +5,12 @@
 #include <iostream>
 #include <memory>
 
-extern "C" {
-#include <lauxlib.h>
-#include <lua.h>
-#include <lualib.h>
-}
 #include <tiny_obj_loader.h>
 
 #include "camera/camera.hpp"
 #include "core/utils.h"
 #include "scene/scene.hpp"
+#include "script/script.hpp"
 const int tileSize = 16;
 
 PRISM_KERNEL void render(Camera &camera, Scene &scene) {
@@ -47,10 +43,10 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    lua_State *lua = luaL_newstate();
-    luaL_openlibs(lua);
-    if (luaL_dofile(lua, argv[1])) {
-        std::cerr << lua_tostring(lua, -1) << '\n';
+    Script script;
+    const char *message;
+    if (!script.load(argv[1], message)) {
+        std::cerr << message << '\n';
         return EXIT_FAILURE;
     }
 
@@ -87,7 +83,7 @@ int main(int argc, char **argv) {
         }
     }
     auto scene = std::make_unique<Scene>(primitives);
-    auto camera = makeCamera(lua, "camera");
+    auto camera = script.getCamera();
 
     int nTiles = ((camera->film.width() + tileSize - 1) / tileSize) *
                  ((camera->film.height() + tileSize - 1) / tileSize);

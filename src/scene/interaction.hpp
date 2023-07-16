@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "vector.hpp"
+#include "core/vector.hpp"
 
 struct Interaction {
     Vector3f n;

@@ -5,9 +5,9 @@
 
 #include "core/bounds.hpp"
 #include "core/ray.hpp"
-#include "core/interaction.hpp"
 #include "core/utils.h"
 #include "core/vector.hpp"
+#include "interaction.hpp"
 
 class Triangle {
 public:
