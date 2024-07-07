@@ -1,17 +1,21 @@
+mod cli;
+
+use clap::Parser;
+use cli::{Cli, Size};
 use image::{Rgb, RgbImage};
 use indicatif::ProgressBar;
 
 fn main() {
-    let image_width = 256;
-    let image_height = 256;
+    let cli = Cli::parse();
+    let Size { width, height } = cli.size;
 
-    let mut image = RgbImage::new(image_width, image_height);
-    let progress_bar = ProgressBar::new(image_height as u64);
+    let mut image = RgbImage::new(width, height);
+    let progress_bar = ProgressBar::new(height as u64);
 
-    for y in 0..image_height {
-        for x in 0..image_width {
-            let r = x as f64 / (image_width - 1) as f64;
-            let g = y as f64 / (image_height - 1) as f64;
+    for y in 0..height {
+        for x in 0..width {
+            let r = x as f64 / (width - 1) as f64;
+            let g = y as f64 / (height - 1) as f64;
             let b = 0.0;
 
             let r = (255.999 * r) as u8;
@@ -23,6 +27,6 @@ fn main() {
         progress_bar.inc(1);
     }
 
-    image.save("output.png").unwrap();
+    image.save(cli.output).unwrap();
     progress_bar.finish();
 }
