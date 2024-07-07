@@ -6,7 +6,7 @@ use std::str::FromStr;
 #[command(version)]
 pub struct Cli {
     /// The image size of the output
-    #[arg(short, long, default_value_t = Size::new(1024, 768))]
+    #[arg(short, long, default_value_t = Size::new(1920, 1080))]
     pub size: Size,
 
     /// The path to the output
@@ -29,7 +29,7 @@ impl Size {
 impl FromStr for Size {
     type Err = String;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self, String> {
         let size: Vec<_> = s.split('x').collect();
         if size.len() != 2 {
             return Err(String::from("invalid number of dimensions found in string"));
