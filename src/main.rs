@@ -8,16 +8,22 @@ use indicatif::ProgressBar;
 use nalgebra::{Point3, Vector3};
 use ray::Ray;
 
-fn hit_sphere(center: Point3<f64>, radius: f64, ray: &Ray) -> bool {
+fn hit_sphere(center: Point3<f64>, radius: f64, ray: &Ray) -> Option<f64> {
     let a = ray.dir.magnitude_squared();
     let b = (-2.0 * ray.dir).dot(&(center - ray.orig));
     let c = (center - ray.orig).magnitude_squared() - radius * radius;
-    return b * b - 4.0 * a * c > 0.0;
+    let discriminant = b * b - 4.0 * a * c;
+    if discriminant < 0.0 {
+        return None;
+    }
+    Some((-b - discriminant.sqrt()) / (2.0 * a))
 }
 
 fn ray_color(ray: &Ray) -> Vector3<f64> {
-    if hit_sphere(Point3::new(0.0, 0.0, -1.0), 0.5, ray) {
-        return Vector3::new(1.0, 0.0, 0.0);
+    let sphere_center = Point3::new(0.0, 0.0, -1.0);
+    if let Some(t) = hit_sphere(sphere_center, 0.5, ray) {
+        let normal = (ray.at(t) - sphere_center).normalize();
+        return 0.5 * (normal + Vector3::new(1.0, 1.0, 1.0));
     }
 
     let dir = ray.dir.normalize();
