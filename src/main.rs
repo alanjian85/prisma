@@ -1,10 +1,12 @@
 use image::{Rgb, RgbImage};
+use indicatif::ProgressBar;
 
 fn main() {
     let image_width = 256;
     let image_height = 256;
 
     let mut image = RgbImage::new(image_width, image_height);
+    let progress_bar = ProgressBar::new(image_height as u64);
 
     for y in 0..image_height {
         for x in 0..image_width {
@@ -18,7 +20,9 @@ fn main() {
 
             image.put_pixel(x, y, Rgb([r, g, b]));
         }
+        progress_bar.inc(1);
     }
 
     image.save("output.png").unwrap();
+    progress_bar.finish();
 }
