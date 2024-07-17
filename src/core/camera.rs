@@ -1,4 +1,4 @@
-use crate::Ray;
+use crate::core::Ray;
 use nalgebra::{Point2, Point3, Vector3};
 
 pub struct Camera {
@@ -9,7 +9,7 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(pos: Point3<f64>, width: u32, height: u32, focal_len: f64) -> Self {
+    pub fn new(width: u32, height: u32, pos: Point3<f64>, focal_len: f64) -> Self {
         let aspect_ratio = width as f64 / height as f64;
         let viewport_height = 2.0;
         let viewport_width = viewport_height * aspect_ratio;
@@ -29,9 +29,8 @@ impl Camera {
     }
 
     pub fn generate_ray(&self, p: Point2<u32>) -> Ray {
-        let pix_pos = self.pix_orig + p.x as f64 * self.pix_delta_x + p.y as f64 * self.pix_delta_y;
-        let dir = pix_pos - self.pos;
-
-        Ray::new(self.pos, dir)
+        let pix_pos =
+            self.pix_orig + p.x as f64 * self.pix_delta_x + p.y as f64 * self.pix_delta_y;
+        Ray::new(self.pos, pix_pos - self.pos)
     }
 }
