@@ -32,7 +32,8 @@ impl Intersect for Sphere {
             }
         }
 
-        let normal = (ray.at(t) - self.center) / self.radius;
-        Some(RayIntersection { t, normal })
+        let pos = ray.at(t);
+        let normal = (pos - self.center) / self.radius;
+        Some(RayIntersection { t, pos, normal })
     }
 }

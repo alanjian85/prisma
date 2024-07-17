@@ -1,9 +1,10 @@
 use crate::core::Ray;
-use nalgebra::Vector3;
+use nalgebra::{Point3, Vector3};
 use std::ops::Range;
 
 pub struct RayIntersection {
     pub t: f64,
+    pub pos: Point3<f64>,
     pub normal: Vector3<f64>,
 }
 
