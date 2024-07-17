@@ -29,8 +29,7 @@ impl Camera {
     }
 
     pub fn generate_ray(&self, p: Point2<u32>) -> Ray {
-        let pix_pos =
-            self.pix_orig + p.x as f64 * self.pix_delta_x + p.y as f64 * self.pix_delta_y;
+        let pix_pos = self.pix_orig + p.x as f64 * self.pix_delta_x + p.y as f64 * self.pix_delta_y;
         Ray::new(self.pos, pix_pos - self.pos)
     }
 }

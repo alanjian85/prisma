@@ -1,5 +1,6 @@
 use crate::core::{Intersect, Ray, RayIntersection};
 use nalgebra::Point3;
+use std::ops::Range;
 
 pub struct Sphere {
     center: Point3<f64>,
@@ -13,7 +14,7 @@ impl Sphere {
 }
 
 impl Intersect for Sphere {
-    fn intersect(&self, ray: &Ray) -> Option<RayIntersection> {
+    fn intersect(&self, ray: &Ray, range: &Range<f64>) -> Option<RayIntersection> {
         let a = ray.dir.magnitude_squared();
         let b = ray.dir.dot(&(self.center - ray.orig));
         let c = (self.center - ray.orig).magnitude_squared() - self.radius * self.radius;
@@ -22,11 +23,16 @@ impl Intersect for Sphere {
             return None;
         }
 
-        let t = (b - discriminant.sqrt()) / a;
-        let p = ray.at(t);
+        let discriminant = discriminant.sqrt();
+        let mut t = (b - discriminant) / a;
+        if !range.contains(&t) {
+            t = (b + discriminant) / a;
+            if !range.contains(&t) {
+                return None;
+            }
+        }
 
-        Some(RayIntersection {
-            normal: (p - self.center) / self.radius,
-        })
+        let normal = (ray.at(t) - self.center) / self.radius;
+        Some(RayIntersection { t, normal })
     }
 }
