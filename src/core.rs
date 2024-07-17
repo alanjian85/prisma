@@ -14,3 +14,9 @@ impl Ray {
         self.orig + t * self.dir
     }
 }
+
+pub trait Intersect {
+    fn intersect(&self, _ray: &Ray) -> Option<f64> {
+        None
+    }
+}
