@@ -1,12 +1,14 @@
+mod camera;
 mod cli;
 mod core;
 
+use camera::Camera;
 use clap::Parser;
 use cli::{Cli, Size};
 use core::Ray;
 use image::{Rgb, RgbImage};
 use indicatif::ProgressBar;
-use nalgebra::{Point3, Vector3};
+use nalgebra::{Point2, Point3, Vector3};
 use palette::{LinSrgb, Srgb};
 
 fn hit_sphere(center: Point3<f64>, radius: f64, ray: &Ray) -> Option<f64> {
@@ -40,22 +42,11 @@ fn main() {
     let mut image = RgbImage::new(width, height);
     let progress_bar = ProgressBar::new(height as u64);
 
-    let camera_pos = Point3::new(0.0, 0.0, 0.0);
-    let camera_focal_len = 1.0;
-
-    let viewport_height = 2.0;
-    let viewport_width = viewport_height * (width as f64 / height as f64);
-
-    let pixel_delta_x = Vector3::new(viewport_width, 0.0, 0.0) / width as f64;
-    let pixel_delta_y = Vector3::new(0.0, -viewport_height, 0.0) / height as f64;
-    let pixel_pos_orig = camera_pos + Vector3::new(0.0, 0.0, -camera_focal_len)
-        - width as f64 / 2.0 * pixel_delta_x
-        - height as f64 / 2.0 * pixel_delta_y;
+    let camera = Camera::new(Point3::new(0.0, 0.0, 0.0), width, height, 1.0);
 
     for y in 0..height {
         for x in 0..width {
-            let pixel_pos = pixel_pos_orig + x as f64 * pixel_delta_x + y as f64 * pixel_delta_y;
-            let ray = Ray::new(camera_pos, pixel_pos - camera_pos);
+            let ray = camera.generate_ray(Point2::new(x, y));
             let color: Srgb<f64> = Srgb::from_linear(ray_color(&ray));
 
             let r = (255.999 * color.red) as u8;
