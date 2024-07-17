@@ -1,20 +1,26 @@
-use crate::core::{Intersect, Ray, RayIntersection};
+use crate::core::{Material, Primitive, Ray, RayIntersection};
 use nalgebra::Point3;
 use std::ops::Range;
+use std::rc::Rc;
 
 pub struct Sphere {
     center: Point3<f64>,
     radius: f64,
+    material: Rc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Point3<f64>, radius: f64) -> Self {
-        Self { center, radius }
+    pub fn new(center: Point3<f64>, radius: f64, material: Rc<dyn Material>) -> Self {
+        Self {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
-impl Intersect for Sphere {
-    fn intersect(&self, ray: &Ray, range: &Range<f64>) -> Option<RayIntersection> {
+impl Primitive for Sphere {
+    fn intersect(&self, ray: &Ray, range: &Range<f64>) -> Option<(f64, RayIntersection)> {
         let a = ray.dir.magnitude_squared();
         let b = ray.dir.dot(&(self.center - ray.orig));
         let c = (self.center - ray.orig).magnitude_squared() - self.radius * self.radius;
@@ -34,6 +40,13 @@ impl Intersect for Sphere {
 
         let pos = ray.at(t);
         let normal = (pos - self.center) / self.radius;
-        Some(RayIntersection { t, pos, normal })
+        Some((
+            t,
+            RayIntersection {
+                pos,
+                normal,
+                material: self.material.clone(),
+            },
+        ))
     }
 }

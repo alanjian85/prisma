@@ -4,10 +4,11 @@ use indicatif::ProgressBar;
 use nalgebra::{Point2, Point3};
 use palette::{LinSrgb, Srgb};
 use prisma::config::{Config, Size};
-use prisma::core::{Camera, Intersect, Ray, Scene};
-use prisma::shapes::Sphere;
-use prisma::utils;
+use prisma::core::{Camera, Ray, Scene};
+use prisma::materials::Lambertian;
+use prisma::primitives::Sphere;
 use rand::rngs::ThreadRng;
+use std::rc::Rc;
 
 fn compute_ray_color(
     config: &Config,
@@ -21,9 +22,8 @@ fn compute_ray_color(
     }
 
     if let Some(intersection) = scene.intersect(ray, &(0.001..f64::INFINITY)) {
-        let dir = intersection.normal + utils::rand_unit_vec3(rng);
-        let ray = Ray::new(intersection.pos, dir);
-        return compute_ray_color(&config, &ray, rng, scene, depth + 1) * 0.5;
+        let (ray, color) = intersection.material.scatter(rng, ray, &intersection);
+        return color * compute_ray_color(&config, &ray, rng, scene, depth + 1) * 0.5;
     }
 
     let dir = ray.dir.normalize();
@@ -41,8 +41,20 @@ fn main() {
 
     let camera = Camera::new(width, height, Point3::new(0.0, 0.0, 0.0), 1.0);
     let mut scene = Scene::new();
-    scene.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
-    scene.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
+
+    let material_ground = Lambertian::new(LinSrgb::new(0.8, 0.8, 0.0));
+    let material_center = Lambertian::new(LinSrgb::new(0.1, 0.2, 0.5));
+
+    scene.add(Box::new(Sphere::new(
+        Point3::new(0.0, -100.5, -1.0),
+        100.0,
+        Rc::new(material_ground),
+    )));
+    scene.add(Box::new(Sphere::new(
+        Point3::new(0.0, 0.0, -1.0),
+        0.5,
+        Rc::new(material_center),
+    )));
 
     for y in 0..height {
         for x in 0..width {
