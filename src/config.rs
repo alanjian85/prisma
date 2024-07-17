@@ -4,7 +4,7 @@ use std::str::FromStr;
 
 #[derive(Parser)]
 #[command(version)]
-pub struct Cli {
+pub struct Config {
     /// The image size of the output
     #[arg(short, long, default_value_t = Size::new(1920, 1080))]
     pub size: Size,
@@ -12,6 +12,14 @@ pub struct Cli {
     /// The path to the output
     #[arg(short, long, default_value_t = String::from("output.png"))]
     pub output: String,
+
+    /// The maximum depth of recursive ray tracing
+    #[arg(long, default_value_t = 50)]
+    pub depth: u32,
+
+    /// The number of samples per pixel
+    #[arg(long, default_value_t = 10)]
+    pub samples: u32,
 }
 
 #[derive(Clone)]

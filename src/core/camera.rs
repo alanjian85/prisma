@@ -1,5 +1,7 @@
 use crate::core::Ray;
+use crate::utils;
 use nalgebra::{Point2, Point3, Vector3};
+use rand::rngs::ThreadRng;
 
 pub struct Camera {
     pos: Point3<f64>,
@@ -28,8 +30,11 @@ impl Camera {
         }
     }
 
-    pub fn generate_ray(&self, p: Point2<u32>) -> Ray {
-        let pix_pos = self.pix_orig + p.x as f64 * self.pix_delta_x + p.y as f64 * self.pix_delta_y;
+    pub fn generate_ray(&self, rng: &mut ThreadRng, p: Point2<u32>) -> Ray {
+        let offset = utils::rand_square_vec2(rng);
+        let pix_pos = self.pix_orig
+            + (p.x as f64 + offset.x) * self.pix_delta_x
+            + (p.y as f64 + offset.y) * self.pix_delta_y;
         Ray::new(self.pos, pix_pos - self.pos)
     }
 }
