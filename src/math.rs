@@ -9,3 +9,9 @@ pub fn refract(incident: Vector3<f64>, normal: Vector3<f64>, eta: f64) -> Vector
     let para = -(1.0 - perp.magnitude_squared()).sqrt() * normal;
     perp + para
 }
+
+pub fn reflectance(cosine: f64, eta: f64) -> f64 {
+    let r = (1.0 - eta) / (1.0 + eta);
+    let r = r * r;
+    r + (1.0 - r) * (1.0 - cosine).powi(5)
+}

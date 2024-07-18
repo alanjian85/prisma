@@ -46,7 +46,8 @@ fn main() {
 
     let material_ground = Lambertian::new(LinSrgb::new(0.8, 0.8, 0.0));
     let material_center = Lambertian::new(LinSrgb::new(0.1, 0.2, 0.5));
-    let material_left = Dielectric::new(1.0 / 1.33);
+    let material_left = Dielectric::new(1.5);
+    let material_bubble = Dielectric::new(1.0 / 1.5);
     let material_right = Metal::new(LinSrgb::new(0.8, 0.6, 0.2), 1.0);
 
     scene.add(Box::new(Sphere::new(
@@ -63,6 +64,11 @@ fn main() {
         Point3::new(-1.0, 0.0, -1.0),
         0.5,
         Rc::new(material_left),
+    )));
+    scene.add(Box::new(Sphere::new(
+        Point3::new(-1.0, 0.0, -1.0),
+        0.4,
+        Rc::new(material_bubble),
     )));
     scene.add(Box::new(Sphere::new(
         Point3::new(1.0, 0.0, -1.0),

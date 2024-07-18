@@ -1,7 +1,7 @@
 use crate::core::{Material, Ray, RayIntersection};
 use crate::math;
 use palette::LinSrgb;
-use rand::rngs::ThreadRng;
+use rand::{rngs::ThreadRng, Rng};
 
 pub struct Dielectric {
     eta: f64,
@@ -16,7 +16,7 @@ impl Dielectric {
 impl Material for Dielectric {
     fn scatter(
         &self,
-        _rng: &mut ThreadRng,
+        rng: &mut ThreadRng,
         ray: &Ray,
         intersection: &RayIntersection,
     ) -> Option<(Ray, LinSrgb<f64>)> {
@@ -30,7 +30,8 @@ impl Material for Dielectric {
         let cosine = -dir.dot(&intersection.normal);
         let sine = (1.0 - cosine * cosine).sqrt();
 
-        let dir = if eta * sine > 1.0 {
+        let rand = rng.gen_range(0.0..1.0);
+        let dir = if eta * sine > 1.0 || rand < math::reflectance(cosine, eta) {
             math::reflect(dir, intersection.normal)
         } else {
             math::refract(dir, intersection.normal, eta)
