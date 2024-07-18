@@ -1,27 +1,32 @@
 use crate::core::{Material, Ray, RayIntersection};
-use crate::math;
+use crate::{math, utils};
 use palette::LinSrgb;
 use rand::rngs::ThreadRng;
 
 pub struct Metal {
     albedo: LinSrgb<f64>,
+    fuzziness: f64,
 }
 
 impl Metal {
-    pub fn new(albedo: LinSrgb<f64>) -> Self {
-        Self { albedo }
+    pub fn new(albedo: LinSrgb<f64>, fuzziness: f64) -> Self {
+        Self { albedo, fuzziness }
     }
 }
 
 impl Material for Metal {
     fn scatter(
         &self,
-        _rng: &mut ThreadRng,
+        rng: &mut ThreadRng,
         ray: &Ray,
         intersection: &RayIntersection,
-    ) -> (Ray, LinSrgb<f64>) {
-        let dir = math::reflect(ray.dir, intersection.normal);
+    ) -> Option<(Ray, LinSrgb<f64>)> {
+        let dir = math::reflect(ray.dir, intersection.normal).normalize();
+        let dir = dir + self.fuzziness * utils::rand_unit_vec3(rng);
         let ray = Ray::new(intersection.pos, dir);
-        (ray, self.albedo)
+        if ray.dir.dot(&intersection.normal) < 0.0 {
+            return None;
+        }
+        Some((ray, self.albedo))
     }
 }

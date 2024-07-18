@@ -8,5 +8,5 @@ pub trait Material {
         rng: &mut ThreadRng,
         ray: &Ray,
         intersection: &RayIntersection,
-    ) -> (Ray, LinSrgb<f64>);
+    ) -> Option<(Ray, LinSrgb<f64>)>;
 }

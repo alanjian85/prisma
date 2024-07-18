@@ -2,6 +2,11 @@ use nalgebra::{Vector2, Vector3};
 use palette::Srgb;
 use rand::{rngs::ThreadRng, Rng};
 
+pub fn is_vec3_near_zero(vec: Vector3<f64>) -> bool {
+    const THRESHOLD: f64 = 1e-8;
+    vec.x.abs() < THRESHOLD && vec.y.abs() < THRESHOLD && vec.z.abs() < THRESHOLD
+}
+
 pub fn unit_vec3_to_rgb(vec: Vector3<f64>) -> Srgb<f64> {
     let vec = 0.5 * (vec + Vector3::new(1.0, 1.0, 1.0));
     Srgb::new(vec.x, vec.y, vec.z)

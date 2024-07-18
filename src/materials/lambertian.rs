@@ -19,9 +19,12 @@ impl Material for Lambertian {
         rng: &mut ThreadRng,
         _ray: &Ray,
         intersection: &RayIntersection,
-    ) -> (Ray, LinSrgb<f64>) {
-        let dir = intersection.normal + utils::rand_unit_vec3(rng);
+    ) -> Option<(Ray, LinSrgb<f64>)> {
+        let mut dir = intersection.normal + utils::rand_unit_vec3(rng);
+        if utils::is_vec3_near_zero(dir) {
+            dir = intersection.normal;
+        }
         let ray = Ray::new(intersection.pos, dir);
-        (ray, self.albedo)
+        Some((ray, self.albedo))
     }
 }
