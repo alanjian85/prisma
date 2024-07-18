@@ -25,7 +25,16 @@ impl Material for Dielectric {
         } else {
             self.eta
         };
-        let dir = math::refract(ray.dir.normalize(), intersection.normal, eta);
+
+        let dir = ray.dir.normalize();
+        let cosine = -dir.dot(&intersection.normal);
+        let sine = (1.0 - cosine * cosine).sqrt();
+
+        let dir = if eta * sine > 1.0 {
+            math::reflect(dir, intersection.normal)
+        } else {
+            math::refract(dir, intersection.normal, eta)
+        };
         let ray = Ray::new(intersection.pos, dir);
         Some((ray, LinSrgb::new(1.0, 1.0, 1.0)))
     }

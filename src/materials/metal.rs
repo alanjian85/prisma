@@ -21,7 +21,7 @@ impl Material for Metal {
         ray: &Ray,
         intersection: &RayIntersection,
     ) -> Option<(Ray, LinSrgb<f64>)> {
-        let dir = math::reflect(ray.dir, intersection.normal).normalize();
+        let dir = math::reflect(ray.dir.normalize(), intersection.normal);
         let dir = dir + self.fuzziness * utils::rand_unit_vec3(rng);
         let ray = Ray::new(intersection.pos, dir);
         if ray.dir.dot(&intersection.normal) < 0.0 {
