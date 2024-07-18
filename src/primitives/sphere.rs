@@ -1,4 +1,4 @@
-use crate::core::{Material, Primitive, Ray, RayIntersection};
+use crate::core::{primitive, Material, Primitive, Ray, RayIntersection};
 use nalgebra::Point3;
 use std::ops::Range;
 use std::rc::Rc;
@@ -40,10 +40,12 @@ impl Primitive for Sphere {
 
         let pos = ray.at(t);
         let normal = (pos - self.center) / self.radius;
+        let (front, normal) = primitive::flip_normal(ray.dir, normal);
         Some((
             t,
             RayIntersection {
                 pos,
+                front,
                 normal,
                 material: self.material.clone(),
             },
