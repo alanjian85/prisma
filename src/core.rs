@@ -4,7 +4,7 @@ pub mod primitive;
 mod ray;
 mod scene;
 
-pub use camera::Camera;
+pub use camera::{Camera, CameraBuilder};
 pub use material::Material;
 pub use primitive::{Primitive, RayIntersection};
 pub use ray::Ray;

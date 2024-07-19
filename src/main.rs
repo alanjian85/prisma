@@ -1,10 +1,10 @@
 use clap::Parser;
 use image::{Rgb, RgbImage};
 use indicatif::ProgressBar;
-use nalgebra::{Point2, Point3};
+use nalgebra::{Point2, Point3, Vector3};
 use palette::{LinSrgb, Srgb};
 use prisma::config::{Config, Size};
-use prisma::core::{Camera, Ray, Scene};
+use prisma::core::{CameraBuilder, Ray, Scene};
 use prisma::materials::{Dielectric, Lambertian, Metal};
 use prisma::primitives::Sphere;
 use rand::rngs::ThreadRng;
@@ -41,7 +41,13 @@ fn main() {
     let progress_bar = ProgressBar::new(height as u64);
     let mut rng = rand::thread_rng();
 
-    let camera = Camera::new(width, height, Point3::new(0.0, 0.0, 0.0), 1.0);
+    let camera = CameraBuilder::new(width, height)
+        .pos(Point3::new(-2.0, 2.0, 1.0))
+        .center(Point3::new(0.0, 0.0, -1.0))
+        .up(Vector3::new(0.0, 1.0, 0.0))
+        .fov(20.0_f64.to_radians())
+        .focal_len(1.0)
+        .build();
     let mut scene = Scene::new();
 
     let material_ground = Lambertian::new(LinSrgb::new(0.8, 0.8, 0.0));
