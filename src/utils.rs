@@ -16,13 +16,24 @@ pub fn rand_square_vec2(rng: &mut ThreadRng) -> Vector2<f64> {
     Vector2::new(rng.gen_range(-0.5..=0.5), rng.gen_range(-0.5..=0.5))
 }
 
+pub fn rand_disk_vec2(rng: &mut ThreadRng) -> Vector2<f64> {
+    let mut vec;
+    loop {
+        vec = Vector2::new(rng.gen_range(-1.0..=1.0), rng.gen_range(-1.0..=1.0));
+        if vec.magnitude_squared() <= 1.0 {
+            break;
+        }
+    }
+    vec
+}
+
 pub fn rand_unit_vec3(rng: &mut ThreadRng) -> Vector3<f64> {
     let mut vec;
     loop {
         vec = Vector3::new(
-            rng.gen_range(-0.5..=0.5),
-            rng.gen_range(-0.5..=0.5),
-            rng.gen_range(-0.5..=0.5),
+            rng.gen_range(-1.0..=1.0),
+            rng.gen_range(-1.0..=1.0),
+            rng.gen_range(-1.0..=1.0),
         );
         if vec.magnitude_squared() <= 1.0 {
             break;

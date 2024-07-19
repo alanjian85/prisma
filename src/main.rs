@@ -46,7 +46,8 @@ fn main() {
         .center(Point3::new(0.0, 0.0, -1.0))
         .up(Vector3::new(0.0, 1.0, 0.0))
         .fov(20.0_f64.to_radians())
-        .focal_len(1.0)
+        .focus_dist(3.4)
+        .lens_angle(10.0_f64.to_radians())
         .build();
     let mut scene = Scene::new();
 
