@@ -1,9 +1,10 @@
 use crate::core::{Primitive, Ray, RayIntersection};
 use std::ops::Range;
+use std::rc::Rc;
 
 #[derive(Default)]
 pub struct Scene {
-    primitives: Vec<Box<dyn Primitive>>,
+    primitives: Vec<Rc<dyn Primitive>>,
 }
 
 impl Scene {
@@ -13,7 +14,7 @@ impl Scene {
         }
     }
 
-    pub fn add(&mut self, primitive: Box<dyn Primitive>) {
+    pub fn add(&mut self, primitive: Rc<dyn Primitive>) {
         self.primitives.push(primitive);
     }
 

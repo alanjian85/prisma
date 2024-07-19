@@ -1,6 +1,6 @@
 use nalgebra::{Vector2, Vector3};
 use palette::Srgb;
-use rand::{rngs::ThreadRng, Rng};
+use rand::prelude::*;
 
 pub fn is_vec3_near_zero(vec: Vector3<f64>) -> bool {
     const THRESHOLD: f64 = 1e-8;

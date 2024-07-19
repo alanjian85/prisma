@@ -1,7 +1,7 @@
 use crate::core::{Material, Ray, RayIntersection};
 use crate::math;
 use palette::LinSrgb;
-use rand::{rngs::ThreadRng, Rng};
+use rand::prelude::*;
 
 pub struct Dielectric {
     eta: f64,

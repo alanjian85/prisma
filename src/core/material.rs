@@ -1,6 +1,6 @@
 use crate::core::{Ray, RayIntersection};
 use palette::LinSrgb;
-use rand::rngs::ThreadRng;
+use rand::prelude::*;
 
 pub trait Material {
     fn scatter(

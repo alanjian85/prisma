@@ -1,6 +1,6 @@
 mod camera;
 mod material;
-pub mod primitive;
+mod primitive;
 mod ray;
 mod scene;
 

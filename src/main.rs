@@ -1,14 +1,13 @@
 use clap::Parser;
 use image::{Rgb, RgbImage};
 use indicatif::ProgressBar;
-use nalgebra::{Point2, Point3, Vector3};
+use nalgebra::Point2;
 use palette::{LinSrgb, Srgb};
 use prisma::config::{Config, Size};
-use prisma::core::{CameraBuilder, Ray, Scene};
-use prisma::materials::{Dielectric, Lambertian, Metal};
-use prisma::primitives::Sphere;
-use rand::rngs::ThreadRng;
-use std::rc::Rc;
+use prisma::core::{Ray, Scene};
+use prisma::scripting::Scripting;
+use rand::prelude::*;
+use std::fs;
 
 fn compute_ray_color(
     config: &Config,
@@ -37,51 +36,13 @@ fn main() {
     let config = Config::parse();
     let Size { width, height } = config.size;
 
+    let scripting = Scripting::new().unwrap();
+    let script = fs::read_to_string("scripts/scene.lua").unwrap();
+    let (camera, scene) = scripting.load(&config, &script).unwrap();
+
     let mut image = RgbImage::new(width, height);
     let progress_bar = ProgressBar::new(height as u64);
     let mut rng = rand::thread_rng();
-
-    let camera = CameraBuilder::new(width, height)
-        .pos(Point3::new(-2.0, 2.0, 1.0))
-        .center(Point3::new(0.0, 0.0, -1.0))
-        .up(Vector3::new(0.0, 1.0, 0.0))
-        .fov(20.0_f64.to_radians())
-        .focus_dist(3.4)
-        .lens_angle(10.0_f64.to_radians())
-        .build();
-    let mut scene = Scene::new();
-
-    let material_ground = Lambertian::new(LinSrgb::new(0.8, 0.8, 0.0));
-    let material_center = Lambertian::new(LinSrgb::new(0.1, 0.2, 0.5));
-    let material_left = Dielectric::new(1.5);
-    let material_bubble = Dielectric::new(1.0 / 1.5);
-    let material_right = Metal::new(LinSrgb::new(0.8, 0.6, 0.2), 1.0);
-
-    scene.add(Box::new(Sphere::new(
-        Point3::new(0.0, -100.5, -1.0),
-        100.0,
-        Rc::new(material_ground),
-    )));
-    scene.add(Box::new(Sphere::new(
-        Point3::new(0.0, 0.0, -1.2),
-        0.5,
-        Rc::new(material_center),
-    )));
-    scene.add(Box::new(Sphere::new(
-        Point3::new(-1.0, 0.0, -1.0),
-        0.5,
-        Rc::new(material_left),
-    )));
-    scene.add(Box::new(Sphere::new(
-        Point3::new(-1.0, 0.0, -1.0),
-        0.4,
-        Rc::new(material_bubble),
-    )));
-    scene.add(Box::new(Sphere::new(
-        Point3::new(1.0, 0.0, -1.0),
-        0.5,
-        Rc::new(material_right),
-    )));
 
     for y in 0..height {
         for x in 0..width {

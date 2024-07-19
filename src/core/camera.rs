@@ -1,7 +1,7 @@
 use crate::core::Ray;
 use crate::utils;
 use nalgebra::{Point2, Point3, Vector3};
-use rand::rngs::ThreadRng;
+use rand::prelude::*;
 
 pub struct CameraBuilder {
     width: u32,

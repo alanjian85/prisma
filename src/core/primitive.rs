@@ -10,11 +10,13 @@ pub struct RayIntersection {
     pub material: Rc<dyn Material>,
 }
 
-pub fn flip_normal(dir: Vector3<f64>, normal: Vector3<f64>) -> (bool, Vector3<f64>) {
-    if dir.dot(&normal) < 0.0 {
-        (true, normal)
-    } else {
-        (false, -normal)
+impl RayIntersection {
+    pub fn flip_normal(dir: Vector3<f64>, normal: Vector3<f64>) -> (bool, Vector3<f64>) {
+        if dir.dot(&normal) < 0.0 {
+            (true, normal)
+        } else {
+            (false, -normal)
+        }
     }
 }
 

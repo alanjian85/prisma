@@ -1,7 +1,7 @@
 use crate::core::{Material, Ray, RayIntersection};
 use crate::utils;
 use palette::LinSrgb;
-use rand::rngs::ThreadRng;
+use rand::prelude::*;
 
 pub struct Lambertian {
     albedo: LinSrgb<f64>,
