@@ -1,6 +1,7 @@
 use crate::core::{Primitive, Ray, RayIntersection};
 use std::ops::Range;
 
+#[derive(Default)]
 pub struct Scene {
     primitives: Vec<Box<dyn Primitive>>,
 }

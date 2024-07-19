@@ -23,7 +23,7 @@ fn compute_ray_color(
 
     if let Some(intersection) = scene.intersect(ray, &(0.001..f64::INFINITY)) {
         if let Some((ray, color)) = intersection.material.scatter(rng, ray, &intersection) {
-            return color * compute_ray_color(&config, &ray, rng, scene, depth + 1);
+            return color * compute_ray_color(config, &ray, rng, scene, depth + 1);
         }
         return LinSrgb::new(0.0, 0.0, 0.0);
     }
