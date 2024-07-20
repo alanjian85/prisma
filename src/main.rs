@@ -37,7 +37,7 @@ fn main() {
     let Size { width, height } = config.size;
 
     let scripting = Scripting::new().unwrap();
-    let script = fs::read_to_string("scripts/scene.lua").unwrap();
+    let script = fs::read_to_string(&config.script).unwrap();
     let (camera, scene) = scripting.load(&config, &script).unwrap();
 
     let mut image = RgbImage::new(width, height);
