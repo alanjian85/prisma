@@ -2,7 +2,7 @@ use crate::core::{Ray, RayIntersection};
 use palette::LinSrgb;
 use rand::prelude::*;
 
-pub trait Material {
+pub trait Material: Send + Sync {
     fn scatter(
         &self,
         rng: &mut ThreadRng,

@@ -11,3 +11,4 @@ mlua = { version = "0.9.9", features = ["lua54", "macros"] }
 nalgebra = "0.33.0"
 palette = "0.7.6"
 rand = "0.8.5"
+rayon = "1.10.0"

@@ -7,6 +7,8 @@ use prisma::config::{Config, Size};
 use prisma::core::{Ray, Scene};
 use prisma::scripting::Scripting;
 use rand::prelude::*;
+use rayon::prelude::*;
+use std::sync::Mutex;
 use std::{error, fs};
 
 fn compute_ray_color(
@@ -40,11 +42,11 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let script = fs::read_to_string(&config.script)?;
     let (camera, scene) = scripting.load(&config, &script)?;
 
-    let mut image = RgbImage::new(width, height);
+    let image = Mutex::new(RgbImage::new(width, height));
     let progress_bar = ProgressBar::new(height as u64);
-    let mut rng = rand::thread_rng();
 
-    for y in 0..height {
+    (0..height).into_par_iter().for_each(|y| {
+        let mut rng = rand::thread_rng();
         for x in 0..width {
             let mut color = LinSrgb::new(0.0, 0.0, 0.0);
             for _ in 0..config.samples {
@@ -58,12 +60,13 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             let g = (255.999 * color.green) as u8;
             let b = (255.999 * color.blue) as u8;
 
+            let mut image = image.lock().unwrap();
             image.put_pixel(x, y, Rgb([r, g, b]));
         }
         progress_bar.inc(1);
-    }
+    });
 
     progress_bar.finish();
-    image.save(config.output).unwrap();
+    image.lock().unwrap().save(config.output)?;
     Ok(())
 }

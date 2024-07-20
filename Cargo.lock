@@ -927,6 +927,7 @@ dependencies = [
  "nalgebra",
  "palette",
  "rand",
+ "rayon",
 ]
 
 [[package]]

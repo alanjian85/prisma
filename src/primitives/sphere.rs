@@ -1,16 +1,16 @@
 use crate::core::{Material, Primitive, Ray, RayIntersection};
 use nalgebra::Point3;
 use std::ops::Range;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct Sphere {
     center: Point3<f64>,
     radius: f64,
-    material: Rc<dyn Material>,
+    material: Arc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Point3<f64>, radius: f64, material: Rc<dyn Material>) -> Self {
+    pub fn new(center: Point3<f64>, radius: f64, material: Arc<dyn Material>) -> Self {
         Self {
             center,
             radius,

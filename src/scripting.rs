@@ -5,7 +5,7 @@ use crate::primitives::Sphere;
 use mlua::{prelude::*, Table, UserData, UserDataMethods, Value};
 use nalgebra::{Point3, Vector3};
 use palette::LinSrgb;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct Scripting {
     lua: Lua,
@@ -33,8 +33,8 @@ impl Scripting {
             "new",
             lua.create_function(|_lua, eta: f64| {
                 let dielectric = Dielectric::new(eta);
-                Ok(MaterialRc {
-                    rc: Rc::new(dielectric),
+                Ok(MaterialPtr {
+                    ptr: Arc::new(dielectric),
                 })
             })?,
         )?;
@@ -45,8 +45,8 @@ impl Scripting {
             "new",
             lua.create_function(|_lua, albedo: Table| {
                 let lambertian = Lambertian::new(table_to_color(&albedo)?);
-                Ok(MaterialRc {
-                    rc: Rc::new(lambertian),
+                Ok(MaterialPtr {
+                    ptr: Arc::new(lambertian),
                 })
             })?,
         )?;
@@ -57,7 +57,9 @@ impl Scripting {
             "new",
             lua.create_function(|_lua, (albedo, fuzziness): (Table, f64)| {
                 let metal = Metal::new(table_to_color(&albedo)?, fuzziness);
-                Ok(MaterialRc { rc: Rc::new(metal) })
+                Ok(MaterialPtr {
+                    ptr: Arc::new(metal),
+                })
             })?,
         )?;
         lua.globals().set("Metal", metal)?;
@@ -70,10 +72,10 @@ impl Scripting {
         sphere.set(
             "new",
             lua.create_function(
-                |_lua, (center, radius, material): (Table, f64, MaterialRc)| {
-                    let sphere = Sphere::new(table_to_point3(&center)?, radius, material.rc);
-                    Ok(PrimitiveRc {
-                        rc: Rc::new(sphere),
+                |_lua, (center, radius, material): (Table, f64, MaterialPtr)| {
+                    let sphere = Sphere::new(table_to_point3(&center)?, radius, material.ptr);
+                    Ok(PrimitivePtr {
+                        ptr: Arc::new(sphere),
                     })
                 },
             )?,
@@ -123,23 +125,23 @@ impl Scripting {
 }
 
 #[derive(FromLua, Clone)]
-struct MaterialRc {
-    rc: Rc<dyn Material>,
+struct MaterialPtr {
+    ptr: Arc<dyn Material>,
 }
 
-impl UserData for MaterialRc {}
+impl UserData for MaterialPtr {}
 
 #[derive(FromLua, Clone)]
-struct PrimitiveRc {
-    rc: Rc<dyn Primitive>,
+struct PrimitivePtr {
+    ptr: Arc<dyn Primitive>,
 }
 
-impl UserData for PrimitiveRc {}
+impl UserData for PrimitivePtr {}
 
 impl UserData for Scene {
     fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-        methods.add_method_mut("add", |_, this, primitive: PrimitiveRc| {
-            this.add(primitive.rc);
+        methods.add_method_mut("add", |_, this, primitive: PrimitivePtr| {
+            this.add(primitive.ptr);
             Ok(())
         });
     }
