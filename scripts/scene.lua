@@ -1,3 +1,7 @@
+function length(v)
+    return math.sqrt(v[1] * v[1] + v[2] * v[2] + v[3] * v[3])
+end
+
 math.randomseed(os.time())
 
 camera.pos = {13.0, 2.0, 3.0}
@@ -18,24 +22,26 @@ for a = -11, 11 do
         center[2] = 0.2
         center[3] = b + 0.9 * math.random()
 
-        if choose_mat < 0.8 then
-            local albedo = {}
-            albedo[1] = math.random() * math.random()
-            albedo[2] = math.random() * math.random()
-            albedo[3] = math.random() * math.random()
-            local material = Lambertian.new(albedo)
-            scene:add(Sphere.new(center, 0.2, material))
-        elseif choose_mat < 0.95 then
-            local albedo = {}
-            albedo[1] = 0.5 * math.random() + 0.5
-            albedo[2] = 0.5 * math.random() + 0.5
-            albedo[3] = 0.5 * math.random() + 0.5
-            local fuzz = 0.5 * math.random()
-            local material = Metal.new(albedo, fuzz)
-            scene:add(Sphere.new(center, 0.2, material))
-        else
-            local material = Dielectric.new(1.5)
-            scene:add(Sphere.new(center, 0.2, material))
+        if length {center[1] - 4.0, center[2] - 0.2, center[3]} > 0.9 then
+            if choose_mat < 0.8 then
+                local albedo = {}
+                albedo[1] = math.random() * math.random()
+                albedo[2] = math.random() * math.random()
+                albedo[3] = math.random() * math.random()
+                local material = Lambertian.new(albedo)
+                scene:add(Sphere.new(center, 0.2, material))
+            elseif choose_mat < 0.95 then
+                local albedo = {}
+                albedo[1] = 0.5 * math.random() + 0.5
+                albedo[2] = 0.5 * math.random() + 0.5
+                albedo[3] = 0.5 * math.random() + 0.5
+                local fuzz = 0.5 * math.random()
+                local material = Metal.new(albedo, fuzz)
+                scene:add(Sphere.new(center, 0.2, material))
+            else
+                local material = Dielectric.new(1.5)
+                scene:add(Sphere.new(center, 0.2, material))
+            end
         end
     end
 end
