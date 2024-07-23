@@ -2,9 +2,16 @@ use nalgebra::{Vector2, Vector3};
 use palette::Srgb;
 use rand::prelude::*;
 
+const NEAR_ZERO_THRESHOLD: f64 = 1e-8;
+
+pub fn is_near_zero(x: f64) -> bool {
+    x.abs() < NEAR_ZERO_THRESHOLD
+}
+
 pub fn is_vec3_near_zero(vec: Vector3<f64>) -> bool {
-    const THRESHOLD: f64 = 1e-8;
-    vec.x.abs() < THRESHOLD && vec.y.abs() < THRESHOLD && vec.z.abs() < THRESHOLD
+    vec.x.abs() < NEAR_ZERO_THRESHOLD
+        && vec.y.abs() < NEAR_ZERO_THRESHOLD
+        && vec.z.abs() < NEAR_ZERO_THRESHOLD
 }
 
 pub fn unit_vec3_to_rgb(vec: Vector3<f64>) -> Srgb<f64> {
