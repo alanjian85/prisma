@@ -1,15 +1,16 @@
-use crate::core::{Material, Ray, RayIntersection};
+use crate::core::{Material, Ray, RayIntersection, Texture2};
 use crate::utils;
 use palette::LinSrgb;
 use rand::prelude::*;
+use std::sync::Arc;
 
 pub struct Lambertian {
-    albedo: LinSrgb<f64>,
+    texture: Arc<dyn Texture2>,
 }
 
 impl Lambertian {
-    pub fn new(albedo: LinSrgb<f64>) -> Self {
-        Self { albedo }
+    pub fn new(texture: Arc<dyn Texture2>) -> Self {
+        Self { texture }
     }
 }
 
@@ -25,6 +26,6 @@ impl Material for Lambertian {
             dir = intersection.normal;
         }
         let ray = Ray::new(intersection.pos, dir);
-        Some((ray, self.albedo))
+        Some((ray, self.texture.sample(intersection.uv)))
     }
 }

@@ -1,5 +1,6 @@
 use crate::core::{Material, Primitive, Ray, RayIntersection};
-use nalgebra::Point3;
+use nalgebra::{Point3, Vector2};
+use std::f64;
 use std::ops::Range;
 use std::sync::Arc;
 
@@ -40,6 +41,14 @@ impl Primitive for Sphere {
 
         let pos = ray.at(t);
         let normal = (pos - self.center) / self.radius;
+
+        let theta = (-normal.y).acos();
+        let phi = (-normal.z).atan2(normal.x) + f64::consts::PI;
+
+        let u = phi / (2.0 * f64::consts::PI);
+        let v = theta / f64::consts::PI;
+        let uv = Vector2::new(u, v);
+
         let (front, normal) = RayIntersection::flip_normal(ray.dir, normal);
         Some((
             t,
@@ -47,6 +56,7 @@ impl Primitive for Sphere {
                 pos,
                 front,
                 normal,
+                uv,
                 material: self.material.clone(),
             },
         ))

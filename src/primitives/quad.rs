@@ -1,6 +1,6 @@
 use crate::core::{Material, Primitive, Ray, RayIntersection};
 use crate::utils;
-use nalgebra::{Point3, Vector3};
+use nalgebra::{Point3, Vector2, Vector3};
 use std::ops::Range;
 use std::sync::Arc;
 
@@ -62,12 +62,14 @@ impl Primitive for Quad {
 
         let normal = self.normal;
         let (front, normal) = RayIntersection::flip_normal(ray.dir, normal);
+        let uv = Vector2::new(u, v);
         Some((
             t,
             RayIntersection {
                 pos,
                 front,
                 normal,
+                uv,
                 material: self.material.clone(),
             },
         ))

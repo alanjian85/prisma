@@ -1,5 +1,5 @@
 use crate::core::{Material, Ray};
-use nalgebra::{Point3, Vector3};
+use nalgebra::{Point3, Vector2, Vector3};
 use std::ops::Range;
 use std::sync::Arc;
 
@@ -7,6 +7,7 @@ pub struct RayIntersection {
     pub pos: Point3<f64>,
     pub front: bool,
     pub normal: Vector3<f64>,
+    pub uv: Vector2<f64>,
     pub material: Arc<dyn Material>,
 }
 
@@ -21,7 +22,5 @@ impl RayIntersection {
 }
 
 pub trait Primitive: Send + Sync {
-    fn intersect(&self, _ray: &Ray, _range: &Range<f64>) -> Option<(f64, RayIntersection)> {
-        None
-    }
+    fn intersect(&self, _ray: &Ray, _range: &Range<f64>) -> Option<(f64, RayIntersection)>;
 }

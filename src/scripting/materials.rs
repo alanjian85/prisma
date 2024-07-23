@@ -1,5 +1,6 @@
 use crate::core::Material;
 use crate::materials::{Dielectric, Lambertian, Metal};
+use crate::scripting::textures::Texture2Ptr;
 use crate::scripting::utils;
 use mlua::{prelude::*, Table, UserData};
 use std::sync::Arc;
@@ -27,8 +28,8 @@ pub fn init(lua: &Lua) -> LuaResult<()> {
     let lambertian = lua.create_table()?;
     lambertian.set(
         "new",
-        lua.create_function(|_lua, albedo: Table| {
-            let lambertian = Lambertian::new(utils::table_to_color(&albedo)?);
+        lua.create_function(|_lua, texture: Texture2Ptr| {
+            let lambertian = Lambertian::new(texture.ptr);
             Ok(MaterialPtr {
                 ptr: Arc::new(lambertian),
             })
