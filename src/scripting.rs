@@ -6,6 +6,7 @@ mod camera;
 mod materials;
 mod primitives;
 mod scene;
+mod textures;
 mod utils;
 
 pub struct Scripting {
@@ -18,6 +19,7 @@ impl Scripting {
 
         materials::init(&lua)?;
         primitives::init(&lua)?;
+        textures::init(&lua)?;
 
         let scene = Scene::new();
         lua.globals().set("scene", scene)?;

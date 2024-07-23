@@ -1,11 +1,17 @@
 use crate::core::Scene;
 use crate::scripting::primitives::PrimitivePtr;
+use crate::scripting::textures::Texture3Ptr;
 use mlua::{prelude::*, UserData, UserDataMethods, Value};
 
 impl UserData for Scene {
     fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_method_mut("add", |_, this, primitive: PrimitivePtr| {
             this.add(primitive.ptr);
+            Ok(())
+        });
+
+        methods.add_method_mut("set_env", |_, this, env_map: Texture3Ptr| {
+            this.set_env(env_map.ptr);
             Ok(())
         });
     }

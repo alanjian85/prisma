@@ -1,19 +1,22 @@
+use crate::core::Texture2;
 use image::{ImageReader, RgbImage};
 use nalgebra::Vector2;
 use palette::{LinSrgb, Srgb};
 use std::error;
 
-pub struct TextureImage {
+pub struct Image {
     image: RgbImage,
 }
 
-impl TextureImage {
-    pub fn new(path: &str) -> Result<Self, Box<dyn error::Error>> {
+impl Image {
+    pub fn new(path: &str) -> Result<Self, Box<dyn error::Error + Send + Sync + 'static>> {
         let image = ImageReader::open(path)?.decode()?.into_rgb8();
         Ok(Self { image })
     }
+}
 
-    pub fn sample(&self, uv: Vector2<f64>) -> LinSrgb<f64> {
+impl Texture2 for Image {
+    fn sample(&self, uv: Vector2<f64>) -> LinSrgb<f64> {
         let u = uv.x.clamp(0.0, 0.999);
         let v = (1.0 - uv.y).clamp(0.0, 0.999);
 
