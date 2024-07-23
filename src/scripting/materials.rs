@@ -1,8 +1,7 @@
 use crate::core::Material;
-use crate::materials::{Dielectric, Lambertian, Metal};
+use crate::materials::{Dielectric, Lambertian, Light, Metal};
 use crate::scripting::textures::Texture2Ptr;
-use crate::scripting::utils;
-use mlua::{prelude::*, Table, UserData};
+use mlua::{prelude::*, UserData};
 use std::sync::Arc;
 
 #[derive(FromLua, Clone)]
@@ -37,11 +36,23 @@ pub fn init(lua: &Lua) -> LuaResult<()> {
     )?;
     lua.globals().set("Lambertian", lambertian)?;
 
+    let light = lua.create_table()?;
+    light.set(
+        "new",
+        lua.create_function(|_lua, texture: Texture2Ptr| {
+            let light = Light::new(texture.ptr);
+            Ok(MaterialPtr {
+                ptr: Arc::new(light),
+            })
+        })?,
+    )?;
+    lua.globals().set("Light", light)?;
+
     let metal = lua.create_table()?;
     metal.set(
         "new",
-        lua.create_function(|_lua, (albedo, fuzziness): (Table, f64)| {
-            let metal = Metal::new(utils::table_to_color(&albedo)?, fuzziness);
+        lua.create_function(|_lua, (texture, fuzziness): (Texture2Ptr, f64)| {
+            let metal = Metal::new(texture.ptr, fuzziness);
             Ok(MaterialPtr {
                 ptr: Arc::new(metal),
             })

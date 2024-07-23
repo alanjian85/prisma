@@ -1,16 +1,17 @@
-use crate::core::{Material, Ray, RayIntersection};
+use crate::core::{Material, Ray, RayIntersection, Texture2};
 use crate::{math, utils};
 use palette::LinSrgb;
 use rand::prelude::*;
+use std::sync::Arc;
 
 pub struct Metal {
-    albedo: LinSrgb<f64>,
+    texture: Arc<dyn Texture2>,
     fuzziness: f64,
 }
 
 impl Metal {
-    pub fn new(albedo: LinSrgb<f64>, fuzziness: f64) -> Self {
-        Self { albedo, fuzziness }
+    pub fn new(texture: Arc<dyn Texture2>, fuzziness: f64) -> Self {
+        Self { texture, fuzziness }
     }
 }
 
@@ -27,6 +28,6 @@ impl Material for Metal {
         if ray.dir.dot(&intersection.normal) < 0.0 {
             return None;
         }
-        Some((ray, self.albedo))
+        Some((ray, self.texture.sample(intersection.uv)))
     }
 }

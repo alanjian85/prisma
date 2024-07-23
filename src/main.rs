@@ -23,10 +23,14 @@ fn compute_ray_color(
     }
 
     if let Some(intersection) = scene.intersect(ray, &(0.001..f64::INFINITY)) {
-        if let Some((ray, color)) = intersection.material.scatter(rng, ray, &intersection) {
-            return color * compute_ray_color(config, rng, &ray, scene, depth + 1);
-        }
-        return LinSrgb::new(0.0, 0.0, 0.0);
+        let emitted_color = intersection.material.emit(&intersection);
+        let scattered_color =
+            if let Some((ray, color)) = intersection.material.scatter(rng, ray, &intersection) {
+                color * compute_ray_color(config, rng, &ray, scene, depth + 1)
+            } else {
+                LinSrgb::new(0.0, 0.0, 0.0)
+            };
+        return emitted_color + scattered_color;
     }
 
     let dir = ray.dir.normalize();
