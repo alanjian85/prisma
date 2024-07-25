@@ -4,11 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-clap = { version = "4.5.8", features = ["derive"] }
-image = "0.25.1"
-indicatif = "0.17.8"
-mlua = { version = "0.9.9", features = ["lua54", "macros"] }
-nalgebra = "0.33.0"
-palette = "0.7.6"
-rand = "0.8.5"
-rayon = "1.10.0"
+vulkano = "0.34.1"
