@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-vulkano = "0.34.1"
+winit = "0.30.4"
