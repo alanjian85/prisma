@@ -1,6 +1,6 @@
 use image::RgbaImage;
 
-use crate::{config::Size, Config};
+use crate::config::{Config, Size};
 
 pub struct Renderer {
     width: u32,
@@ -34,8 +34,7 @@ impl Renderer {
             .await
             .unwrap();
 
-        let shader_module =
-            device.create_shader_module(wgpu::include_wgsl!("../../shaders/shader.wgsl"));
+        let shader_module = device.create_shader_module(wgpu::include_wgsl!("../../shaders/shader.wgsl"));
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: None,
             layout: None,
@@ -52,7 +51,7 @@ impl Renderer {
                 module: &shader_module,
                 entry_point: "fs_main",
                 compilation_options: wgpu::PipelineCompilationOptions::default(),
-                targets: &[Some(wgpu::TextureFormat::Rgba8UnormSrgb.into())],
+                targets: &[Some(wgpu::TextureFormat::Rgba8UnormSrgb.into())]
             }),
             multiview: None,
             cache: None,

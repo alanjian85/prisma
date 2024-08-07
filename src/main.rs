@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use clap::Parser;
-use prisma::{Config, Renderer};
+use prisma::{config::Config, core::Renderer};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let config = Config::parse();
