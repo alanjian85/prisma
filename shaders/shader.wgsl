@@ -19,6 +19,7 @@ struct Ray {
 }
 
 struct Intersection {
+    t: f32,
     normal: vec3f,
 }
 
@@ -38,13 +39,21 @@ fn sphere_intersect(sphere: Sphere, ray: Ray, intersection: ptr<function, Inters
     let c = dot(oc, oc) - sphere.radius * sphere.radius;
     let discriminant = b * b - a * c;
 
-    if discriminant >= 0.0 {
-        let t = (b - sqrt(discriminant)) / a;
-        (*intersection).normal = (ray_at(ray, t) - sphere.center) / sphere.radius;
-        return true;
-    } else {
+    if discriminant < 0.0 {
         return false;
     }
+
+    var t = (b - sqrt(discriminant)) / a;
+    if t < 0.0 {
+        t = (b + sqrt(discriminant)) / a;
+        if t < 0.0 {
+            return false;
+        }
+    }
+
+    (*intersection).t = t;
+    (*intersection).normal = (ray_at(ray, t) - sphere.center) / sphere.radius;
+    return true;
 }
 
 const aspect_ratio = 16.0 / 9.0;
@@ -62,14 +71,32 @@ fn generate_ray(uv: vec2f) -> Ray {
     return Ray(vec3(0.0, 0.0, 0.0), pix_pos);
 }
 
+const num_spheres = 4;
+
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-    let sphere = Sphere(vec3(0.0, 0.0, -1.0), 0.5);
+    var spheres = array<Sphere, num_spheres>(
+        Sphere(vec3(0.0, -100.5, -1.0), 100.0),
+        Sphere(vec3(0.0, 0.0, -1.0), 0.5),
+        Sphere(vec3(-1.0, 0.0, -1.0), 0.5),
+        Sphere(vec3(1.0, 0.0, -1.0), 0.5)
+    );
 
     let ray = generate_ray(in.uv);
-    var intersection = Intersection();
-    if sphere_intersect(sphere, ray, &intersection) {
-        return vec4(0.5 * (intersection.normal + 1.0), 1.0);
+    var closest_intersection = Intersection();
+    var intersected = false;
+    for (var i = 0; i < num_spheres; i++) {
+        var intersection = Intersection();
+        if sphere_intersect(spheres[i], ray, &intersection) {
+            if !intersected || intersection.t < closest_intersection.t {
+                closest_intersection = intersection;
+                intersected = true;
+            }
+        }
+    }
+
+    if intersected {
+        return vec4(0.5 * (closest_intersection.normal + 1.0), 1.0);
     } else {
         let alpha = 0.5 * (normalize(ray.dir).y + 1.0);
         return mix(vec4(1.0, 1.0, 1.0, 1.0), vec4(0.5, 0.7, 1.0, 1.0), alpha);
