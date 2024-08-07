@@ -7,6 +7,7 @@ pub struct Renderer {
     height: u32,
     device: wgpu::Device,
     queue: wgpu::Queue,
+    render_pipeline: wgpu::RenderPipeline,
     render_target: wgpu::Texture,
     output_staging_buffer: wgpu::Buffer,
 }
@@ -32,6 +33,30 @@ impl Renderer {
             )
             .await
             .unwrap();
+
+        let shader_module =
+            device.create_shader_module(wgpu::include_wgsl!("../../shaders/shader.wgsl"));
+        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: None,
+            layout: None,
+            vertex: wgpu::VertexState {
+                module: &shader_module,
+                entry_point: "vs_main",
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                buffers: &[],
+            },
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            fragment: Some(wgpu::FragmentState {
+                module: &shader_module,
+                entry_point: "fs_main",
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                targets: &[Some(wgpu::TextureFormat::Rgba8UnormSrgb.into())],
+            }),
+            multiview: None,
+            cache: None,
+        });
 
         let render_target = device.create_texture(&wgpu::TextureDescriptor {
             label: None,
@@ -60,6 +85,7 @@ impl Renderer {
             height,
             device,
             queue,
+            render_pipeline,
             render_target,
             output_staging_buffer,
         }
@@ -75,7 +101,7 @@ impl Renderer {
             .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
         {
-            let _render_pass = command_encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            let mut render_pass = command_encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                     view: &view,
@@ -89,6 +115,8 @@ impl Renderer {
                 timestamp_writes: None,
                 occlusion_query_set: None,
             });
+            render_pass.set_pipeline(&self.render_pipeline);
+            render_pass.draw(0..3, 0..1);
         }
 
         command_encoder.copy_texture_to_buffer(
