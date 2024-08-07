@@ -13,6 +13,15 @@ fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
     return vertices[in_vertex_index];
 }
 
+struct Interval {
+    min: f32,
+    max: f32,
+}
+
+fn interval_surrounds(interval: Interval, x: f32) -> bool {
+    return interval.min < x && x < interval.max;
+}
+
 struct Ray {
     orig: vec3f,
     dir: vec3f,
@@ -21,6 +30,7 @@ struct Ray {
 struct Intersection {
     t: f32,
     normal: vec3f,
+    color: vec3f,
 }
 
 fn ray_at(ray: Ray, t: f32) -> vec3f {
@@ -30,9 +40,10 @@ fn ray_at(ray: Ray, t: f32) -> vec3f {
 struct Sphere {
     center: vec3f,
     radius: f32,
+    color: vec3f,
 }
 
-fn sphere_intersect(sphere: Sphere, ray: Ray, intersection: ptr<function, Intersection>) -> bool {
+fn sphere_intersect(sphere: Sphere, ray: Ray, intersection: ptr<function, Intersection>, interval: Interval) -> bool {
     let oc = sphere.center - ray.orig;
     let a = dot(ray.dir, ray.dir);
     let b = dot(ray.dir, oc);
@@ -44,21 +55,21 @@ fn sphere_intersect(sphere: Sphere, ray: Ray, intersection: ptr<function, Inters
     }
 
     var t = (b - sqrt(discriminant)) / a;
-    if t < 0.0 {
+    if !interval_surrounds(interval, t) {
         t = (b + sqrt(discriminant)) / a;
-        if t < 0.0 {
+        if !interval_surrounds(interval, t) {
             return false;
         }
     }
 
     (*intersection).t = t;
     (*intersection).normal = (ray_at(ray, t) - sphere.center) / sphere.radius;
+    (*intersection).color = sphere.color;
     return true;
 }
 
-const aspect_ratio = 16.0 / 9.0;
-
 fn generate_ray(uv: vec2f) -> Ray {
+    let aspect_ratio = 16.0 / 9.0;
     let viewport_height = 2.0;
     let viewport_width = aspect_ratio * viewport_height;
     let focus_dist = 1.0;
@@ -71,34 +82,42 @@ fn generate_ray(uv: vec2f) -> Ray {
     return Ray(vec3(0.0, 0.0, 0.0), pix_pos);
 }
 
-const num_spheres = 4;
+const NUM_SPHERES = 4;
+const MAX_DEPTH = 50;
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-    var spheres = array<Sphere, num_spheres>(
-        Sphere(vec3(0.0, -100.5, -1.0), 100.0),
-        Sphere(vec3(0.0, 0.0, -1.0), 0.5),
-        Sphere(vec3(-1.0, 0.0, -1.0), 0.5),
-        Sphere(vec3(1.0, 0.0, -1.0), 0.5)
+    var spheres = array<Sphere, NUM_SPHERES>(
+        Sphere(vec3(0.0, -100.5, -1.0), 100.0, vec3(0.8, 0.8, 0.0)),
+        Sphere(vec3(0.0, 0.0, -1.0), 0.5, vec3(0.1, 0.2, 0.5)),
+        Sphere(vec3(-1.0, 0.0, -1.0), 0.5, vec3(0.8, 0.8, 0.8)),
+        Sphere(vec3(1.0, 0.0, -1.0), 0.5, vec3(0.8, 0.6, 0.2))
     );
 
-    let ray = generate_ray(in.uv);
-    var closest_intersection = Intersection();
-    var intersected = false;
-    for (var i = 0; i < num_spheres; i++) {
+    var ray = generate_ray(in.uv);
+    var color = vec3(1.0, 1.0, 1.0);
+    for (var i = 0; i < MAX_DEPTH; i++) {
         var intersection = Intersection();
-        if sphere_intersect(spheres[i], ray, &intersection) {
-            if !intersected || intersection.t < closest_intersection.t {
-                closest_intersection = intersection;
+        var intersected = false;
+        intersection.t = 1000.0;
+        for (var i = 0; i < NUM_SPHERES; i++) {
+            let interval = Interval(0.001, intersection.t);
+            if sphere_intersect(spheres[i], ray, &intersection, interval) {
                 intersected = true;
             }
         }
+
+        if intersected {
+            let orig = ray_at(ray, intersection.t);
+            let dir = reflect(ray.dir, intersection.normal);
+            ray = Ray(orig, dir);
+            color *= intersection.color;
+        } else {
+            let alpha = 0.5 * (normalize(ray.dir).y + 1.0);
+            color *= mix(vec3(1.0, 1.0, 1.0), vec3(0.5, 0.7, 1.0), alpha);
+            return vec4(color, 1.0);
+        }
     }
 
-    if intersected {
-        return vec4(0.5 * (closest_intersection.normal + 1.0), 1.0);
-    } else {
-        let alpha = 0.5 * (normalize(ray.dir).y + 1.0);
-        return mix(vec4(1.0, 1.0, 1.0, 1.0), vec4(0.5, 0.7, 1.0, 1.0), alpha);
-    }
+    return vec4(0.0, 0.0, 0.0, 1.0);
 }
