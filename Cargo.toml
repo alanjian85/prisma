@@ -4,4 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-winit = "0.30.4"
+clap = { version = "4.5.13", features = ["derive"] }
+flume = "0.11.0"
+image = "0.25.2"
+pollster = "0.3.0"
+wgpu = "22.1.0"
