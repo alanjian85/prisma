@@ -7,9 +7,9 @@ pub struct Renderer {
     height: u32,
     device: wgpu::Device,
     queue: wgpu::Queue,
-    render_pipeline: wgpu::RenderPipeline,
+    bind_group_layout: wgpu::BindGroupLayout,
+    pipeline: wgpu::ComputePipeline,
     render_target: wgpu::Texture,
-    output_staging_buffer: wgpu::Buffer,
 }
 
 impl Renderer {
@@ -36,25 +36,33 @@ impl Renderer {
 
         let shader_module =
             device.create_shader_module(wgpu::include_wgsl!("../../shaders/shader.wgsl"));
-        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+
+        let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: None,
-            layout: None,
-            vertex: wgpu::VertexState {
-                module: &shader_module,
-                entry_point: "vs_main",
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
-                buffers: &[],
-            },
-            primitive: wgpu::PrimitiveState::default(),
-            depth_stencil: None,
-            multisample: wgpu::MultisampleState::default(),
-            fragment: Some(wgpu::FragmentState {
-                module: &shader_module,
-                entry_point: "fs_main",
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
-                targets: &[Some(wgpu::TextureFormat::Rgba8UnormSrgb.into())],
-            }),
-            multiview: None,
+            entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::COMPUTE,
+                ty: wgpu::BindingType::StorageTexture {
+                    access: wgpu::StorageTextureAccess::WriteOnly,
+                    format: wgpu::TextureFormat::Rgba8Unorm,
+                    view_dimension: wgpu::TextureViewDimension::D2,
+                },
+                count: None,
+            }],
+        });
+
+        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: None,
+            bind_group_layouts: &[&bind_group_layout],
+            push_constant_ranges: &[],
+        });
+
+        let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+            label: None,
+            layout: Some(&pipeline_layout),
+            module: &shader_module,
+            entry_point: "main",
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
             cache: None,
         });
 
@@ -68,16 +76,9 @@ impl Renderer {
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8UnormSrgb,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
-            view_formats: &[wgpu::TextureFormat::Rgba8UnormSrgb],
-        });
-
-        let output_staging_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: None,
-            size: (width * height * 4) as u64,
-            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
-            mapped_at_creation: false,
+            format: wgpu::TextureFormat::Rgba8Unorm,
+            usage: wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::COPY_SRC,
+            view_formats: &[wgpu::TextureFormat::Rgba8Unorm],
         });
 
         Self {
@@ -85,9 +86,9 @@ impl Renderer {
             height,
             device,
             queue,
-            render_pipeline,
+            bind_group_layout,
+            pipeline,
             render_target,
-            output_staging_buffer,
         }
     }
 
@@ -96,30 +97,45 @@ impl Renderer {
             .render_target
             .create_view(&wgpu::TextureViewDescriptor::default());
 
-        let mut command_encoder = self
+        let bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: None,
+            layout: &self.bind_group_layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureView(&view),
+            }],
+        });
+
+        let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
         {
-            let mut render_pass = command_encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
                 label: None,
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
-                        store: wgpu::StoreOp::Store,
-                    },
-                })],
-                depth_stencil_attachment: None,
                 timestamp_writes: None,
-                occlusion_query_set: None,
             });
-            render_pass.set_pipeline(&self.render_pipeline);
-            render_pass.draw(0..3, 0..1);
+            compute_pass.set_pipeline(&self.pipeline);
+            compute_pass.set_bind_group(0, &bind_group, &[]);
+            compute_pass.dispatch_workgroups(self.width / 16, self.height / 16, 1);
         }
 
-        command_encoder.copy_texture_to_buffer(
+        self.queue.submit(Some(encoder.finish()));
+    }
+
+    pub async fn retrieve(&self) -> RgbaImage {
+        let staging_buffer = self.device.create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: (self.width * self.height * 4) as u64,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
+
+        let mut encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
+
+        encoder.copy_texture_to_buffer(
             wgpu::ImageCopyTexture {
                 texture: &self.render_target,
                 mip_level: 0,
@@ -127,7 +143,7 @@ impl Renderer {
                 aspect: wgpu::TextureAspect::All,
             },
             wgpu::ImageCopyBuffer {
-                buffer: &self.output_staging_buffer,
+                buffer: &staging_buffer,
                 layout: wgpu::ImageDataLayout {
                     offset: 0,
                     bytes_per_row: Some(self.width * 4),
@@ -141,12 +157,10 @@ impl Renderer {
             },
         );
 
-        self.queue.submit(Some(command_encoder.finish()));
-    }
+        self.queue.submit(Some(encoder.finish()));
 
-    pub async fn retrieve(&self) -> RgbaImage {
         let (tx, rx) = flume::bounded(1);
-        let slice = self.output_staging_buffer.slice(..);
+        let slice = staging_buffer.slice(..);
         slice.map_async(wgpu::MapMode::Read, move |result| tx.send(result).unwrap());
         self.device.poll(wgpu::Maintain::Wait).panic_on_timeout();
         rx.recv_async().await.unwrap().unwrap();
@@ -157,7 +171,7 @@ impl Renderer {
             buffer.extend_from_slice(&view[..]);
         }
 
-        self.output_staging_buffer.unmap();
+        staging_buffer.unmap();
         RgbaImage::from_raw(self.width, self.height, buffer).unwrap()
     }
 }
