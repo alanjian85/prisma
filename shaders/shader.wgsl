@@ -13,6 +13,47 @@ fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
     return vertices[in_vertex_index];
 }
 
+fn rand_init(uv: vec2u, res: vec2u, frame: u32) -> u32 {
+    let state = dot(uv, vec2(1, res.x)) ^ jenkins_hash(frame);
+    return jenkins_hash(state);
+}
+
+fn rand(state: ptr<function, u32>) -> f32 {
+    *state = xorshift(*state);
+    return u32_to_f32(*state);
+}
+
+fn rand_sphere(state: ptr<function, u32>) -> vec3f {
+    var v = vec3f();
+    loop {
+        v = vec3(rand(state), rand(state), rand(state));
+        if dot(v, v) <= 1.0 {
+            break;
+        }
+    }
+    return normalize(v);
+}
+
+fn jenkins_hash(x: u32) -> u32 {
+    var res = x + x << 10;
+    res ^= res >> 6;
+    res += res << 3;
+    res ^= res >> 11;
+    res += res << 15;
+    return res;
+}
+
+fn xorshift(x: u32) -> u32 {
+    var res = x ^ x << 13;
+    res ^= x >> 17;
+    res ^= x << 5;
+    return res;
+}
+
+fn u32_to_f32(x: u32) -> f32 {
+    return bitcast<f32>(0x3F800000 | (x >> 9)) - 1.0;
+}
+
 struct Interval {
     min: f32,
     max: f32,
@@ -87,9 +128,18 @@ const MAX_DEPTH = 50;
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4f {
+    let width = 1920u;
+    let height = 1080u;
+    let frame = 0u;
+
+    let x = u32(in.uv.x * f32(width));
+    let y = u32(in.uv.y * f32(height));
+
+    var rand_state = rand_init(vec2(x, y), vec2(width, height), frame);
+
     var spheres = array<Sphere, NUM_SPHERES>(
         Sphere(vec3(0.0, -100.5, -1.0), 100.0, vec3(0.8, 0.8, 0.0)),
-        Sphere(vec3(0.0, 0.0, -1.0), 0.5, vec3(0.1, 0.2, 0.5)),
+        Sphere(vec3(0.0, 0.0, -1.2), 0.5, vec3(0.1, 0.2, 0.5)),
         Sphere(vec3(-1.0, 0.0, -1.0), 0.5, vec3(0.8, 0.8, 0.8)),
         Sphere(vec3(1.0, 0.0, -1.0), 0.5, vec3(0.8, 0.6, 0.2))
     );
@@ -109,7 +159,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4f {
 
         if intersected {
             let orig = ray_at(ray, intersection.t);
-            let dir = reflect(ray.dir, intersection.normal);
+            let dir = normalize(reflect(ray.dir, intersection.normal)) + rand_sphere(&rand_state);
             ray = Ray(orig, dir);
             color *= intersection.color;
         } else {
