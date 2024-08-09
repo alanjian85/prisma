@@ -10,7 +10,7 @@ pub struct Config {
     pub size: Size,
 
     /// The path to the output
-    #[arg(short, long, default_value_t = String::from("output.png"))]
+    #[arg(short, long, default_value_t = String::from("output.exr"))]
     pub output: String,
 }
 

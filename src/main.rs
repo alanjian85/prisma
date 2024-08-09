@@ -4,6 +4,7 @@ use clap::Parser;
 use prisma::{config::Config, core::Renderer};
 
 fn main() -> Result<(), Box<dyn Error>> {
+    env_logger::init();
     let config = Config::parse();
 
     let image = pollster::block_on(async {
@@ -13,6 +14,5 @@ fn main() -> Result<(), Box<dyn Error>> {
     });
 
     image.save(config.output)?;
-
     Ok(())
 }

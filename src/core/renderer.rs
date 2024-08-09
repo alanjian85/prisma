@@ -1,4 +1,4 @@
-use image::RgbaImage;
+use image::{ImageBuffer, Rgba};
 
 use crate::config::{Config, Size};
 
@@ -21,12 +21,15 @@ impl Renderer {
             .request_adapter(&wgpu::RequestAdapterOptions::default())
             .await
             .unwrap();
+        let mut limits = wgpu::Limits::downlevel_defaults();
+        limits.max_push_constant_size = 4;
         let (device, queue) = adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: None,
-                    required_features: wgpu::Features::empty(),
-                    required_limits: wgpu::Limits::downlevel_defaults(),
+                    required_features: wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
+                        | wgpu::Features::PUSH_CONSTANTS,
+                    required_limits: limits,
                     memory_hints: wgpu::MemoryHints::Performance,
                 },
                 None,
@@ -43,8 +46,8 @@ impl Renderer {
                 binding: 0,
                 visibility: wgpu::ShaderStages::COMPUTE,
                 ty: wgpu::BindingType::StorageTexture {
-                    access: wgpu::StorageTextureAccess::WriteOnly,
-                    format: wgpu::TextureFormat::Rgba8Unorm,
+                    access: wgpu::StorageTextureAccess::ReadWrite,
+                    format: wgpu::TextureFormat::Rgba32Float,
                     view_dimension: wgpu::TextureViewDimension::D2,
                 },
                 count: None,
@@ -54,7 +57,10 @@ impl Renderer {
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: None,
             bind_group_layouts: &[&bind_group_layout],
-            push_constant_ranges: &[],
+            push_constant_ranges: &[wgpu::PushConstantRange {
+                stages: wgpu::ShaderStages::COMPUTE,
+                range: 0..4,
+            }],
         });
 
         let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
@@ -76,9 +82,9 @@ impl Renderer {
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8Unorm,
+            format: wgpu::TextureFormat::Rgba32Float,
             usage: wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::COPY_SRC,
-            view_formats: &[wgpu::TextureFormat::Rgba8Unorm],
+            view_formats: &[wgpu::TextureFormat::Rgba32Float],
         });
 
         Self {
@@ -106,27 +112,32 @@ impl Renderer {
             }],
         });
 
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
+        for sample in 0..1000 {
+            let mut encoder = self
+                .device
+                .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
-        {
-            let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                label: None,
-                timestamp_writes: None,
-            });
-            compute_pass.set_pipeline(&self.pipeline);
-            compute_pass.set_bind_group(0, &bind_group, &[]);
-            compute_pass.dispatch_workgroups(self.width / 16, self.height / 16, 1);
+            {
+                let sample: [u8; 4] = unsafe { std::mem::transmute(sample) };
+
+                let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                    label: None,
+                    timestamp_writes: None,
+                });
+                compute_pass.set_pipeline(&self.pipeline);
+                compute_pass.set_bind_group(0, &bind_group, &[]);
+                compute_pass.set_push_constants(0, &sample);
+                compute_pass.dispatch_workgroups(self.width / 16, self.height / 16, 1);
+            }
+
+            self.queue.submit(Some(encoder.finish()));
         }
-
-        self.queue.submit(Some(encoder.finish()));
     }
 
-    pub async fn retrieve(&self) -> RgbaImage {
+    pub async fn retrieve(&self) -> ImageBuffer<Rgba<f32>, Vec<f32>> {
         let staging_buffer = self.device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
-            size: (self.width * self.height * 4) as u64,
+            size: (self.width * self.height * 16) as u64,
             usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
             mapped_at_creation: false,
         });
@@ -146,7 +157,7 @@ impl Renderer {
                 buffer: &staging_buffer,
                 layout: wgpu::ImageDataLayout {
                     offset: 0,
-                    bytes_per_row: Some(self.width * 4),
+                    bytes_per_row: Some(self.width * 16),
                     rows_per_image: None,
                 },
             },
@@ -172,6 +183,13 @@ impl Renderer {
         }
 
         staging_buffer.unmap();
-        RgbaImage::from_raw(self.width, self.height, buffer).unwrap()
+        let buffer: Vec<_> = buffer
+            .chunks_exact(4)
+            .map(TryInto::try_into)
+            .map(Result::unwrap)
+            .map(f32::from_le_bytes)
+            .collect();
+
+        ImageBuffer::from_raw(self.width, self.height, buffer).unwrap()
     }
 }
