@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-use image::{ImageBuffer, Rgba};
-
 use crate::config::{Config, Size};
 
 use super::RenderContext;
@@ -33,7 +31,6 @@ impl<'a> Renderer<'a> {
         let device = context.device();
 
         let Size { width, height } = config.size;
-        let samples = config.samples;
 
         let target_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -60,11 +57,10 @@ impl<'a> Renderer<'a> {
         });
 
         let shader_module =
-            device.create_shader_module(wgpu::include_wgsl!("../../shaders/shader.wgsl"));
+            device.create_shader_module(wgpu::include_wgsl!("../../shaders/render.wgsl"));
 
         let mut constants = HashMap::new();
         constants.insert(String::from("MAX_DEPTH"), config.depth as f64);
-        constants.insert(String::from("NUM_SAMPLES"), samples as f64);
 
         let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
             label: None,
@@ -90,7 +86,7 @@ impl<'a> Renderer<'a> {
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format: wgpu::TextureFormat::Rgba32Float,
-            usage: wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::COPY_SRC,
+            usage: wgpu::TextureUsages::STORAGE_BINDING,
             view_formats: &[],
         });
 
@@ -98,7 +94,7 @@ impl<'a> Renderer<'a> {
             context,
             width,
             height,
-            samples,
+            samples: config.samples,
             target_bind_group_layout,
             pipeline,
             render_target,
@@ -144,63 +140,7 @@ impl<'a> Renderer<'a> {
         }
     }
 
-    pub async fn retrieve_result(&self) -> ImageBuffer<Rgba<f32>, Vec<f32>> {
-        let device = self.context.device();
-        let queue = self.context.queue();
-
-        let staging_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: None,
-            size: (self.width * self.height * 16) as u64,
-            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
-            mapped_at_creation: false,
-        });
-
-        let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
-
-        encoder.copy_texture_to_buffer(
-            wgpu::ImageCopyTexture {
-                texture: &self.render_target,
-                mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
-            },
-            wgpu::ImageCopyBuffer {
-                buffer: &staging_buffer,
-                layout: wgpu::ImageDataLayout {
-                    offset: 0,
-                    bytes_per_row: Some(self.width * 16),
-                    rows_per_image: None,
-                },
-            },
-            wgpu::Extent3d {
-                width: self.width,
-                height: self.height,
-                depth_or_array_layers: 1,
-            },
-        );
-
-        queue.submit(Some(encoder.finish()));
-
-        let (tx, rx) = flume::bounded(1);
-        let slice = staging_buffer.slice(..);
-        slice.map_async(wgpu::MapMode::Read, move |result| tx.send(result).unwrap());
-        device.poll(wgpu::Maintain::Wait).panic_on_timeout();
-        rx.recv_async().await.unwrap().unwrap();
-
-        let mut buffer = Vec::new();
-        {
-            let view = slice.get_mapped_range();
-            buffer.extend_from_slice(&view[..]);
-        }
-
-        staging_buffer.unmap();
-        let buffer: Vec<_> = buffer
-            .chunks_exact(4)
-            .map(TryInto::try_into)
-            .map(Result::unwrap)
-            .map(f32::from_le_bytes)
-            .collect();
-
-        ImageBuffer::from_raw(self.width, self.height, buffer).unwrap()
+    pub fn render_target(&self) -> &wgpu::Texture {
+        &self.render_target
     }
 }

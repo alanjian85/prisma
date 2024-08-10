@@ -10,7 +10,7 @@ pub struct Config {
     pub size: Size,
 
     /// The path to the output
-    #[arg(short, long, default_value_t = String::from("output.exr"))]
+    #[arg(short, long, default_value_t = String::from("output.png"))]
     pub output: String,
 
     /// The maximum depth of each camera ray
