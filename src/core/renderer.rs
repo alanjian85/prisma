@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use image::{ImageBuffer, ImageReader, Rgba};
 
 use crate::config::{Config, Size};
@@ -5,6 +7,7 @@ use crate::config::{Config, Size};
 pub struct Renderer {
     width: u32,
     height: u32,
+    samples: u32,
     device: wgpu::Device,
     queue: wgpu::Queue,
     target_bind_group_layout: wgpu::BindGroupLayout,
@@ -81,12 +84,20 @@ impl Renderer {
             }],
         });
 
+        let mut constants = HashMap::new();
+        constants.insert(String::from("MAX_DEPTH"), config.depth as f64);
+        constants.insert(String::from("NUM_SAMPLES"), config.samples as f64);
+
         let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
             label: None,
             layout: Some(&pipeline_layout),
             module: &shader_module,
             entry_point: "main",
-            compilation_options: wgpu::PipelineCompilationOptions::default(),
+            compilation_options: wgpu::PipelineCompilationOptions {
+                constants: &constants,
+                zero_initialize_workgroup_memory: true,
+                vertex_pulling_transform: false,
+            },
             cache: None,
         });
 
@@ -165,6 +176,7 @@ impl Renderer {
         Self {
             width,
             height,
+            samples: config.samples,
             device,
             queue,
             target_bind_group_layout,
@@ -188,7 +200,7 @@ impl Renderer {
             }],
         });
 
-        for sample in 0..100000 {
+        for sample in 0..self.samples {
             let mut encoder = self
                 .device
                 .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());

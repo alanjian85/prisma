@@ -1,6 +1,7 @@
 const PI: f32 = 3.14159;
 
-override MAX_DEPTH: u32 = 50u;
+override MAX_DEPTH: u32;
+override NUM_SAMPLES: u32;
 
 @group(0) @binding(0)
 var render_target: texture_storage_2d<rgba32float, read_write>;
@@ -63,7 +64,7 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
     }
 
     let prev_color = textureLoad(render_target, id.xy);
-    textureStore(render_target, id.xy, prev_color + vec4(color, 1.0) / 100000.0);
+    textureStore(render_target, id.xy, prev_color + vec4(color, 1.0) / f32(NUM_SAMPLES));
 }
 
 struct Interval {

@@ -12,6 +12,14 @@ pub struct Config {
     /// The path to the output
     #[arg(short, long, default_value_t = String::from("output.exr"))]
     pub output: String,
+
+    /// The maximum depth of each camera ray
+    #[arg(long, default_value_t = 50)]
+    pub depth: u32,
+
+    /// The number of samples per pixel
+    #[arg(long, default_value_t = 1000)]
+    pub samples: u32,
 }
 
 #[derive(Clone)]
