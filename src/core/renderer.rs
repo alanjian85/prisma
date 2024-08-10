@@ -26,7 +26,6 @@ impl Renderer {
             .await
             .unwrap();
         let mut limits = wgpu::Limits::downlevel_defaults();
-        limits.max_texture_dimension_2d = 8192;
         limits.max_push_constant_size = 4;
         let (device, queue) = adapter
             .request_device(
