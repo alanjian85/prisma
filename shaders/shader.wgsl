@@ -11,12 +11,6 @@ var panorama_texture: texture_2d<f32>;
 
 var<push_constant> sample: u32;
 
-fn reflectance(cosine: f32, eta: f32) -> f32 {
-    var r = (1.0 - eta) / (1.0 + eta);
-    r *= r;
-    return r + (1.0 - r) * pow(1.0 - cosine, 5.0);
-}
-
 @compute
 @workgroup_size(16, 16, 1)
 fn main(@builtin(global_invocation_id) id: vec3<u32>) {
@@ -89,8 +83,8 @@ fn rand(state: ptr<function, u32>) -> f32 {
 fn rand_sphere(state: ptr<function, u32>) -> vec3f {
     let a = rand(state);
     let b = rand(state);
-    let x = cos(radians(a * 360)) * 2 * sqrt(b * (1 - b));
-    let y = sin(radians(a * 360)) * 2 * sqrt(b * (1 - b));
+    let x = cos(2 * PI * a) * 2 * sqrt(b * (1 - b));
+    let y = sin(2 * PI * a) * 2 * sqrt(b * (1 - b));
     let z = 1 - 2 * b;
     return vec3(x, y, z);
 }
@@ -226,4 +220,10 @@ struct Material {
     diffuse: bool,
     albedo: vec3f,
     ior: f32,
+}
+
+fn reflectance(cosine: f32, eta: f32) -> f32 {
+    var r = (1.0 - eta) / (1.0 + eta);
+    r *= r;
+    return r + (1.0 - r) * pow(1.0 - cosine, 5.0);
 }
