@@ -1,9 +1,20 @@
+const PI: f32 = 3.14159;
+
 override MAX_DEPTH: u32 = 50u;
 
 @group(0) @binding(0)
 var render_target: texture_storage_2d<rgba32float, read_write>;
 
+@group(1) @binding(0)
+var panorama_texture: texture_2d<f32>;
+
 var<push_constant> sample: u32;
+
+fn reflectance(cosine: f32, eta: f32) -> f32 {
+    var r = (1.0 - eta) / (1.0 + eta);
+    r *= r;
+    return r + (1.0 - r) * pow(1.0 - cosine, 5.0);
+}
 
 @compute
 @workgroup_size(16, 16, 1)
@@ -26,24 +37,33 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
                 let dir = normalize(ray.dir);
                 let eta = select(material.ior, 1.0 / material.ior, intersection.front);
 
-                let cosine = dot(dir, intersection.normal);
+                let cosine = dot(-dir, intersection.normal);
                 let sine = sqrt(1.0 - cosine * cosine);
 
-                if eta * sine >= 1.0 {
+                if eta * sine > 1.0 || rand(&rand_state) < reflectance(cosine, eta) {
                     ray.dir = reflect(dir, intersection.normal);
                 } else {
                     ray.dir = refract(dir, intersection.normal, eta);
                 }
             }
         } else {
-            let alpha = 0.5 * (normalize(ray.dir).y + 1.0);
-            color *= mix(vec3(1.0, 1.0, 1.0), vec3(0.5, 0.7, 1.0), alpha);
+            let dir = normalize(ray.dir);
+            let theta = acos(-dir.y);
+            let phi = atan2(-dir.z, dir.x) + PI;
+
+            let u = phi / (2.0 * PI);
+            let v = theta / PI;
+
+            let x = u32(u * f32(textureDimensions(panorama_texture).x - 1));
+            let y = u32((1.0 - v) * f32(textureDimensions(panorama_texture).y - 1));
+
+            color *= textureLoad(panorama_texture, vec2(x, y), 0).xyz;
             break;
         }
     }
 
     let prev_color = textureLoad(render_target, id.xy);
-    textureStore(render_target, id.xy, prev_color + vec4(color, 0.001));
+    textureStore(render_target, id.xy, prev_color + vec4(color, 1.0) / 100000.0);
 }
 
 struct Interval {
@@ -68,9 +88,8 @@ fn rand(state: ptr<function, u32>) -> f32 {
 fn rand_sphere(state: ptr<function, u32>) -> vec3f {
     let a = rand(state);
     let b = rand(state);
-    let t = 2 * sqrt(b * (1 - b));
-    let x = cos(radians(a * 360)) * t;
-    let y = sin(radians(b * 360)) * t;
+    let x = cos(radians(a * 360)) * 2 * sqrt(b * (1 - b));
+    let y = sin(radians(a * 360)) * 2 * sqrt(b * (1 - b));
     let z = 1 - 2 * b;
     return vec3(x, y, z);
 }
@@ -105,22 +124,31 @@ fn ray_at(ray: Ray, t: f32) -> vec3f {
 }
 
 fn generate_ray(size: vec2u, pix: vec2u, rand_state: ptr<function, u32>) -> Ray {
-    let aspect_ratio = f32(size.x) / f32(size.y);
-    let viewport_height = 2.0;
-    let viewport_width = aspect_ratio * viewport_height;
-    let focus_dist = 1.0;
+    let pos = vec3(0.0, 7.0, 7.0);
+    let center = vec3(0.0, 1.0, 0.0);
+    let vup = vec3(0.0, 1.0, 0.0);
+    let fov = radians(15.0);
 
-    let pix_delta_u = vec3(viewport_width, 0.0, 0.0);
-    let pix_delta_v = vec3(0.0, -viewport_height, 0.0);
+    let focus_dist = 1.0;
+    let aspect_ratio = f32(size.x) / f32(size.y);
+    let viewport_height = 2.0 * tan(fov / 2.0) * focus_dist;
+    let viewport_width = aspect_ratio * viewport_height;
+
+    let front = normalize(center - pos);
+    let right = normalize(cross(front, vup));
+    let up = cross(right, front);
+
+    let pix_delta_u = viewport_width * right;
+    let pix_delta_v = viewport_height * -up;
     let pix_delta_x = pix_delta_u / f32(size.x);
     let pix_delta_y = pix_delta_v / f32(size.y);
-    let pix_orig = vec3(0.0, 0.0, -focus_dist) - 0.5 * pix_delta_u - 0.5 * pix_delta_v;
+    let pix_orig = pos + focus_dist * front - 0.5 * pix_delta_u - 0.5 * pix_delta_v;
 
     let x = f32(pix.x) + rand(rand_state) - 0.5;
     let y = f32(pix.y) + rand(rand_state) - 0.5;
 
     let pix_pos = pix_orig + x * pix_delta_x + y * pix_delta_y;
-    return Ray(vec3(0.0, 0.0, 0.0), pix_pos);
+    return Ray(pos, pix_pos - pos);
 }
 
 struct Intersection {
@@ -140,26 +168,20 @@ fn intersection_flip_normal(intersection: ptr<function, Intersection>, ray: Ray)
     }
 }
 
-const NUM_SPHERES = 4;
-
-struct Scene {
-    spheres: array<Sphere, NUM_SPHERES>
-}
+const NUM_SPHERES = 2;
 
 fn scene_intersect(ray: Ray, intersection: ptr<function, Intersection>) -> bool {
-    let material_ground = Material(true, vec3(0.8, 0.8, 0.8), 0.0);
+    let material_ground = Material(true, vec3(0.4, 0.4, 0.4), 0.0);
     let material_ball = Material(false, vec3(0.0, 0.0, 0.0), 1.5);
-    let material_bubble = Material(false, vec3(0.0, 0.0, 0.0), 1.0 / 1.5);
 
-    var spheres = array(
-        Sphere(vec3(0.0, -100.5, -1.0), 100.0, material_ground),
-        Sphere(vec3(0.0, 0.0, -1.2), 0.5, material_ball),
-        Sphere(vec3(0.0, 0.0, -1.2), 0.4, material_bubble),
+    var spheres = array<Sphere, NUM_SPHERES>(
+        Sphere(vec3(0.0, -1000.0, 0.0), 1000.0, material_ground),
+        Sphere(vec3(0.0, 1.0, 0.0), 1.0, material_ball),
     );
 
     (*intersection).t = 1000.0;
     var intersected = false;
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < NUM_SPHERES; i++) {
         let interval = Interval(0.001, (*intersection).t);
         if sphere_intersect(spheres[i], ray, intersection, interval) {
             intersected = true;
