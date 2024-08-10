@@ -3,7 +3,7 @@ const PI: f32 = 3.14159;
 override MAX_DEPTH: u32;
 
 @group(0) @binding(0)
-var render_target: texture_storage_2d<rgba32float, read_write>;
+var render_target: texture_storage_2d<rgba16float, read_write>;
 
 @group(1) @binding(0)
 var panorama_texture: texture_2d<f32>;

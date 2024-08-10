@@ -40,7 +40,7 @@ impl<'a> Renderer<'a> {
                     visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::StorageTexture {
                         access: wgpu::StorageTextureAccess::ReadWrite,
-                        format: wgpu::TextureFormat::Rgba32Float,
+                        format: wgpu::TextureFormat::Rgba16Float,
                         view_dimension: wgpu::TextureViewDimension::D2,
                     },
                     count: None,
@@ -85,7 +85,7 @@ impl<'a> Renderer<'a> {
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba32Float,
+            format: wgpu::TextureFormat::Rgba16Float,
             usage: wgpu::TextureUsages::STORAGE_BINDING,
             view_formats: &[],
         });

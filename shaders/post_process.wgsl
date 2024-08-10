@@ -1,7 +1,7 @@
 override NUM_SAMPLES: u32;
 
 @group(0) @binding(0)
-var src_texture: texture_storage_2d<rgba32float, read>;
+var src_texture: texture_storage_2d<rgba16float, read>;
 
 @group(0) @binding(1)
 var dst_texture: texture_storage_2d<rgba8unorm, write>;
