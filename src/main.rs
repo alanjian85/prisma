@@ -1,40 +1,47 @@
-use std::{error::Error, rc::Rc};
+use std::{cell::RefCell, error::Error, fs, rc::Rc};
 
 use clap::Parser;
 use prisma::{
     config::Config,
     core::{BindGroupLayoutSet, BindGroupSet, PostProcessor, RenderContext, Renderer},
-    textures::{ImageHdr, Textures},
+    scripting::Scripting,
+    textures::Textures,
 };
+
+fn build_scene(
+    context: Rc<RenderContext>,
+    config: &Config,
+) -> Result<(BindGroupLayoutSet, BindGroupSet), Box<dyn Error>> {
+    let textures = Rc::new(RefCell::new(Textures::new(context)));
+
+    let script = fs::read_to_string(&config.script)?;
+    let scripting = Scripting::new(textures.clone())?;
+    let scene = scripting.load(&script)?;
+
+    let (texture_bind_group_layout, texture_bind_group) = textures.borrow().build();
+
+    let bind_group_layout_set = BindGroupLayoutSet {
+        texture: texture_bind_group_layout,
+    };
+    let bind_group_set = BindGroupSet {
+        texture: texture_bind_group,
+    };
+    Ok((bind_group_layout_set, bind_group_set))
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
     env_logger::init();
     let config = Config::parse();
 
-    let image = pollster::block_on(async {
-        let context = RenderContext::new().await;
+    let context = Rc::new(pollster::block_on(RenderContext::new()));
+    let (bind_group_layout_set, bind_group_set) = build_scene(context.clone(), &config)?;
 
-        let mut textures = Textures::new(&context);
-        textures.set_env_map(Rc::new(
-            ImageHdr::new(&context, "textures/panorama.hdr").unwrap(),
-        ));
-        let (texture_bind_group_layout, texture_bind_group) = textures.build();
+    let renderer = Renderer::new(context.clone(), &config, bind_group_layout_set);
+    renderer.render(bind_group_set);
+    let post_processor = PostProcessor::new(context.clone(), &config);
+    post_processor.post_process(renderer.render_target());
 
-        let bind_group_layout_set = BindGroupLayoutSet {
-            texture: &texture_bind_group_layout,
-        };
-        let bind_group_set = BindGroupSet {
-            texture: &texture_bind_group,
-        };
-
-        let renderer = Renderer::new(&context, &config, bind_group_layout_set);
-        renderer.render(bind_group_set);
-
-        let post_processor = PostProcessor::new(&context, &config);
-        post_processor.post_process(renderer.render_target());
-        post_processor.retrieve_result().await
-    });
-
+    let image = pollster::block_on(post_processor.retrieve_result());
     image.save(config.output)?;
     Ok(())
 }

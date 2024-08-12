@@ -1,11 +1,11 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 use crate::config::{Config, Size};
 
 use super::RenderContext;
 
-pub struct Renderer<'a> {
-    context: &'a RenderContext,
+pub struct Renderer {
+    context: Rc<RenderContext>,
     width: u32,
     height: u32,
     samples: u32,
@@ -14,17 +14,17 @@ pub struct Renderer<'a> {
     render_target: wgpu::Texture,
 }
 
-pub struct BindGroupLayoutSet<'a> {
-    pub texture: &'a wgpu::BindGroupLayout,
+pub struct BindGroupLayoutSet {
+    pub texture: wgpu::BindGroupLayout,
 }
 
-pub struct BindGroupSet<'a> {
-    pub texture: &'a wgpu::BindGroup,
+pub struct BindGroupSet {
+    pub texture: wgpu::BindGroup,
 }
 
-impl<'a> Renderer<'a> {
+impl Renderer {
     pub fn new(
-        context: &'a RenderContext,
+        context: Rc<RenderContext>,
         config: &Config,
         bind_group_layout_set: BindGroupLayoutSet,
     ) -> Self {
@@ -49,7 +49,7 @@ impl<'a> Renderer<'a> {
 
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: None,
-            bind_group_layouts: &[&target_bind_group_layout, bind_group_layout_set.texture],
+            bind_group_layouts: &[&target_bind_group_layout, &bind_group_layout_set.texture],
             push_constant_ranges: &[wgpu::PushConstantRange {
                 stages: wgpu::ShaderStages::COMPUTE,
                 range: 0..4,
@@ -131,7 +131,7 @@ impl<'a> Renderer<'a> {
                 });
                 compute_pass.set_pipeline(&self.pipeline);
                 compute_pass.set_bind_group(0, &output_bind_group, &[]);
-                compute_pass.set_bind_group(1, bind_group_set.texture, &[]);
+                compute_pass.set_bind_group(1, &bind_group_set.texture, &[]);
                 compute_pass.set_push_constants(0, &sample);
                 compute_pass.dispatch_workgroups(self.width / 16, self.height / 16, 1);
             }

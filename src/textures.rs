@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{error::Error, rc::Rc};
 
 use crate::core::RenderContext;
 
@@ -6,9 +6,9 @@ mod image_hdr;
 
 pub use image_hdr::ImageHdr;
 
-pub struct Textures<'a> {
-    context: &'a RenderContext,
-    env_map: Option<Rc<dyn Texture2>>,
+pub struct Textures {
+    context: Rc<RenderContext>,
+    registry: Vec<Rc<dyn Texture2>>,
 }
 
 pub trait Texture2 {
@@ -16,25 +16,29 @@ pub trait Texture2 {
     fn view(&self) -> &wgpu::TextureView;
 }
 
-impl<'a> Textures<'a> {
-    pub fn new(context: &'a RenderContext) -> Self {
+impl Textures {
+    pub fn new(context: Rc<RenderContext>) -> Self {
         Self {
             context,
-            env_map: None,
+            registry: Vec::new(),
         }
     }
 
-    pub fn set_env_map(&mut self, env_map: Rc<dyn Texture2>) {
-        self.env_map = Some(env_map);
+    pub fn create_image_hdr(&mut self, path: &str) -> Result<u32, Box<dyn Error + Send + Sync>> {
+        self.registry
+            .push(Rc::new(ImageHdr::new(&self.context, path)?));
+        Ok(self.registry.len() as u32 - 1)
     }
 
     pub fn build(&self) -> (wgpu::BindGroupLayout, wgpu::BindGroup) {
         let device = self.context.device();
 
-        let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: None,
-            entries: &[wgpu::BindGroupLayoutEntry {
-                binding: 0,
+        let entries: Vec<_> = self
+            .registry
+            .iter()
+            .enumerate()
+            .map(|(i, _)| wgpu::BindGroupLayoutEntry {
+                binding: i as u32,
                 visibility: wgpu::ShaderStages::COMPUTE,
                 ty: wgpu::BindingType::Texture {
                     sample_type: wgpu::TextureSampleType::Float { filterable: false },
@@ -42,16 +46,26 @@ impl<'a> Textures<'a> {
                     multisampled: false,
                 },
                 count: None,
-            }],
+            })
+            .collect();
+        let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: None,
+            entries: &entries,
         });
 
+        let entries: Vec<_> = self
+            .registry
+            .iter()
+            .enumerate()
+            .map(|(i, texture)| wgpu::BindGroupEntry {
+                binding: i as u32,
+                resource: wgpu::BindingResource::TextureView(texture.view()),
+            })
+            .collect();
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: None,
             layout: &bind_group_layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: wgpu::BindingResource::TextureView(self.env_map.as_ref().unwrap().view()),
-            }],
+            entries: &entries,
         });
 
         (bind_group_layout, bind_group)

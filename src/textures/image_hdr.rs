@@ -12,7 +12,7 @@ pub struct ImageHdr {
 }
 
 impl ImageHdr {
-    pub fn new(context: &RenderContext, path: &str) -> Result<Self, Box<dyn Error>> {
+    pub fn new(context: &RenderContext, path: &str) -> Result<Self, Box<dyn Error + Send + Sync>> {
         let device = context.device();
         let queue = context.queue();
 

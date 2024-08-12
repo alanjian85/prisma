@@ -20,6 +20,9 @@ pub struct Config {
     /// The number of samples per pixel
     #[arg(long, default_value_t = 1000)]
     pub samples: u32,
+
+    /// The path to the Lua scene description
+    pub script: String,
 }
 
 #[derive(Clone)]
