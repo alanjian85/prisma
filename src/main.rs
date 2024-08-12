@@ -16,10 +16,10 @@ fn build_scene(
 
     let script = fs::read_to_string(&config.script)?;
     let scripting = Scripting::new(textures.clone())?;
-    let scene = scripting.load(&script)?;
+    let scene = scripting.load(&config, &script)?;
 
     let (texture_bind_group_layout, texture_bind_group) = textures.borrow().build();
-    let (scene_bind_group_layout, scene_bind_group) = scene.build(&context)?;
+    let (scene_bind_group_layout, scene_bind_group) = scene.build(&context.clone())?;
 
     let bind_group_layout_set = BindGroupLayoutSet {
         texture: texture_bind_group_layout,

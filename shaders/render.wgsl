@@ -8,7 +8,15 @@ var render_target: texture_storage_2d<rgba16float, read_write>;
 @group(1) @binding(0)
 var textures: binding_array<texture_2d<f32>>;
 
+struct Camera {
+    pos: vec3f,
+    pix_orig: vec3f,
+    pix_delta_x: vec3f,
+    pix_delta_y: vec3f,
+}
+
 struct SceneUniform {
+    camera: Camera,
     env_map: u32
 }
 
@@ -127,31 +135,11 @@ fn ray_at(ray: Ray, t: f32) -> vec3f {
 }
 
 fn generate_ray(size: vec2u, pix: vec2u, rand_state: ptr<function, u32>) -> Ray {
-    let pos = vec3(0.0, 7.0, 7.0);
-    let center = vec3(0.0, 1.0, 0.0);
-    let vup = vec3(0.0, 1.0, 0.0);
-    let fov = radians(15.0);
-
-    let focus_dist = 1.0;
-    let aspect_ratio = f32(size.x) / f32(size.y);
-    let viewport_height = 2.0 * tan(fov / 2.0) * focus_dist;
-    let viewport_width = aspect_ratio * viewport_height;
-
-    let front = normalize(center - pos);
-    let right = normalize(cross(front, vup));
-    let up = cross(right, front);
-
-    let pix_delta_u = viewport_width * right;
-    let pix_delta_v = viewport_height * -up;
-    let pix_delta_x = pix_delta_u / f32(size.x);
-    let pix_delta_y = pix_delta_v / f32(size.y);
-    let pix_orig = pos + focus_dist * front - 0.5 * pix_delta_u - 0.5 * pix_delta_v;
-
+    let camera = scene.camera;
     let x = f32(pix.x) + rand(rand_state) - 0.5;
     let y = f32(pix.y) + rand(rand_state) - 0.5;
-
-    let pix_pos = pix_orig + x * pix_delta_x + y * pix_delta_y;
-    return Ray(pos, pix_pos - pos);
+    let pix_pos = camera.pix_orig + x * camera.pix_delta_x + y * camera.pix_delta_y;
+    return Ray(camera.pos, pix_pos - camera.pos);
 }
 
 struct Intersection {

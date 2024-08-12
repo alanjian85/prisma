@@ -1,20 +1,28 @@
-use std::{error::Error, mem};
+use std::error::Error;
 
 use encase::{ShaderType, UniformBuffer};
 
-use super::RenderContext;
+use super::{Camera, RenderContext};
 
-#[derive(Default, ShaderType)]
+#[derive(ShaderType)]
 pub struct Scene {
+    camera: Camera,
     env_map: u32,
 }
 
 impl Scene {
     pub fn new() -> Self {
-        Self { env_map: 0 }
+        Self {
+            camera: Camera::new(),
+            env_map: 0,
+        }
     }
 
-    pub fn set_env(&mut self, env_map: u32) {
+    pub fn set_camera(&mut self, camera: Camera) {
+        self.camera = camera;
+    }
+
+    pub fn set_env_map(&mut self, env_map: u32) {
         self.env_map = env_map;
     }
 
@@ -31,14 +39,16 @@ impl Scene {
         let device = context.device();
         let queue = context.queue();
 
+        let wgsl_bytes = &self.as_wgsl_bytes()?;
+
         let uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
-            size: mem::size_of::<Scene>() as u64,
+            size: wgsl_bytes.len() as u64,
             usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::UNIFORM,
             mapped_at_creation: false,
         });
 
-        queue.write_buffer(&uniform_buffer, 0, &self.as_wgsl_bytes()?);
+        queue.write_buffer(&uniform_buffer, 0, &wgsl_bytes);
 
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: None,

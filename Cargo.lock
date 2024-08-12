@@ -483,6 +483,7 @@ checksum = "0265fa0e7bcdb058128cdf7597cdacea42e33911713663a04d971a39cad16afa"
 dependencies = [
  "const_panic",
  "encase_derive",
+ "glam",
  "thiserror",
 ]
 
@@ -637,6 +638,12 @@ dependencies = [
  "log",
  "xml-rs",
 ]
+
+[[package]]
+name = "glam"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "779ae4bf7e8421cf91c0b3b64e7e8b40b862fba4d393f59150042de7c4965a94"
 
 [[package]]
 name = "glow"
@@ -1222,6 +1229,7 @@ dependencies = [
  "clap",
  "encase",
  "env_logger",
+ "glam",
  "image",
  "mlua",
  "pollster",

@@ -2,10 +2,12 @@ use std::{cell::RefCell, rc::Rc};
 
 use mlua::prelude::*;
 
-use crate::{core::Scene, textures::Textures};
+use crate::{config::Config, core::Scene, textures::Textures};
 
+mod camera;
 mod scene;
 mod textures;
+mod utils;
 
 pub struct Scripting {
     lua: Lua,
@@ -17,15 +19,20 @@ impl Scripting {
 
         textures::init(&lua, textures)?;
 
+        let camera = lua.create_table()?;
+        lua.globals().set("camera", camera)?;
+
         let scene = Scene::new();
         lua.globals().set("scene", scene)?;
 
         Ok(Self { lua })
     }
 
-    pub fn load(self, script: &str) -> LuaResult<Scene> {
+    pub fn load(self, config: &Config, script: &str) -> LuaResult<Scene> {
         self.lua.load(script).exec()?;
-        let scene = self.lua.globals().get("scene")?;
+        let camera = camera::load(&self.lua, config)?;
+        let mut scene: Scene = self.lua.globals().get("scene")?;
+        scene.set_camera(camera);
         Ok(scene)
     }
 }
