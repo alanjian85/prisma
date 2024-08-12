@@ -16,10 +16,12 @@ pub struct Renderer {
 
 pub struct BindGroupLayoutSet {
     pub texture: wgpu::BindGroupLayout,
+    pub scene: wgpu::BindGroupLayout,
 }
 
 pub struct BindGroupSet {
     pub texture: wgpu::BindGroup,
+    pub scene: wgpu::BindGroup,
 }
 
 impl Renderer {
@@ -49,7 +51,11 @@ impl Renderer {
 
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: None,
-            bind_group_layouts: &[&target_bind_group_layout, &bind_group_layout_set.texture],
+            bind_group_layouts: &[
+                &target_bind_group_layout,
+                &bind_group_layout_set.texture,
+                &bind_group_layout_set.scene,
+            ],
             push_constant_ranges: &[wgpu::PushConstantRange {
                 stages: wgpu::ShaderStages::COMPUTE,
                 range: 0..4,
@@ -123,7 +129,7 @@ impl Renderer {
                 device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
             {
-                let sample: [u8; 4] = unsafe { std::mem::transmute(sample) };
+                let sample: [u8; 4] = sample.to_ne_bytes();
 
                 let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
                     label: None,
@@ -132,6 +138,7 @@ impl Renderer {
                 compute_pass.set_pipeline(&self.pipeline);
                 compute_pass.set_bind_group(0, &output_bind_group, &[]);
                 compute_pass.set_bind_group(1, &bind_group_set.texture, &[]);
+                compute_pass.set_bind_group(2, &bind_group_set.scene, &[]);
                 compute_pass.set_push_constants(0, &sample);
                 compute_pass.dispatch_workgroups(self.width / 16, self.height / 16, 1);
             }

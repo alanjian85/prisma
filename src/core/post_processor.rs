@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Rc};
+use std::{collections::HashMap, error::Error, rc::Rc, sync::mpsc};
 
 use image::RgbaImage;
 
@@ -136,7 +136,7 @@ impl PostProcessor {
         queue.submit(Some(encoder.finish()));
     }
 
-    pub async fn retrieve_result(&self) -> RgbaImage {
+    pub async fn retrieve_result(&self) -> Result<Option<RgbaImage>, Box<dyn Error>> {
         let device = self.context.device();
         let queue = self.context.queue();
 
@@ -173,11 +173,11 @@ impl PostProcessor {
 
         queue.submit(Some(encoder.finish()));
 
-        let (tx, rx) = flume::bounded(1);
+        let (tx, rx) = mpsc::channel();
         let slice = staging_buffer.slice(..);
         slice.map_async(wgpu::MapMode::Read, move |result| tx.send(result).unwrap());
         device.poll(wgpu::Maintain::Wait).panic_on_timeout();
-        rx.recv_async().await.unwrap().unwrap();
+        rx.recv()??;
 
         let mut buffer = Vec::new();
         {
@@ -186,6 +186,6 @@ impl PostProcessor {
         }
 
         staging_buffer.unmap();
-        RgbaImage::from_raw(self.width, self.height, buffer).unwrap()
+        Ok(RgbaImage::from_raw(self.width, self.height, buffer))
     }
 }

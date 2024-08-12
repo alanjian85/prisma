@@ -1,4 +1,4 @@
-use std::{error::Error, rc::Rc};
+use std::{error::Error, num::NonZeroU32, rc::Rc};
 
 use crate::core::RenderContext;
 
@@ -33,39 +33,28 @@ impl Textures {
     pub fn build(&self) -> (wgpu::BindGroupLayout, wgpu::BindGroup) {
         let device = self.context.device();
 
-        let entries: Vec<_> = self
-            .registry
-            .iter()
-            .enumerate()
-            .map(|(i, _)| wgpu::BindGroupLayoutEntry {
-                binding: i as u32,
+        let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: None,
+            entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
                 visibility: wgpu::ShaderStages::COMPUTE,
                 ty: wgpu::BindingType::Texture {
                     sample_type: wgpu::TextureSampleType::Float { filterable: false },
                     view_dimension: wgpu::TextureViewDimension::D2,
                     multisampled: false,
                 },
-                count: None,
-            })
-            .collect();
-        let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: None,
-            entries: &entries,
+                count: NonZeroU32::new(self.registry.len() as u32),
+            }],
         });
 
-        let entries: Vec<_> = self
-            .registry
-            .iter()
-            .enumerate()
-            .map(|(i, texture)| wgpu::BindGroupEntry {
-                binding: i as u32,
-                resource: wgpu::BindingResource::TextureView(texture.view()),
-            })
-            .collect();
+        let view_array: Vec<_> = self.registry.iter().map(|texture| texture.view()).collect();
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: None,
             layout: &bind_group_layout,
-            entries: &entries,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureViewArray(&view_array),
+            }],
         });
 
         (bind_group_layout, bind_group)

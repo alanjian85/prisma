@@ -6,7 +6,14 @@ override MAX_DEPTH: u32;
 var render_target: texture_storage_2d<rgba16float, read_write>;
 
 @group(1) @binding(0)
-var panorama_texture: texture_2d<f32>;
+var textures: binding_array<texture_2d<f32>>;
+
+struct SceneUniform {
+    env_map: u32
+}
+
+@group(2) @binding(0)
+var<uniform> scene: SceneUniform;
 
 var<push_constant> sample: u32;
 
@@ -41,6 +48,8 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
                 }
             }
         } else {
+            let texture_size = textureDimensions(textures[scene.env_map]);
+
             let dir = normalize(ray.dir);
             let theta = acos(-dir.y);
             let phi = atan2(-dir.z, dir.x) + PI;
@@ -48,10 +57,10 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
             let u = phi / (2.0 * PI);
             let v = theta / PI;
 
-            let x = u32(u * f32(textureDimensions(panorama_texture).x - 1));
-            let y = u32((1.0 - v) * f32(textureDimensions(panorama_texture).y - 1));
+            let x = u32(u * f32(texture_size.x - 1));
+            let y = u32((1.0 - v) * f32(texture_size.y - 1));
 
-            color *= textureLoad(panorama_texture, vec2(x, y), 0).xyz;
+            color *= textureLoad(textures[scene.env_map], vec2(x, y), 0).xyz;
             break;
         }
     }
@@ -165,7 +174,7 @@ fn intersection_flip_normal(intersection: ptr<function, Intersection>, ray: Ray)
 const NUM_SPHERES = 2;
 
 fn scene_intersect(ray: Ray, intersection: ptr<function, Intersection>) -> bool {
-    let material_ground = Material(true, vec3(0.4, 0.4, 0.4), 0.0);
+    let material_ground = Material(true, vec3(1.0, 1.0, 1.0), 0.0);
     let material_ball = Material(false, vec3(0.0, 0.0, 0.0), 1.5);
 
     var spheres = array<Sphere, NUM_SPHERES>(

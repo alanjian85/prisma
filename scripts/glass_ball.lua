@@ -2,6 +2,7 @@
 --camera.center = {0.0, 1.0, 0.0}
 --camera.fov = math.rad(15.0)
 --
+test = ImageHdr.new("textures/bruh.hdr")
 panorama = ImageHdr.new("textures/panorama.hdr")
 scene:set_env(panorama)
 --

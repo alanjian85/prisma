@@ -9,10 +9,10 @@ pub fn init(lua: &Lua, textures: Rc<RefCell<Textures>>) -> LuaResult<()> {
     image_hdr.set(
         "new",
         lua.create_function(move |_lua, path: String| {
-            Ok(textures
+            textures
                 .borrow_mut()
                 .create_image_hdr(&path)
-                .map_err(|err| err.into_lua_err())?)
+                .map_err(|err| err.into_lua_err())
         })?,
     )?;
     lua.globals().set("ImageHdr", image_hdr)?;
