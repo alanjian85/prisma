@@ -11,13 +11,7 @@ pub struct CameraBuilder {
 
 impl CameraBuilder {
     pub fn new() -> CameraBuilder {
-        Self {
-            pos: Vec3::new(0.0, 0.0, 0.0),
-            center: Vec3::new(0.0, 0.0, -1.0),
-            up: Vec3::new(0.0, 1.0, 0.0),
-            fov: 90.0_f32.to_radians(),
-            focus_dist: 1.0,
-        }
+        Self::default()
     }
 
     pub fn pos(&mut self, pos: Vec3) -> &mut CameraBuilder {
@@ -69,21 +63,22 @@ impl CameraBuilder {
     }
 }
 
-#[derive(ShaderType)]
+impl Default for CameraBuilder {
+    fn default() -> Self {
+        Self {
+            pos: Vec3::new(0.0, 0.0, 0.0),
+            center: Vec3::new(0.0, 0.0, -1.0),
+            up: Vec3::new(0.0, 1.0, 0.0),
+            fov: 90.0_f32.to_radians(),
+            focus_dist: 1.0,
+        }
+    }
+}
+
+#[derive(Default, ShaderType)]
 pub struct Camera {
     pos: Vec3,
     pix_orig: Vec3,
     pix_delta_x: Vec3,
     pix_delta_y: Vec3,
-}
-
-impl Camera {
-    pub fn new() -> Camera {
-        Camera {
-            pos: Vec3::new(0.0, 0.0, 0.0),
-            pix_orig: Vec3::new(0.0, 0.0, 0.0),
-            pix_delta_x: Vec3::new(0.0, 0.0, 0.0),
-            pix_delta_y: Vec3::new(0.0, 0.0, 0.0),
-        }
-    }
 }

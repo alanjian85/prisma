@@ -4,7 +4,7 @@ use encase::{ShaderType, UniformBuffer};
 
 use super::{Camera, RenderContext};
 
-#[derive(ShaderType)]
+#[derive(Default, ShaderType)]
 pub struct Scene {
     camera: Camera,
     env_map: u32,
@@ -12,10 +12,7 @@ pub struct Scene {
 
 impl Scene {
     pub fn new() -> Self {
-        Self {
-            camera: Camera::new(),
-            env_map: 0,
-        }
+        Self::default()
     }
 
     pub fn set_camera(&mut self, camera: Camera) {
@@ -48,7 +45,7 @@ impl Scene {
             mapped_at_creation: false,
         });
 
-        queue.write_buffer(&uniform_buffer, 0, &wgsl_bytes);
+        queue.write_buffer(&uniform_buffer, 0, wgsl_bytes);
 
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: None,
