@@ -5,14 +5,14 @@ use crate::primitives::Sphere;
 use super::{Camera, RenderContext};
 
 #[derive(Default, ShaderType)]
-struct States {
+struct Uniform {
     camera: Camera,
     env_map: u32,
 }
 
 #[derive(Default)]
 pub struct Scene {
-    states: States,
+    uniform: Uniform,
     primitives: Vec<Sphere>,
 }
 
@@ -22,11 +22,11 @@ impl Scene {
     }
 
     pub fn set_camera(&mut self, camera: Camera) {
-        self.states.camera = camera;
+        self.uniform.camera = camera;
     }
 
     pub fn set_env_map(&mut self, env_map: u32) {
-        self.states.env_map = env_map;
+        self.uniform.env_map = env_map;
     }
 
     pub fn add(&mut self, sphere: Sphere) {
@@ -41,7 +41,7 @@ impl Scene {
         let queue = context.queue();
 
         let mut wgsl_bytes = UniformBuffer::new(Vec::new());
-        wgsl_bytes.write(&self.states)?;
+        wgsl_bytes.write(&self.uniform)?;
         let wgsl_bytes = wgsl_bytes.into_inner();
 
         let uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {

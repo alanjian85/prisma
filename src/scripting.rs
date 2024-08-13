@@ -2,9 +2,10 @@ use std::{cell::RefCell, rc::Rc};
 
 use mlua::prelude::*;
 
-use crate::{config::Config, core::Scene, textures::Textures};
+use crate::{config::Config, core::Scene, materials::Materials, textures::Textures};
 
 mod camera;
+mod materials;
 mod primitives;
 mod scene;
 mod textures;
@@ -15,10 +16,14 @@ pub struct Scripting {
 }
 
 impl Scripting {
-    pub fn new(textures: Rc<RefCell<Textures>>) -> LuaResult<Self> {
+    pub fn new(
+        textures: Rc<RefCell<Textures>>,
+        materials: Rc<RefCell<Materials>>,
+    ) -> LuaResult<Self> {
         let lua = Lua::new();
 
         textures::init(&lua, textures)?;
+        materials::init(&lua, materials)?;
         primitives::init(&lua)?;
 
         let camera = lua.create_table()?;

@@ -4,6 +4,7 @@ use clap::Parser;
 use prisma::{
     config::Config,
     core::{BindGroupLayoutSet, BindGroupSet, PostProcessor, RenderContext, Renderer},
+    materials::Materials,
     scripting::Scripting,
     textures::Textures,
 };
@@ -13,20 +14,24 @@ fn build_scene(
     config: &Config,
 ) -> Result<(BindGroupLayoutSet, BindGroupSet), Box<dyn Error>> {
     let textures = Rc::new(RefCell::new(Textures::new(context.clone())));
+    let materials = Rc::new(RefCell::new(Materials::new(context.clone())));
 
     let script = fs::read_to_string(&config.script)?;
-    let scripting = Scripting::new(textures.clone())?;
+    let scripting = Scripting::new(textures.clone(), materials.clone())?;
     let scene = scripting.load(config, &script)?;
 
-    let (texture_bind_group_layout, texture_bind_group) = textures.borrow().build();
+    let (textures_bind_group_layout, textures_bind_group) = textures.borrow().build();
+    let (materials_bind_group_layout, materials_bind_group) = materials.borrow().build()?;
     let (scene_bind_group_layout, scene_bind_group) = scene.build(&context.clone())?;
 
     let bind_group_layout_set = BindGroupLayoutSet {
-        texture: texture_bind_group_layout,
+        textures: textures_bind_group_layout,
+        materials: materials_bind_group_layout,
         scene: scene_bind_group_layout,
     };
     let bind_group_set = BindGroupSet {
-        texture: texture_bind_group,
+        textures: textures_bind_group,
+        materials: materials_bind_group,
         scene: scene_bind_group,
     };
     Ok((bind_group_layout_set, bind_group_set))

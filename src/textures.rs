@@ -4,7 +4,7 @@ use crate::core::RenderContext;
 
 mod image_hdr;
 
-pub use image_hdr::ImageHdr;
+use image_hdr::ImageHdr;
 
 pub struct Textures {
     context: Rc<RenderContext>,

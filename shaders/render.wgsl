@@ -8,6 +8,15 @@ var render_target: texture_storage_2d<rgba16float, read_write>;
 @group(1) @binding(0)
 var textures: binding_array<texture_2d<f32>>;
 
+struct Material {
+    ty: u32,
+    albedo: vec3f,
+    ior: f32,
+}
+
+@group(2) @binding(0)
+var<storage, read> materials: array<Material>;
+
 struct Camera {
     pos: vec3f,
     pix_orig: vec3f,
@@ -20,10 +29,16 @@ struct SceneUniform {
     env_map: u32
 }
 
-@group(2) @binding(0)
+@group(3) @binding(0)
 var<uniform> scene: SceneUniform;
 
-@group(2) @binding(1)
+struct Sphere {
+    center: vec3f,
+    radius: f32,
+    material: u32,
+}
+
+@group(3) @binding(1)
 var<storage, read> primitives: array<Sphere>;
 
 var<push_constant> sample: u32;
@@ -40,9 +55,25 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
         var intersection = Intersection();
         if scene_intersect(ray, &intersection) {
             intersection_flip_normal(&intersection, ray);
+            let material = materials[intersection.material];
+
             ray.orig = ray_at(ray, intersection.t);
-            ray.dir = intersection.normal + rand_sphere(&rand_state);
-            color *= vec3(0.5, 0.5, 0.5);
+            if material.ty == 0 {
+                ray.dir = intersection.normal + rand_sphere(&rand_state);
+                color *= material.albedo;
+            } else {
+                let dir = normalize(ray.dir);
+                let eta = select(material.ior, 1.0 / material.ior, intersection.front);
+
+                let cosine = dot(-dir, intersection.normal);
+                let sine = sqrt(1.0 - cosine * cosine);
+
+                if eta * sine > 1.0 || rand(&rand_state) < reflectance(cosine, eta) {
+                    ray.dir = reflect(dir, intersection.normal);
+                } else {
+                    ray.dir = refract(dir, intersection.normal, eta);
+                }
+            }
         } else {
             let texture_size = textureDimensions(textures[scene.env_map]);
 
@@ -134,6 +165,7 @@ struct Intersection {
     t: f32,
     normal: vec3f,
     front: bool,
+    material: u32,
 }
 
 fn intersection_flip_normal(intersection: ptr<function, Intersection>, ray: Ray) {
@@ -158,11 +190,6 @@ fn scene_intersect(ray: Ray, intersection: ptr<function, Intersection>) -> bool 
     return intersected;
 }
 
-struct Sphere {
-    center: vec3f,
-    radius: f32,
-}
-
 fn sphere_intersect(sphere: Sphere, ray: Ray, intersection: ptr<function, Intersection>, interval: Interval) -> bool {
     let oc = sphere.center - ray.orig;
     let a = dot(ray.dir, ray.dir);
@@ -184,5 +211,12 @@ fn sphere_intersect(sphere: Sphere, ray: Ray, intersection: ptr<function, Inters
 
     (*intersection).t = t;
     (*intersection).normal = (ray_at(ray, t) - sphere.center) / sphere.radius;
+    (*intersection).material = sphere.material;
     return true;
+}
+
+fn reflectance(cosine: f32, eta: f32) -> f32 {
+    var r = (1.0 - eta) / (1.0 + eta);
+    r *= r;
+    return r + (1.0 - r) * pow(1.0 - cosine, 5.0);
 }
