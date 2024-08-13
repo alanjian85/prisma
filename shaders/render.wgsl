@@ -23,6 +23,9 @@ struct SceneUniform {
 @group(2) @binding(0)
 var<uniform> scene: SceneUniform;
 
+@group(2) @binding(1)
+var<storage, read> primitives: array<Sphere>;
+
 var<push_constant> sample: u32;
 
 @compute
@@ -37,24 +40,9 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
         var intersection = Intersection();
         if scene_intersect(ray, &intersection) {
             intersection_flip_normal(&intersection, ray);
-            let material = intersection.material;
             ray.orig = ray_at(ray, intersection.t);
-            if material.diffuse {
-                color *= material.albedo;
-                ray.dir = intersection.normal + rand_sphere(&rand_state);
-            } else {
-                let dir = normalize(ray.dir);
-                let eta = select(material.ior, 1.0 / material.ior, intersection.front);
-
-                let cosine = dot(-dir, intersection.normal);
-                let sine = sqrt(1.0 - cosine * cosine);
-
-                if eta * sine > 1.0 || rand(&rand_state) < reflectance(cosine, eta) {
-                    ray.dir = reflect(dir, intersection.normal);
-                } else {
-                    ray.dir = refract(dir, intersection.normal, eta);
-                }
-            }
+            ray.dir = intersection.normal + rand_sphere(&rand_state);
+            color *= vec3(0.5, 0.5, 0.5);
         } else {
             let texture_size = textureDimensions(textures[scene.env_map]);
 
@@ -146,7 +134,6 @@ struct Intersection {
     t: f32,
     normal: vec3f,
     front: bool,
-    material: Material,
 }
 
 fn intersection_flip_normal(intersection: ptr<function, Intersection>, ray: Ray) {
@@ -159,22 +146,12 @@ fn intersection_flip_normal(intersection: ptr<function, Intersection>, ray: Ray)
     }
 }
 
-const NUM_SPHERES = 2;
-
 fn scene_intersect(ray: Ray, intersection: ptr<function, Intersection>) -> bool {
-    let material_ground = Material(true, vec3(1.0, 1.0, 1.0), 0.0);
-    let material_ball = Material(false, vec3(0.0, 0.0, 0.0), 1.5);
-
-    var spheres = array<Sphere, NUM_SPHERES>(
-        Sphere(vec3(0.0, -1000.0, 0.0), 1000.0, material_ground),
-        Sphere(vec3(0.0, 1.0, 0.0), 1.0, material_ball),
-    );
-
     (*intersection).t = 1000.0;
     var intersected = false;
-    for (var i = 0; i < NUM_SPHERES; i++) {
+    for (var i = 0u; i < arrayLength(&primitives); i++) {
         let interval = Interval(0.001, (*intersection).t);
-        if sphere_intersect(spheres[i], ray, intersection, interval) {
+        if sphere_intersect(primitives[i], ray, intersection, interval) {
             intersected = true;
         }
     }
@@ -184,7 +161,6 @@ fn scene_intersect(ray: Ray, intersection: ptr<function, Intersection>) -> bool 
 struct Sphere {
     center: vec3f,
     radius: f32,
-    material: Material,
 }
 
 fn sphere_intersect(sphere: Sphere, ray: Ray, intersection: ptr<function, Intersection>, interval: Interval) -> bool {
@@ -208,18 +184,5 @@ fn sphere_intersect(sphere: Sphere, ray: Ray, intersection: ptr<function, Inters
 
     (*intersection).t = t;
     (*intersection).normal = (ray_at(ray, t) - sphere.center) / sphere.radius;
-    (*intersection).material = sphere.material;
     return true;
-}
-
-struct Material {
-    diffuse: bool,
-    albedo: vec3f,
-    ior: f32,
-}
-
-fn reflectance(cosine: f32, eta: f32) -> f32 {
-    var r = (1.0 - eta) / (1.0 + eta);
-    r *= r;
-    return r + (1.0 - r) * pow(1.0 - cosine, 5.0);
 }

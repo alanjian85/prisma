@@ -5,6 +5,7 @@ use mlua::prelude::*;
 use crate::{config::Config, core::Scene, textures::Textures};
 
 mod camera;
+mod primitives;
 mod scene;
 mod textures;
 mod utils;
@@ -18,6 +19,7 @@ impl Scripting {
         let lua = Lua::new();
 
         textures::init(&lua, textures)?;
+        primitives::init(&lua)?;
 
         let camera = lua.create_table()?;
         lua.globals().set("camera", camera)?;

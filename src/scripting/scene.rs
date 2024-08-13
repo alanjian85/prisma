@@ -1,11 +1,15 @@
 use mlua::{prelude::*, UserData, UserDataMethods, Value};
 
-use crate::core::Scene;
+use crate::{core::Scene, primitives::Sphere};
 
 impl UserData for Scene {
     fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_method_mut("set_env_map", |_, this, env_map: u32| {
             this.set_env_map(env_map);
+            Ok(())
+        });
+        methods.add_method_mut("add", |_, this, sphere: Sphere| {
+            this.add(sphere);
             Ok(())
         });
     }
