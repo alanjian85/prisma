@@ -11,6 +11,7 @@ var textures: binding_array<texture_2d<f32>>;
 struct Material {
     ty: u32,
     albedo: vec3f,
+    fuzziness: f32,
     ior: f32,
 }
 
@@ -60,6 +61,13 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
             ray.orig = ray_at(ray, intersection.t);
             if material.ty == 0 {
                 ray.dir = intersection.normal + rand_sphere(&rand_state);
+                color *= material.albedo;
+            } else if material.ty == 1 {
+                ray.dir = reflect(normalize(ray.dir), intersection.normal) + material.fuzziness * rand_sphere(&rand_state);
+                if dot(ray.dir, intersection.normal) < 0.0 {
+                    color *= vec3(0.0, 0.0, 0.0);
+                    break;
+                }
                 color *= material.albedo;
             } else {
                 let dir = normalize(ray.dir);

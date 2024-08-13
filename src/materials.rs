@@ -5,10 +5,11 @@ use glam::Vec3;
 
 use crate::core::RenderContext;
 
-#[derive(ShaderType)]
+#[derive(Default, ShaderType)]
 pub struct Material {
     ty: u32,
     albedo: Vec3,
+    fuzziness: f32,
     ior: f32,
 }
 
@@ -29,16 +30,26 @@ impl Materials {
         self.registry.push(Material {
             ty: 0,
             albedo,
-            ior: 0.0,
+            ..Default::default()
+        });
+        self.registry.len() as u32 - 1
+    }
+
+    pub fn create_metal(&mut self, albedo: Vec3, fuzziness: f32) -> u32 {
+        self.registry.push(Material {
+            ty: 1,
+            albedo,
+            fuzziness,
+            ..Default::default()
         });
         self.registry.len() as u32 - 1
     }
 
     pub fn create_dielectric(&mut self, ior: f32) -> u32 {
         self.registry.push(Material {
-            ty: 1,
-            albedo: Vec3::new(0.0, 0.0, 0.0),
+            ty: 2,
             ior,
+            ..Default::default()
         });
         self.registry.len() as u32 - 1
     }

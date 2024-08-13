@@ -23,6 +23,20 @@ pub fn init(lua: &Lua, materials: Rc<RefCell<Materials>>) -> LuaResult<()> {
 
     {
         let materials = materials.clone();
+        let metal = lua.create_table()?;
+        metal.set(
+            "new",
+            lua.create_function(move |_lua, (albedo, fuzziness): (Table, f32)| {
+                Ok(materials
+                    .borrow_mut()
+                    .create_metal(utils::table_to_vec3(&albedo)?, fuzziness))
+            })?,
+        )?;
+        lua.globals().set("Metal", metal)?;
+    }
+
+    {
+        let materials = materials.clone();
         let dielectric = lua.create_table()?;
         dielectric.set(
             "new",
