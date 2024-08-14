@@ -1,6 +1,8 @@
 camera.pos = {0.0, 7.0, 7.0}
 camera.center = {0.0, 1.0, 0.0}
 camera.fov = math.rad(15.0)
+camera.focus_dist = 8.8
+camera.lens_angle = math.rad(10.0)
 
 panorama = ImageHdr.new("textures/panorama.hdr")
 scene:set_env_map(panorama)

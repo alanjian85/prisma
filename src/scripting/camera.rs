@@ -29,6 +29,9 @@ pub fn load(lua: &Lua, config: &Config) -> LuaResult<Camera> {
     if let Ok(focus_dist) = camera.get("focus_dist") {
         builder.focus_dist(focus_dist);
     }
+    if let Ok(lens_angle) = camera.get("lens_angle") {
+        builder.lens_angle(lens_angle);
+    }
 
     Ok(builder.build(config.size.width, config.size.height))
 }

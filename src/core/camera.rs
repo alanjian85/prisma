@@ -7,6 +7,7 @@ pub struct CameraBuilder {
     up: Vec3,
     fov: f32,
     focus_dist: f32,
+    lens_angle: f32,
 }
 
 impl CameraBuilder {
@@ -39,9 +40,14 @@ impl CameraBuilder {
         self
     }
 
+    pub fn lens_angle(&mut self, lens_angle: f32) -> &mut CameraBuilder {
+        self.lens_angle = lens_angle;
+        self
+    }
+
     pub fn build(&self, width: u32, height: u32) -> Camera {
         let aspect_ratio = width as f32 / height as f32;
-        let viewport_height = 2.0 * (self.fov / 2.0).tan();
+        let viewport_height = 2.0 * (self.fov / 2.0).tan() * self.focus_dist;
         let viewport_width = aspect_ratio * viewport_height;
 
         let front = (self.center - self.pos).normalize();
@@ -54,11 +60,18 @@ impl CameraBuilder {
         let pix_delta_y = pix_delta_v / height as f32;
         let pix_orig = self.pos + self.focus_dist * front - 0.5 * pix_delta_u - 0.5 * pix_delta_v;
 
+        let lens_radius = (self.lens_angle / 2.0).tan() * self.focus_dist;
+        let lens_delta_x = lens_radius * right;
+        let lens_delta_y = lens_radius * -up;
+
         Camera {
             pos: self.pos,
             pix_orig,
             pix_delta_x,
             pix_delta_y,
+            lens_radius,
+            lens_delta_x,
+            lens_delta_y,
         }
     }
 }
@@ -71,6 +84,7 @@ impl Default for CameraBuilder {
             up: Vec3::new(0.0, 1.0, 0.0),
             fov: 90.0_f32.to_radians(),
             focus_dist: 1.0,
+            lens_angle: 0.0,
         }
     }
 }
@@ -81,4 +95,7 @@ pub struct Camera {
     pix_orig: Vec3,
     pix_delta_x: Vec3,
     pix_delta_y: Vec3,
+    lens_radius: f32,
+    lens_delta_x: Vec3,
+    lens_delta_y: Vec3,
 }

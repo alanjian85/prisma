@@ -23,6 +23,9 @@ struct Camera {
     pix_orig: vec3f,
     pix_delta_x: vec3f,
     pix_delta_y: vec3f,
+    lens_radius: f32,
+    lens_delta_x: vec3f,
+    lens_delta_y: vec3f
 }
 
 struct SceneUniform {
@@ -123,6 +126,21 @@ fn rand(state: ptr<function, u32>) -> f32 {
     return u32_to_f32(*state);
 }
 
+fn rand_square(state: ptr<function, u32>) -> vec2f {
+    return vec2(rand(state) - 0.5, rand(state) - 0.5);
+}
+
+fn rand_disk(state: ptr<function, u32>) -> vec2f {
+    var v: vec2f;
+    loop {
+        v = rand_square(state);
+        if dot(v, v) < 1.0 {
+            break;
+        }
+    }
+    return v;
+}
+
 fn rand_sphere(state: ptr<function, u32>) -> vec3f {
     let a = rand(state);
     let b = rand(state);
@@ -163,10 +181,14 @@ fn ray_at(ray: Ray, t: f32) -> vec3f {
 
 fn generate_ray(size: vec2u, pix: vec2u, rand_state: ptr<function, u32>) -> Ray {
     let camera = scene.camera;
-    let x = f32(pix.x) + rand(rand_state) - 0.5;
-    let y = f32(pix.y) + rand(rand_state) - 0.5;
-    let pix_pos = camera.pix_orig + x * camera.pix_delta_x + y * camera.pix_delta_y;
-    return Ray(camera.pos, pix_pos - camera.pos);
+
+    let ray_offset = camera.lens_radius * rand_disk(rand_state);
+    let ray_pos = camera.pos + ray_offset.x * camera.lens_delta_x + ray_offset.y * camera.lens_delta_y;
+
+    let pix_xy = vec2f(pix) + rand_square(rand_state);
+    let pix_pos = camera.pix_orig + pix_xy.x * camera.pix_delta_x + pix_xy.y * camera.pix_delta_y;
+    
+    return Ray(ray_pos, pix_pos - ray_pos);
 }
 
 struct Intersection {
