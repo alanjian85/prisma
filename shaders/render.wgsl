@@ -45,6 +45,43 @@ struct Sphere {
 @group(3) @binding(1)
 var<storage, read> primitives: array<Sphere>;
 
+struct Aabb3 {
+    min: vec3f,
+    max: vec3f,
+}
+
+fn aabb_intersect(aabb: Aabb3, ray: Ray, interval: Interval) -> bool {
+    var t_interval = interval;
+    for (var i = 0; i < 3; i++) {
+        let inv_dir = 1.0 / ray.dir[i];
+
+        let t0 = (aabb.min[i] - ray.orig[i]) * inv_dir;
+        let t1 = (aabb.max[i] - ray.orig[i]) * inv_dir;
+
+        if t0 < t1 {
+            t_interval.min = max(t_interval.min, t0);
+            t_interval.max = min(t_interval.max, t1);
+        } else {
+            t_interval.min = max(t_interval.min, t1);
+            t_interval.max = min(t_interval.max, t0);
+        }
+
+        if t_interval.min >= t_interval.max {
+            return false;
+        }
+    }
+    return true;
+}
+
+struct BvhNode {
+    aabb: Aabb3,
+    rigth_idx: u32,
+    primitive: u32,
+}
+
+@group(3) @binding(2)
+var<storage, read> bvh_nodes: array<BvhNode>;
+
 var<push_constant> sample: u32;
 
 @compute
@@ -114,6 +151,10 @@ struct Interval {
 
 fn interval_surrounds(interval: Interval, x: f32) -> bool {
     return interval.min < x && x < interval.max;
+}
+
+fn interval_overlaps(lhs: Interval, rhs: Interval) -> bool {
+    return !(lhs.min > rhs.max || lhs.max < rhs.min);
 }
 
 fn rand_init(id: vec2u, size: vec2u, frame: u32) -> u32 {
@@ -187,7 +228,7 @@ fn generate_ray(size: vec2u, pix: vec2u, rand_state: ptr<function, u32>) -> Ray 
 
     let pix_xy = vec2f(pix) + rand_square(rand_state);
     let pix_pos = camera.pix_orig + pix_xy.x * camera.pix_delta_x + pix_xy.y * camera.pix_delta_y;
-    
+
     return Ray(ray_pos, pix_pos - ray_pos);
 }
 
@@ -209,14 +250,39 @@ fn intersection_flip_normal(intersection: ptr<function, Intersection>, ray: Ray)
 }
 
 fn scene_intersect(ray: Ray, intersection: ptr<function, Intersection>) -> bool {
+    var stack = array<u32, 32>();
+    var stack_ptr = 1u;
+    stack[0] = 0u;
     (*intersection).t = 1000.0;
+
+    var node = 0u;
     var intersected = false;
-    for (var i = 0u; i < arrayLength(&primitives); i++) {
+    var idx = 0;
+    loop {
         let interval = Interval(0.001, (*intersection).t);
-        if sphere_intersect(primitives[i], ray, intersection, interval) {
-            intersected = true;
+
+        let left = node + 1;
+        let right = bvh_nodes[node].rigth_idx;
+
+        if right == 0 || !aabb_intersect(bvh_nodes[node].aabb, ray, interval) {
+            if right == 0 && sphere_intersect(primitives[bvh_nodes[node].primitive], ray, intersection, interval) {
+                intersected = true;
+            }
+            stack_ptr--;
+            node = stack[stack_ptr];
+        } else {
+            node = left;
+            stack[stack_ptr] = right;
+            stack_ptr++;
+        }
+
+        idx++;
+
+        if node == 0 {
+            break;
         }
     }
+
     return intersected;
 }
 

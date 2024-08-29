@@ -2,7 +2,7 @@ use encase::{ShaderType, StorageBuffer, UniformBuffer};
 
 use crate::primitives::Sphere;
 
-use super::{Camera, RenderContext};
+use super::{Bvh, Camera, RenderContext};
 
 #[derive(Default, ShaderType)]
 struct Uniform {
@@ -34,7 +34,7 @@ impl Scene {
     }
 
     pub fn build(
-        &self,
+        &mut self,
         context: &RenderContext,
     ) -> encase::internal::Result<(wgpu::BindGroupLayout, wgpu::BindGroup)> {
         let device = context.device();
@@ -52,17 +52,31 @@ impl Scene {
         });
         queue.write_buffer(&uniform_buffer, 0, &wgsl_bytes);
 
+        let bvh = Bvh::new(&mut self.primitives);
+
         let mut wgsl_bytes = StorageBuffer::new(Vec::new());
         wgsl_bytes.write(&self.primitives)?;
         let wgsl_bytes = wgsl_bytes.into_inner();
 
-        let storage_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        let primitive_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
             size: wgsl_bytes.len() as u64,
             usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::STORAGE,
             mapped_at_creation: false,
         });
-        queue.write_buffer(&storage_buffer, 0, &wgsl_bytes);
+        queue.write_buffer(&primitive_buffer, 0, &wgsl_bytes);
+
+        let mut wgsl_bytes = StorageBuffer::new(Vec::new());
+        wgsl_bytes.write(&bvh.flatten())?;
+        let wgsl_bytes = wgsl_bytes.into_inner();
+
+        let bvh_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: wgsl_bytes.len() as u64,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::STORAGE,
+            mapped_at_creation: false,
+        });
+        queue.write_buffer(&bvh_buffer, 0, &wgsl_bytes);
 
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: None,
@@ -87,6 +101,16 @@ impl Scene {
                     },
                     count: None,
                 },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 2,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
             ],
         });
 
@@ -100,7 +124,11 @@ impl Scene {
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: storage_buffer.as_entire_binding(),
+                    resource: primitive_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: bvh_buffer.as_entire_binding(),
                 },
             ],
         });

@@ -18,7 +18,7 @@ fn build_scene(
 
     let script = fs::read_to_string(&config.script)?;
     let scripting = Scripting::new(textures.clone(), materials.clone())?;
-    let scene = scripting.load(config, &script)?;
+    let mut scene = scripting.load(config, &script)?;
 
     let (textures_bind_group_layout, textures_bind_group) = textures.borrow().build();
     let (materials_bind_group_layout, materials_bind_group) = materials.borrow().build()?;
