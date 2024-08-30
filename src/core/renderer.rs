@@ -1,5 +1,7 @@
 use std::{collections::HashMap, rc::Rc};
 
+use indicatif::ProgressBar;
+
 use crate::config::{Config, Size};
 
 use super::RenderContext;
@@ -127,6 +129,8 @@ impl Renderer {
             }],
         });
 
+        let progress_bar = ProgressBar::new(self.samples as u64);
+
         for sample in 0..self.samples {
             let mut encoder =
                 device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
@@ -148,7 +152,11 @@ impl Renderer {
             }
 
             queue.submit(Some(encoder.finish()));
+            progress_bar.inc(1);
         }
+
+        device.poll(wgpu::Maintain::Wait);
+        progress_bar.finish();
     }
 
     pub fn render_target(&self) -> &wgpu::Texture {
