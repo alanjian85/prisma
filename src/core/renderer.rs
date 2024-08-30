@@ -158,7 +158,7 @@ impl Renderer {
         }
 
         device.poll(wgpu::Maintain::Wait);
-        progress_bar.finish();
+        progress_bar.finish_and_clear();
     }
 
     pub fn render_target(&self) -> &wgpu::Texture {

@@ -257,7 +257,6 @@ fn scene_intersect(ray: Ray, intersection: ptr<function, Intersection>) -> bool 
 
     var node = 0u;
     var intersected = false;
-    var idx = 0;
     loop {
         let interval = Interval(0.001, (*intersection).t);
 
@@ -275,8 +274,6 @@ fn scene_intersect(ray: Ray, intersection: ptr<function, Intersection>) -> bool 
             stack[stack_ptr] = right;
             stack_ptr++;
         }
-
-        idx++;
 
         if node == 0 {
             break;

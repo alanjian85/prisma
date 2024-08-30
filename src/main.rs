@@ -1,6 +1,7 @@
 use std::{cell::RefCell, error::Error, fs, rc::Rc};
 
 use clap::Parser;
+use console::Emoji;
 use prisma::{
     config::Config,
     core::{BindGroupLayoutSet, BindGroupSet, PostProcessor, RenderContext, Renderer},
@@ -42,14 +43,35 @@ fn main() -> Result<(), Box<dyn Error>> {
     let config = Config::parse();
 
     let context = Rc::new(pollster::block_on(RenderContext::new())?);
+    println!(
+        "{} {} Parsing and loading the scene...",
+        console::style("[1/4]").bold().dim(),
+        Emoji("📜 ", "")
+    );
     let (bind_group_layout_set, bind_group_set) = build_scene(context.clone(), &config)?;
 
     let renderer = Renderer::new(context.clone(), &config, bind_group_layout_set);
+    println!(
+        "{} {} Taking samples of path-traced rays...",
+        console::style("[2/4]").bold().dim(),
+        Emoji("📷 ", "")
+    );
     renderer.render(bind_group_set);
+
+    println!(
+        "{} {} Applying post-processing effects...",
+        console::style("[3/4]").bold().dim(),
+        Emoji("🌟 ", "")
+    );
     let post_processor = PostProcessor::new(context.clone(), &config);
     post_processor.post_process(renderer.render_target());
 
     let image = pollster::block_on(post_processor.retrieve_result())?.unwrap();
+    println!(
+        "{} {} Exporting the image...",
+        console::style("[4/4]").bold().dim(),
+        Emoji("🎞️  ", "")
+    );
     image.save(config.output)?;
     Ok(())
 }
