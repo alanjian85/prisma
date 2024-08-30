@@ -10,6 +10,8 @@ pub struct PostProcessor {
     context: Rc<RenderContext>,
     width: u32,
     height: u32,
+    aligned_width: u32,
+    aligned_height: u32,
     bind_group_layout: wgpu::BindGroupLayout,
     pipeline: wgpu::ComputePipeline,
     dst_texture: wgpu::Texture,
@@ -20,6 +22,8 @@ impl PostProcessor {
         let device = context.device();
 
         let Size { width, height } = config.size;
+        let aligned_width = (width + 15) / 16 * 16;
+        let aligned_height = (height + 15) / 16 * 16;
 
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: None,
@@ -75,8 +79,8 @@ impl PostProcessor {
         let dst_texture = device.create_texture(&wgpu::TextureDescriptor {
             label: None,
             size: wgpu::Extent3d {
-                width,
-                height,
+                width: aligned_width,
+                height: aligned_height,
                 depth_or_array_layers: 1,
             },
             mip_level_count: 1,
@@ -91,6 +95,8 @@ impl PostProcessor {
             context,
             width,
             height,
+            aligned_width,
+            aligned_height,
             bind_group_layout,
             pipeline,
             dst_texture,
@@ -130,7 +136,7 @@ impl PostProcessor {
             });
             compute_pass.set_pipeline(&self.pipeline);
             compute_pass.set_bind_group(0, &bind_group, &[]);
-            compute_pass.dispatch_workgroups(self.width / 16, self.height / 16, 1);
+            compute_pass.dispatch_workgroups(self.aligned_width / 16, self.aligned_height / 16, 1);
         }
 
         queue.submit(Some(encoder.finish()));
@@ -140,9 +146,10 @@ impl PostProcessor {
         let device = self.context.device();
         let queue = self.context.queue();
 
+        let padded_width = (self.width + 63) / 64 * 64;
         let staging_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
-            size: (self.width * self.height * 4) as u64,
+            size: (padded_width * self.height * 4) as u64,
             usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
             mapped_at_creation: false,
         });
@@ -160,7 +167,7 @@ impl PostProcessor {
                 buffer: &staging_buffer,
                 layout: wgpu::ImageDataLayout {
                     offset: 0,
-                    bytes_per_row: Some(self.width * 4),
+                    bytes_per_row: Some(padded_width * 4),
                     rows_per_image: None,
                 },
             },
@@ -184,8 +191,17 @@ impl PostProcessor {
             let view = slice.get_mapped_range();
             buffer.extend_from_slice(&view[..]);
         }
-
         staging_buffer.unmap();
-        Ok(RgbaImage::from_raw(self.width, self.height, buffer))
+
+        let mut image_buffer = Vec::with_capacity((self.width * self.height * 4) as usize);
+        for y in 0..self.height {
+            for x in 0..self.width {
+                for i in 0..4 {
+                    image_buffer.push(buffer[((y * padded_width + x) * 4 + i) as usize]);
+                }
+            }
+        }
+
+        Ok(RgbaImage::from_raw(self.width, self.height, image_buffer))
     }
 }

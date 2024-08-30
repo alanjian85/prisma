@@ -37,6 +37,8 @@ impl Renderer {
         let device = context.device();
 
         let Size { width, height } = config.size;
+        let width = (width + 15) / 16 * 16;
+        let height = (height + 15) / 16 * 16;
 
         let target_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
