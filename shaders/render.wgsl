@@ -35,14 +35,15 @@ struct SceneUniform {
 @group(3) @binding(0)
 var<uniform> scene: SceneUniform;
 
-struct Sphere {
-    center: vec3f,
-    radius: f32,
+struct Triangle {
+    p0: vec3f,
+    p1: vec3f,
+    p2: vec3f,
     material: u32,
 }
 
 @group(3) @binding(1)
-var<storage, read> primitives: array<Sphere>;
+var<storage, read> primitives: array<Triangle>;
 
 struct Aabb3 {
     min: vec3f,
@@ -108,7 +109,7 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
                     break;
                 }
                 color *= material.albedo;
-            } else {
+            } else if material.ty == 2 {
                 let dir = normalize(ray.dir);
                 let eta = select(material.ior, 1.0 / material.ior, intersection.front);
 
@@ -120,6 +121,9 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
                 } else {
                     ray.dir = refract(dir, intersection.normal, eta);
                 }
+            } else {
+                color *= material.albedo;
+                break;
             }
         } else {
             let texture_size = textureDimensions(textures[scene.env_map]);
@@ -134,7 +138,7 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
             let x = u32(u * f32(texture_size.x - 1));
             let y = u32((1.0 - v) * f32(texture_size.y - 1));
 
-            color *= textureLoad(textures[scene.env_map], vec2(x, y), 0).xyz;
+            color *= vec3(0.0, 0.0, 0.0); //textureLoad(textures[scene.env_map], vec2(x, y), 0).xyz;
             break;
         }
     }
@@ -150,10 +154,6 @@ struct Interval {
 
 fn interval_surrounds(interval: Interval, x: f32) -> bool {
     return interval.min < x && x < interval.max;
-}
-
-fn interval_overlaps(lhs: Interval, rhs: Interval) -> bool {
-    return !(lhs.min > rhs.max || lhs.max < rhs.min);
 }
 
 fn rand_init(id: vec2u, size: vec2u, frame: u32) -> u32 {
@@ -243,63 +243,109 @@ fn intersection_flip_normal(intersection: ptr<function, Intersection>, ray: Ray)
     }
 }
 
-fn scene_intersect(ray: Ray, intersection: ptr<function, Intersection>) -> bool {
-    var stack = array<u32, 32>();
-    var stack_ptr = 1u;
-    stack[0] = 0u;
-    (*intersection).t = 1000.0;
+fn triangle_intersect(triangle: Triangle, ray: Ray, intersection: ptr<function, Intersection>, interval: Interval) -> bool {
+    var p0 = triangle.p0 - ray.orig;
+    var p1 = triangle.p1 - ray.orig;
+    var p2 = triangle.p2 - ray.orig;
 
-    var node = 0u;
-    var intersected = false;
-    loop {
-        let interval = Interval(0.001, (*intersection).t);
+    let z = max_dim(abs(ray.dir));
+    let x = (z + 1) % 3;
+    let y = (x + 1) % 3;
+    p0 = permute(p0, x, y, z);
+    p1 = permute(p1, x, y, z);
+    p2 = permute(p2, x, y, z);
 
-        let left = node + 1;
-        let right = bvh_nodes[node].rigth_idx;
+    let sx = -ray.dir[x] / ray.dir[z];
+    let sy = -ray.dir[y] / ray.dir[z];
+    let sz = 1.0 / ray.dir[z];
+    p0 += vec3(p0.z * vec2(sx, sy), 0.0);
+    p1 += vec3(p1.z * vec2(sx, sy), 0.0);
+    p2 += vec3(p2.z * vec2(sx, sy), 0.0);
 
-        if right == 0 || !aabb_intersect(bvh_nodes[node].aabb, ray, interval) {
-            if right == 0 && sphere_intersect(primitives[bvh_nodes[node].primitive], ray, intersection, interval) {
-                intersected = true;
-            }
-            stack_ptr--;
-            node = stack[stack_ptr];
-        } else {
-            node = left;
-            stack[stack_ptr] = right;
-            stack_ptr++;
-        }
-
-        if node == 0 {
-            break;
-        }
+    let e0 = p1.x * p2.y - p1.y * p2.x;
+    let e1 = p2.x * p0.y - p2.y * p0.x;
+    let e2 = p0.x * p1.y - p0.y * p1.x;
+    if (e0 < 0 || e1 < 0 || e2 < 0) && (e0 > 0 || e1 > 0 || e2 > 0) {
+        return false;
     }
-
-    return intersected;
-}
-
-fn sphere_intersect(sphere: Sphere, ray: Ray, intersection: ptr<function, Intersection>, interval: Interval) -> bool {
-    let oc = sphere.center - ray.orig;
-    let a = dot(ray.dir, ray.dir);
-    let b = dot(ray.dir, oc);
-    let c = dot(oc, oc) - sphere.radius * sphere.radius;
-    let discriminant = b * b - a * c;
-
-    if discriminant < 0.0 {
+    let det = e0 + e1 + e2;
+    if det == 0 {
         return false;
     }
 
-    var t = (b - sqrt(discriminant)) / a;
+    p0.z *= sz;
+    p1.z *= sz;
+    p2.z *= sz;
+    let t = (e0 * p0.z + e1 * p1.z + e2 * p2.z) / det;
     if !interval_surrounds(interval, t) {
-        t = (b + sqrt(discriminant)) / a;
-        if !interval_surrounds(interval, t) {
-            return false;
-        }
+        return false;
     }
 
     (*intersection).t = t;
-    (*intersection).normal = (ray_at(ray, t) - sphere.center) / sphere.radius;
-    (*intersection).material = sphere.material;
+    (*intersection).normal = normalize(cross(p0 - p2, p1 - p2));
+    (*intersection).material = triangle.material;
+
     return true;
+}
+
+fn max_dim(v: vec3f) -> u32 {
+    if v.x > v.y && v.x > v.z {
+        return 0u;
+    } else if v.y > v.z {
+        return 1u;
+    } else {
+        return 2u;
+    }
+}
+
+fn permute(v: vec3f, x: u32, y: u32, z: u32) -> vec3f {
+    let vx = v[x];
+    let vy = v[y];
+    let vz = v[z];
+    return vec3(vx, vy, vz);
+}
+
+fn scene_intersect(ray: Ray, intersection: ptr<function, Intersection>) -> bool {
+//    var stack = array<u32, 32>();
+//    var stack_ptr = 1u;
+//    stack[0] = 0u;
+//    (*intersection).t = bitcast<f32>(0x7F800000);
+//
+//    var node = 0u;
+//    var intersected = false;
+//    loop {
+//        let interval = Interval(0.001, (*intersection).t);
+//
+//        let left = node + 1;
+//        let right = bvh_nodes[node].rigth_idx;
+//
+//        if right == 0 || !aabb_intersect(bvh_nodes[node].aabb, ray, interval) {
+//            if right == 0 && triangle_intersect(primitives[bvh_nodes[node].primitive], ray, intersection, interval) {
+//                intersected = true;
+//            }
+//            stack_ptr--;
+//            node = stack[stack_ptr];
+//        } else {
+//            node = left;
+//            stack[stack_ptr] = right;
+//            stack_ptr++;
+//        }
+//
+//        if node == 0 {
+//            break;
+//        }
+//    }
+//
+//    return intersected;
+    (*intersection).t = bitcast<f32>(0x7F800000);
+    var intersected = false;
+    for (var i = 0u; i < arrayLength(&primitives); i++) {
+        let interval = Interval(0.001, (*intersection).t);
+        if triangle_intersect(primitives[i], ray, intersection, interval) {
+            intersected = true;
+        }
+    }
+    return intersected;
 }
 
 fn reflectance(cosine: f32, eta: f32) -> f32 {

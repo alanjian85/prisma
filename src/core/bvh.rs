@@ -1,6 +1,6 @@
 use encase::ShaderType;
 
-use crate::primitives::Sphere;
+use crate::primitives::Triangle;
 
 use super::Aabb3;
 
@@ -12,7 +12,7 @@ struct BvhNode {
 }
 
 impl BvhNode {
-    pub fn new(primitives: &mut [Sphere], start: usize, end: usize) -> Self {
+    pub fn new(primitives: &mut [Triangle], start: usize, end: usize) -> Self {
         if end - start == 1 {
             return Self {
                 left: None,
@@ -67,7 +67,7 @@ pub struct Bvh {
 }
 
 impl Bvh {
-    pub fn new(primitives: &mut [Sphere]) -> Self {
+    pub fn new(primitives: &mut [Triangle]) -> Self {
         let len = primitives.len();
         let root = Box::new(BvhNode::new(primitives, 0, len));
         Self { root }

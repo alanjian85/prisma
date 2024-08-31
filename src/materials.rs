@@ -54,6 +54,15 @@ impl Materials {
         self.registry.len() as u32 - 1
     }
 
+    pub fn create_light(&mut self, albedo: Vec3) -> u32 {
+        self.registry.push(Material {
+            ty: 3,
+            albedo,
+            ..Default::default()
+        });
+        self.registry.len() as u32 - 1
+    }
+
     pub fn build(&self) -> encase::internal::Result<(wgpu::BindGroupLayout, wgpu::BindGroup)> {
         let device = self.context.device();
         let queue = self.context.queue();

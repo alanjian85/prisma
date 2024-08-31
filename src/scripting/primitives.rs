@@ -1,21 +1,25 @@
 use mlua::{prelude::*, Table};
 
-use crate::primitives::Sphere;
+use crate::primitives::Triangle;
 
 use super::utils;
 
 pub fn init(lua: &Lua) -> LuaResult<()> {
-    let sphere = lua.create_table()?;
-    sphere.set(
+    let triangle = lua.create_table()?;
+    triangle.set(
         "new",
-        lua.create_function(move |_lua, (center, radius, material): (Table, f32, u32)| {
-            Ok(Sphere::new(
-                utils::table_to_vec3(&center)?,
-                radius,
-                material,
-            ))
-        })?,
+        lua.create_function(
+            move |_lua, (p0, p1, p2, material): (Table, Table, Table, u32)| {
+                Ok(Triangle::new(
+                    utils::table_to_vec3(&p0)?,
+                    utils::table_to_vec3(&p1)?,
+                    utils::table_to_vec3(&p2)?,
+                    material,
+                ))
+            },
+        )?,
     )?;
-    lua.globals().set("Sphere", sphere)?;
+    lua.globals().set("Triangle", triangle)?;
+
     Ok(())
 }

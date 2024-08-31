@@ -47,5 +47,19 @@ pub fn init(lua: &Lua, materials: Rc<RefCell<Materials>>) -> LuaResult<()> {
         lua.globals().set("Dielectric", dielectric)?;
     }
 
+    {
+        let materials = materials.clone();
+        let light = lua.create_table()?;
+        light.set(
+            "new",
+            lua.create_function(move |_lua, albedo: Table| {
+                Ok(materials
+                    .borrow_mut()
+                    .create_light(utils::table_to_vec3(&albedo)?))
+            })?,
+        )?;
+        lua.globals().set("Light", light)?;
+    }
+
     Ok(())
 }

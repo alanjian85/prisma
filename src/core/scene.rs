@@ -1,6 +1,6 @@
 use encase::{ShaderType, StorageBuffer, UniformBuffer};
 
-use crate::primitives::Sphere;
+use crate::primitives::Triangle;
 
 use super::{Bvh, Camera, RenderContext};
 
@@ -13,7 +13,7 @@ struct Uniform {
 #[derive(Default)]
 pub struct Scene {
     uniform: Uniform,
-    primitives: Vec<Sphere>,
+    primitives: Vec<Triangle>,
 }
 
 impl Scene {
@@ -29,8 +29,8 @@ impl Scene {
         self.uniform.env_map = env_map;
     }
 
-    pub fn add(&mut self, sphere: Sphere) {
-        self.primitives.push(sphere);
+    pub fn add(&mut self, triangle: Triangle) {
+        self.primitives.push(triangle);
     }
 
     pub fn build(

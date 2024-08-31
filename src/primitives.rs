@@ -5,25 +5,29 @@ use mlua::{prelude::*, UserData};
 use crate::core::Aabb3;
 
 #[derive(FromLua, Clone, ShaderType)]
-pub struct Sphere {
-    center: Vec3,
-    radius: f32,
-    materials: u32,
+pub struct Triangle {
+    p0: Vec3,
+    p1: Vec3,
+    p2: Vec3,
+    material: u32,
 }
 
-impl Sphere {
-    pub fn new(center: Vec3, radius: f32, materials: u32) -> Self {
+impl Triangle {
+    pub fn new(p0: Vec3, p1: Vec3, p2: Vec3, material: u32) -> Self {
         Self {
-            center,
-            radius,
-            materials,
+            p0,
+            p1,
+            p2,
+            material,
         }
     }
 
     pub fn aabb(&self) -> Aabb3 {
-        let r = Vec3::new(self.radius, self.radius, self.radius);
-        Aabb3::from_corners(self.center + r, self.center - r)
+        Aabb3::new()
+            .union_point(self.p0)
+            .union_point(self.p1)
+            .union_point(self.p2)
     }
 }
 
-impl UserData for Sphere {}
+impl UserData for Triangle {}
