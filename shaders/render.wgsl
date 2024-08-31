@@ -23,7 +23,6 @@ struct Camera {
     pix_orig: vec3f,
     pix_delta_x: vec3f,
     pix_delta_y: vec3f,
-    lens_radius: f32,
     lens_delta_x: vec3f,
     lens_delta_y: vec3f
 }
@@ -172,22 +171,17 @@ fn rand_square(state: ptr<function, u32>) -> vec2f {
 }
 
 fn rand_disk(state: ptr<function, u32>) -> vec2f {
-    var v: vec2f;
-    loop {
-        v = rand_square(state);
-        if dot(v, v) < 1.0 {
-            break;
-        }
-    }
-    return v;
+    let r = sqrt(rand(state));
+    let theta = 2.0 * PI * rand(state);
+    return r * vec2(cos(theta), sin(theta));
 }
 
 fn rand_sphere(state: ptr<function, u32>) -> vec3f {
     let a = rand(state);
     let b = rand(state);
-    let x = cos(2 * PI * a) * 2 * sqrt(b * (1 - b));
-    let y = sin(2 * PI * a) * 2 * sqrt(b * (1 - b));
-    let z = 1 - 2 * b;
+    let x = cos(2.0 * PI * a) * 2.0 * sqrt(b * (1 - b));
+    let y = sin(2.0 * PI * a) * 2.0 * sqrt(b * (1 - b));
+    let z = 1.0 - 2.0 * b;
     return vec3(x, y, z);
 }
 
@@ -223,7 +217,7 @@ fn ray_at(ray: Ray, t: f32) -> vec3f {
 fn generate_ray(size: vec2u, pix: vec2u, rand_state: ptr<function, u32>) -> Ray {
     let camera = scene.camera;
 
-    let ray_offset = camera.lens_radius * rand_disk(rand_state);
+    let ray_offset = rand_disk(rand_state);
     let ray_pos = camera.pos + ray_offset.x * camera.lens_delta_x + ray_offset.y * camera.lens_delta_y;
 
     let pix_xy = vec2f(pix) + rand_square(rand_state);

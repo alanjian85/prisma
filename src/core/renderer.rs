@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Rc};
+use std::{collections::HashMap, rc::Rc, sync::Arc};
 
 use indicatif::ProgressBar;
 
@@ -131,7 +131,7 @@ impl Renderer {
             }],
         });
 
-        let progress_bar = ProgressBar::new(self.samples as u64);
+        let progress_bar = Arc::new(ProgressBar::new(self.samples as u64));
 
         for sample in 0..self.samples {
             let mut encoder =
@@ -153,8 +153,9 @@ impl Renderer {
                 compute_pass.dispatch_workgroups(self.width / 16, self.height / 16, 1);
             }
 
+            let progress_bar = progress_bar.clone();
             queue.submit(Some(encoder.finish()));
-            progress_bar.inc(1);
+            queue.on_submitted_work_done(move || progress_bar.inc(1));
         }
 
         device.poll(wgpu::Maintain::Wait);

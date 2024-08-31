@@ -69,7 +69,6 @@ impl CameraBuilder {
             pix_orig,
             pix_delta_x,
             pix_delta_y,
-            lens_radius,
             lens_delta_x,
             lens_delta_y,
         }
@@ -95,7 +94,6 @@ pub struct Camera {
     pix_orig: Vec3,
     pix_delta_x: Vec3,
     pix_delta_y: Vec3,
-    lens_radius: f32,
     lens_delta_x: Vec3,
     lens_delta_y: Vec3,
 }
