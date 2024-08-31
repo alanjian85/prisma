@@ -8,7 +8,8 @@ struct BvhNode {
     left: Option<Box<BvhNode>>,
     right: Option<Box<BvhNode>>,
     aabb: Aabb3,
-    primitive: u32,
+    primitive_start: u32,
+    primitive_end: u32,
 }
 
 impl BvhNode {
@@ -18,7 +19,8 @@ impl BvhNode {
                 left: None,
                 right: None,
                 aabb: primitives[start].aabb(),
-                primitive: start as u32,
+                primitive_start: start as u32,
+                primitive_end: start as u32 + 1,
             };
         }
 
@@ -33,7 +35,8 @@ impl BvhNode {
                 left: None,
                 right: None,
                 aabb: primitives[start].aabb(),
-                primitive: start as u32,
+                primitive_start: start as u32,
+                primitive_end: end as u32,
             };
         }
 
@@ -50,7 +53,8 @@ impl BvhNode {
             left: Some(left),
             right: Some(right),
             aabb,
-            primitive: 0,
+            primitive_start: 0,
+            primitive_end: 0,
         }
     }
 }
@@ -59,7 +63,8 @@ impl BvhNode {
 pub struct FlatBvhNode {
     aabb: Aabb3,
     right_idx: u32,
-    primitive: u32,
+    primitive_start: u32,
+    primitive_end: u32,
 }
 
 pub struct Bvh {
@@ -84,7 +89,8 @@ impl Bvh {
         nodes.push(FlatBvhNode {
             aabb: node.aabb,
             right_idx: 0,
-            primitive: node.primitive,
+            primitive_start: node.primitive_start,
+            primitive_end: node.primitive_end,
         });
 
         if node.left.is_none() {

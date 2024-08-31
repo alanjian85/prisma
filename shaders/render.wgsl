@@ -76,7 +76,8 @@ fn aabb_intersect(aabb: Aabb3, ray: Ray, interval: Interval) -> bool {
 struct BvhNode {
     aabb: Aabb3,
     rigth_idx: u32,
-    primitive: u32,
+    primitive_start: u32,
+    primitive_end: u32,
 }
 
 @group(3) @binding(2)
@@ -306,45 +307,41 @@ fn permute(v: vec3f, x: u32, y: u32, z: u32) -> vec3f {
 }
 
 fn scene_intersect(ray: Ray, intersection: ptr<function, Intersection>) -> bool {
-//    var stack = array<u32, 32>();
-//    var stack_ptr = 1u;
-//    stack[0] = 0u;
-//    (*intersection).t = bitcast<f32>(0x7F800000);
-//
-//    var node = 0u;
-//    var intersected = false;
-//    loop {
-//        let interval = Interval(0.001, (*intersection).t);
-//
-//        let left = node + 1;
-//        let right = bvh_nodes[node].rigth_idx;
-//
-//        if right == 0 || !aabb_intersect(bvh_nodes[node].aabb, ray, interval) {
-//            if right == 0 && triangle_intersect(primitives[bvh_nodes[node].primitive], ray, intersection, interval) {
-//                intersected = true;
-//            }
-//            stack_ptr--;
-//            node = stack[stack_ptr];
-//        } else {
-//            node = left;
-//            stack[stack_ptr] = right;
-//            stack_ptr++;
-//        }
-//
-//        if node == 0 {
-//            break;
-//        }
-//    }
-//
-//    return intersected;
+    var stack = array<u32, 32>();
+    var stack_ptr = 1u;
+    stack[0] = 0u;
     (*intersection).t = bitcast<f32>(0x7F800000);
+
+    var node = 0u;
     var intersected = false;
-    for (var i = 0u; i < arrayLength(&primitives); i++) {
-        let interval = Interval(0.001, (*intersection).t);
-        if triangle_intersect(primitives[i], ray, intersection, interval) {
-            intersected = true;
+    loop {
+        var interval = Interval(0.001, (*intersection).t);
+
+        let left = node + 1;
+        let right = bvh_nodes[node].rigth_idx;
+
+        if right == 0 || !aabb_intersect(bvh_nodes[node].aabb, ray, interval) {
+            if right == 0 {
+                for (var i = bvh_nodes[node].primitive_start; i < bvh_nodes[node].primitive_end; i++) {
+                    if triangle_intersect(primitives[i], ray, intersection, interval) {
+                        intersected = true;
+                        interval = Interval(0.001, (*intersection).t);
+                    }
+                }
+            }
+            stack_ptr--;
+            node = stack[stack_ptr];
+        } else {
+            node = left;
+            stack[stack_ptr] = right;
+            stack_ptr++;
+        }
+
+        if node == 0 {
+            break;
         }
     }
+
     return intersected;
 }
 
