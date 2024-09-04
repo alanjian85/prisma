@@ -1,6 +1,6 @@
 use encase::ShaderType;
 
-use crate::primitives::Triangle;
+use crate::primitives::{Triangle, Vertex};
 
 use super::Aabb3;
 
@@ -13,12 +13,12 @@ struct BvhNode {
 }
 
 impl BvhNode {
-    pub fn new(primitives: &mut [Triangle], start: usize, end: usize) -> Self {
+    pub fn new(vertices: &[Vertex], primitives: &mut [Triangle], start: usize, end: usize) -> Self {
         if end - start == 1 {
             return Self {
                 left: None,
                 right: None,
-                aabb: primitives[start].aabb(),
+                aabb: primitives[start].aabb(vertices),
                 primitive_start: start as u32,
                 primitive_end: start as u32 + 1,
             };
@@ -26,7 +26,7 @@ impl BvhNode {
 
         let mut centroid_aabb = Aabb3::new();
         for primitive in &primitives[start..end] {
-            centroid_aabb = centroid_aabb.union_point(primitive.aabb().centroid());
+            centroid_aabb = centroid_aabb.union_point(primitive.aabb(vertices).centroid());
         }
 
         let dim = centroid_aabb.max_dim();
@@ -34,7 +34,7 @@ impl BvhNode {
             return Self {
                 left: None,
                 right: None,
-                aabb: primitives[start].aabb(),
+                aabb: primitives[start].aabb(vertices),
                 primitive_start: start as u32,
                 primitive_end: end as u32,
             };
@@ -43,11 +43,11 @@ impl BvhNode {
         let mid = (centroid_aabb.min[dim] + centroid_aabb.max[dim]) / 2.0;
         let split_idx = start
             + itertools::partition(&mut primitives[start..end], |elem| {
-                elem.aabb().centroid()[dim] < mid
+                elem.aabb(vertices).centroid()[dim] < mid
             });
 
-        let left = Box::new(Self::new(primitives, start, split_idx));
-        let right = Box::new(Self::new(primitives, split_idx, end));
+        let left = Box::new(Self::new(vertices, primitives, start, split_idx));
+        let right = Box::new(Self::new(vertices, primitives, split_idx, end));
         let aabb = left.aabb.union(&right.aabb);
         Self {
             left: Some(left),
@@ -72,9 +72,9 @@ pub struct Bvh {
 }
 
 impl Bvh {
-    pub fn new(primitives: &mut [Triangle]) -> Self {
+    pub fn new(vertices: &[Vertex], primitives: &mut [Triangle]) -> Self {
         let len = primitives.len();
-        let root = Box::new(BvhNode::new(primitives, 0, len));
+        let root = Box::new(BvhNode::new(vertices, primitives, 0, len));
         Self { root }
     }
 

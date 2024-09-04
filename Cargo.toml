@@ -14,4 +14,5 @@ indicatif = "0.17.8"
 itertools = "0.13.0"
 mlua = { version = "0.9.9", features = ["lua54", "macros"] }
 pollster = "0.3.0"
+tobj = "4.0.2"
 wgpu = "22.1.0"

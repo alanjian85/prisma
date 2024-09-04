@@ -4,29 +4,25 @@ use mlua::{prelude::*, UserData};
 
 use crate::core::Aabb3;
 
+#[derive(ShaderType)]
+pub struct Vertex {
+    pub pos: Vec3,
+    pub normal: Vec3,
+}
+
 #[derive(FromLua, Clone, ShaderType)]
 pub struct Triangle {
-    p0: Vec3,
-    p1: Vec3,
-    p2: Vec3,
-    material: u32,
+    pub p0: u32,
+    pub p1: u32,
+    pub p2: u32,
 }
 
 impl Triangle {
-    pub fn new(p0: Vec3, p1: Vec3, p2: Vec3, material: u32) -> Self {
-        Self {
-            p0,
-            p1,
-            p2,
-            material,
-        }
-    }
-
-    pub fn aabb(&self) -> Aabb3 {
+    pub fn aabb(&self, vertices: &[Vertex]) -> Aabb3 {
         Aabb3::new()
-            .union_point(self.p0)
-            .union_point(self.p1)
-            .union_point(self.p2)
+            .union_point(vertices[self.p0 as usize].pos)
+            .union_point(vertices[self.p1 as usize].pos)
+            .union_point(vertices[self.p2 as usize].pos)
     }
 }
 
