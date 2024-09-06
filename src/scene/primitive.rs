@@ -1,7 +1,14 @@
 use encase::ShaderType;
+use glam::Vec3;
 use mlua::{prelude::*, UserData};
 
-use crate::{core::Aabb3, model::Vertex};
+use super::aabb::Aabb3;
+
+#[derive(ShaderType)]
+pub struct Vertex {
+    pub pos: Vec3,
+    pub normal: Vec3,
+}
 
 #[derive(FromLua, Clone, ShaderType)]
 pub struct Triangle {

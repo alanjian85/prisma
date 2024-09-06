@@ -1,10 +1,10 @@
 use std::{error::Error, num::NonZeroU32, rc::Rc};
 
-use crate::core::RenderContext;
-
 mod image_hdr;
 
 use image_hdr::ImageHdr;
+
+use crate::render::RenderContext;
 
 pub struct Textures {
     context: Rc<RenderContext>,

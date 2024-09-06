@@ -3,7 +3,7 @@ use std::rc::Rc;
 use encase::{ShaderType, StorageBuffer};
 use glam::Vec3;
 
-use crate::core::RenderContext;
+use crate::render::RenderContext;
 
 #[derive(Default, ShaderType)]
 pub struct Material {

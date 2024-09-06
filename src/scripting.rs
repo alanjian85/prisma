@@ -2,11 +2,10 @@ use std::{cell::RefCell, rc::Rc};
 
 use mlua::prelude::*;
 
-use crate::{config::Config, core::Scene, materials::Materials, textures::Textures};
+use crate::{config::Config, materials::Materials, scene::Scene, textures::Textures};
 
 mod camera;
 mod materials;
-mod primitives;
 mod scene;
 mod textures;
 mod utils;
@@ -24,7 +23,6 @@ impl Scripting {
 
         textures::init(&lua, textures)?;
         materials::init(&lua, materials)?;
-        primitives::init(&lua)?;
 
         let camera = lua.create_table()?;
         lua.globals().set("camera", camera)?;

@@ -2,7 +2,7 @@ use std::{error::Error, slice};
 
 use image::ImageReader;
 
-use crate::core::RenderContext;
+use crate::render::RenderContext;
 
 use super::Texture2;
 

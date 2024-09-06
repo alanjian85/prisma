@@ -2,7 +2,7 @@ use mlua::{prelude::*, Table};
 
 use crate::{
     config::Config,
-    core::{Camera, CameraBuilder},
+    scene::{Camera, CameraBuilder},
 };
 
 use super::utils;

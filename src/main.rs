@@ -4,9 +4,9 @@ use clap::Parser;
 use console::Emoji;
 use prisma::{
     config::Config,
-    core::{BindGroupLayoutSet, BindGroupSet, PostProcessor, RenderContext, Renderer},
     materials::Materials,
-    model::Model,
+    render::{BindGroupLayoutSet, BindGroupSet, PostProcessor, RenderContext, Renderer},
+    scene::Model,
     scripting::Scripting,
     textures::Textures,
 };
@@ -22,8 +22,7 @@ fn build_scene(
     let scripting = Scripting::new(textures.clone(), materials.clone())?;
     let mut scene = scripting.load(config, &script)?;
 
-    let mut models = Vec::new();
-    models.push(Model::load("models/bunny.obj")?);
+    let models = vec![Model::load("models/bunny.obj")?];
 
     let (textures_bind_group_layout, textures_bind_group) = textures.borrow().build();
     let (materials_bind_group_layout, materials_bind_group) = materials.borrow().build()?;

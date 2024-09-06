@@ -1,8 +1,9 @@
 use encase::ShaderType;
 
-use crate::{model::Vertex, primitives::Triangle};
-
-use super::Aabb3;
+use super::{
+    aabb::Aabb3,
+    primitive::{Triangle, Vertex},
+};
 
 struct BvhNode {
     left: Option<Box<BvhNode>>,

@@ -1,6 +1,6 @@
 use mlua::{prelude::*, UserData, UserDataMethods, Value};
 
-use crate::core::Scene;
+use crate::scene::Scene;
 
 impl UserData for Scene {
     fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {

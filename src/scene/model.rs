@@ -1,14 +1,7 @@
-use encase::ShaderType;
 use glam::Vec3;
 use tobj::{LoadError, LoadOptions};
 
-use crate::primitives::Triangle;
-
-#[derive(ShaderType)]
-pub struct Vertex {
-    pub pos: Vec3,
-    pub normal: Vec3,
-}
+use super::primitive::{Triangle, Vertex};
 
 pub struct Model {
     models: Vec<tobj::Model>,
