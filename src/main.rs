@@ -6,6 +6,7 @@ use prisma::{
     config::Config,
     core::{BindGroupLayoutSet, BindGroupSet, PostProcessor, RenderContext, Renderer},
     materials::Materials,
+    model::Model,
     scripting::Scripting,
     textures::Textures,
 };
@@ -21,9 +22,12 @@ fn build_scene(
     let scripting = Scripting::new(textures.clone(), materials.clone())?;
     let mut scene = scripting.load(config, &script)?;
 
+    let mut models = Vec::new();
+    models.push(Model::load("models/bunny.obj")?);
+
     let (textures_bind_group_layout, textures_bind_group) = textures.borrow().build();
     let (materials_bind_group_layout, materials_bind_group) = materials.borrow().build()?;
-    let (scene_bind_group_layout, scene_bind_group) = scene.build(&context.clone())?;
+    let (scene_bind_group_layout, scene_bind_group) = scene.build(&context.clone(), &models)?;
 
     let bind_group_layout_set = BindGroupLayoutSet {
         textures: textures_bind_group_layout,

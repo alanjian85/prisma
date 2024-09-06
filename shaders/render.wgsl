@@ -112,6 +112,7 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
             let cosine = dot(-dir, intersection.normal);
             let sine = sqrt(1.0 - cosine * cosine);
 
+            ray.orig = ray_at(ray, intersection.t);
             if eta * sine > 1.0 || rand(&rand_state) < reflectance(cosine, eta) {
                 ray.dir = reflect(dir, intersection.normal);
             } else {

@@ -1,6 +1,6 @@
 use encase::ShaderType;
 
-use crate::primitives::{Triangle, Vertex};
+use crate::{model::Vertex, primitives::Triangle};
 
 use super::Aabb3;
 

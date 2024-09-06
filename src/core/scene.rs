@@ -1,8 +1,6 @@
 use encase::{ShaderType, StorageBuffer, UniformBuffer};
-use glam::Vec3;
-use tobj::LoadOptions;
 
-use crate::primitives::{Triangle, Vertex};
+use crate::model::Model;
 
 use super::{Bvh, Camera, RenderContext};
 
@@ -33,6 +31,7 @@ impl Scene {
     pub fn build(
         &mut self,
         context: &RenderContext,
+        models: &[Model],
     ) -> encase::internal::Result<(wgpu::BindGroupLayout, wgpu::BindGroup)> {
         let device = context.device();
         let queue = context.queue();
@@ -49,43 +48,12 @@ impl Scene {
         });
         queue.write_buffer(&uniform_buffer, 0, &wgsl_bytes);
 
-        let (models, _materials) = tobj::load_obj(
-            "models/bunny.obj",
-            &LoadOptions {
-                single_index: true,
-                triangulate: true,
-                ..Default::default()
-            },
-        )
-        .unwrap();
         let mut vertices = Vec::new();
         let mut primitives = Vec::new();
         for model in models {
-            let mesh = &model.mesh;
-
-            for v in 0..mesh.positions.len() / 3 {
-                vertices.push(Vertex {
-                    pos: Vec3::new(
-                        mesh.positions[3 * v],
-                        mesh.positions[3 * v + 1],
-                        mesh.positions[3 * v + 2],
-                    ),
-                    normal: Vec3::new(
-                        mesh.normals[3 * v],
-                        mesh.normals[3 * v + 1],
-                        mesh.normals[3 * v + 2],
-                    ),
-                });
-            }
-
-            for i in 0..mesh.indices.len() / 3 {
-                let triangle = Triangle {
-                    p0: mesh.indices[3 * i],
-                    p1: mesh.indices[3 * i + 1],
-                    p2: mesh.indices[3 * i + 2],
-                };
-                primitives.push(triangle);
-            }
+            let offset = vertices.len() as u32;
+            vertices.append(&mut model.vertices());
+            primitives.append(&mut model.primitives(offset));
         }
 
         let bvh = Bvh::new(&vertices, &mut primitives);
