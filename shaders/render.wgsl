@@ -8,15 +8,16 @@ var render_target: texture_storage_2d<rgba32float, read_write>;
 @group(1) @binding(0)
 var textures: binding_array<texture_2d<f32>>;
 
-struct Material {
-    ty: u32,
-    albedo: vec3f,
-    fuzziness: f32,
-    ior: f32,
-}
-
 @group(2) @binding(0)
-var<storage, read> materials: array<Material>;
+var<storage, read> vertices: array<Vertex>;
+
+@group(2) @binding(1)
+var<storage, read> offsets: array<u32>;
+
+struct Vertex {
+    pos: vec3f,
+    normal: vec3f,
+}
 
 struct Camera {
     pos: vec3f,
@@ -35,21 +36,14 @@ struct SceneUniform {
 @group(3) @binding(0)
 var<uniform> scene: SceneUniform;
 
-struct Vertex {
-    pos: vec3f,
-    normal: vec3f,
-}
-
-@group(3) @binding(1)
-var<storage, read> vertices: array<Vertex>;
-
 struct Triangle {
+    idx: u32,
     p0: u32,
     p1: u32,
     p2: u32,
 }
 
-@group(3) @binding(2)
+@group(3) @binding(1)
 var<storage, read> primitives: array<Triangle>;
 
 struct Aabb3 {
@@ -87,7 +81,7 @@ struct BvhNode {
     primitive_end: u32,
 }
 
-@group(3) @binding(3)
+@group(3) @binding(2)
 var<storage, read> bvh_nodes: array<BvhNode>;
 
 var<push_constant> sample: u32;
@@ -104,7 +98,6 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
         var intersection = Intersection();
         if scene_intersect(ray, &intersection) {
             intersection_flip_normal(&intersection, ray);
-            let material = materials[intersection.material];
 
             let dir = normalize(ray.dir);
             let eta = select(1.5, 1.0 / 1.5, intersection.front);
@@ -123,6 +116,7 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
 
             let dir = normalize(ray.dir);
             let theta = acos(-dir.y);
+
             let phi = atan2(-dir.z, dir.x) + PI;
 
             let u = phi / (2.0 * PI);
@@ -237,9 +231,10 @@ fn intersection_flip_normal(intersection: ptr<function, Intersection>, ray: Ray)
 }
 
 fn triangle_intersect(triangle: Triangle, ray: Ray, intersection: ptr<function, Intersection>, interval: Interval) -> bool {
-    var p0 = vertices[triangle.p0].pos - ray.orig;
-    var p1 = vertices[triangle.p1].pos - ray.orig;
-    var p2 = vertices[triangle.p2].pos - ray.orig;
+    let offset = offsets[triangle.idx];
+    var p0 = vertices[triangle.p0 + offset].pos - ray.orig;
+    var p1 = vertices[triangle.p1 + offset].pos - ray.orig;
+    var p2 = vertices[triangle.p2 + offset].pos - ray.orig;
 
     let z = max_dim(abs(ray.dir));
     let x = (z + 1) % 3;

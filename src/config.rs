@@ -1,6 +1,7 @@
-use clap::Parser;
 use std::fmt::{self, Display};
 use std::str::FromStr;
+
+use clap::Parser;
 
 #[derive(Parser)]
 #[command(version)]

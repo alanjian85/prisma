@@ -18,13 +18,13 @@ pub struct Renderer {
 
 pub struct BindGroupLayoutSet {
     pub textures: wgpu::BindGroupLayout,
-    pub materials: wgpu::BindGroupLayout,
+    pub meshes: wgpu::BindGroupLayout,
     pub scene: wgpu::BindGroupLayout,
 }
 
 pub struct BindGroupSet {
     pub textures: wgpu::BindGroup,
-    pub materials: wgpu::BindGroup,
+    pub meshes: wgpu::BindGroup,
     pub scene: wgpu::BindGroup,
 }
 
@@ -60,7 +60,7 @@ impl Renderer {
             bind_group_layouts: &[
                 &target_bind_group_layout,
                 &bind_group_layout_set.textures,
-                &bind_group_layout_set.materials,
+                &bind_group_layout_set.meshes,
                 &bind_group_layout_set.scene,
             ],
             push_constant_ranges: &[wgpu::PushConstantRange {
@@ -147,7 +147,7 @@ impl Renderer {
                 compute_pass.set_pipeline(&self.pipeline);
                 compute_pass.set_bind_group(0, &output_bind_group, &[]);
                 compute_pass.set_bind_group(1, &bind_group_set.textures, &[]);
-                compute_pass.set_bind_group(2, &bind_group_set.materials, &[]);
+                compute_pass.set_bind_group(2, &bind_group_set.meshes, &[]);
                 compute_pass.set_bind_group(3, &bind_group_set.scene, &[]);
                 compute_pass.set_push_constants(0, &sample);
                 compute_pass.dispatch_workgroups(self.width / 16, self.height / 16, 1);

@@ -1,5 +1,6 @@
 pub mod config;
-pub mod materials;
+pub mod core;
+pub mod meshes;
 pub mod render;
 pub mod scene;
 pub mod scripting;

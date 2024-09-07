@@ -1,8 +1,10 @@
+use std::{cell::RefCell, rc::Rc};
+
 use encase::ShaderType;
 
-use super::{
-    aabb::Aabb3,
-    primitive::{Triangle, Vertex},
+use crate::{
+    core::{Aabb3, Primitive},
+    meshes::Meshes,
 };
 
 struct BvhNode {
@@ -14,12 +16,17 @@ struct BvhNode {
 }
 
 impl BvhNode {
-    pub fn new(vertices: &[Vertex], primitives: &mut [Triangle], start: usize, end: usize) -> Self {
+    pub fn new(
+        meshes: &Rc<RefCell<Meshes>>,
+        primitives: &mut [Primitive],
+        start: usize,
+        end: usize,
+    ) -> Self {
         if end - start == 1 {
             return Self {
                 left: None,
                 right: None,
-                aabb: primitives[start].aabb(vertices),
+                aabb: primitives[start].aabb(meshes),
                 primitive_start: start as u32,
                 primitive_end: start as u32 + 1,
             };
@@ -27,7 +34,7 @@ impl BvhNode {
 
         let mut centroid_aabb = Aabb3::new();
         for primitive in &primitives[start..end] {
-            centroid_aabb = centroid_aabb.union_point(primitive.aabb(vertices).centroid());
+            centroid_aabb = centroid_aabb.union_point(primitive.aabb(meshes).centroid());
         }
 
         let dim = centroid_aabb.max_dim();
@@ -35,7 +42,7 @@ impl BvhNode {
             return Self {
                 left: None,
                 right: None,
-                aabb: primitives[start].aabb(vertices),
+                aabb: primitives[start].aabb(meshes),
                 primitive_start: start as u32,
                 primitive_end: end as u32,
             };
@@ -44,11 +51,11 @@ impl BvhNode {
         let mid = (centroid_aabb.min[dim] + centroid_aabb.max[dim]) / 2.0;
         let split_idx = start
             + itertools::partition(&mut primitives[start..end], |elem| {
-                elem.aabb(vertices).centroid()[dim] < mid
+                elem.aabb(meshes).centroid()[dim] < mid
             });
 
-        let left = Box::new(Self::new(vertices, primitives, start, split_idx));
-        let right = Box::new(Self::new(vertices, primitives, split_idx, end));
+        let left = Box::new(Self::new(meshes, primitives, start, split_idx));
+        let right = Box::new(Self::new(meshes, primitives, split_idx, end));
         let aabb = left.aabb.union(&right.aabb);
         Self {
             left: Some(left),
@@ -73,9 +80,9 @@ pub struct Bvh {
 }
 
 impl Bvh {
-    pub fn new(vertices: &[Vertex], primitives: &mut [Triangle]) -> Self {
+    pub fn new(meshes: &Rc<RefCell<Meshes>>, primitives: &mut [Primitive]) -> Self {
         let len = primitives.len();
-        let root = Box::new(BvhNode::new(vertices, primitives, 0, len));
+        let root = Box::new(BvhNode::new(meshes, primitives, 0, len));
         Self { root }
     }
 

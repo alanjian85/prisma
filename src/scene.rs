@@ -1,17 +1,15 @@
+use std::{cell::RefCell, rc::Rc};
+
 use encase::{ShaderType, StorageBuffer, UniformBuffer};
 
-mod aabb;
-mod bvh;
-mod camera;
-mod model;
-mod primitive;
-
-pub use camera::{Camera, CameraBuilder};
-pub use model::Model;
-
-use crate::render::RenderContext;
+use crate::{core::Primitive, meshes::Meshes, render::RenderContext};
 
 use self::bvh::Bvh;
+
+mod bvh;
+mod camera;
+
+pub use camera::{Camera, CameraBuilder};
 
 #[derive(Default, ShaderType)]
 struct Uniform {
@@ -19,28 +17,41 @@ struct Uniform {
     env_map: u32,
 }
 
-#[derive(Default)]
 pub struct Scene {
     uniform: Uniform,
+    model_primitives: Rc<RefCell<Vec<Vec<Primitive>>>>,
+    primitives: Vec<Primitive>,
 }
 
 impl Scene {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(model_primitives: Rc<RefCell<Vec<Vec<Primitive>>>>) -> Self {
+        Self {
+            uniform: Uniform::default(),
+            model_primitives,
+            primitives: Vec::new(),
+        }
     }
 
-    pub fn set_camera(&mut self, camera: Camera) {
+    pub fn set_camera(&mut self, camera: Camera) -> &mut Self {
         self.uniform.camera = camera;
+        self
     }
 
-    pub fn set_env_map(&mut self, env_map: u32) {
+    pub fn set_env_map(&mut self, env_map: u32) -> &mut Self {
         self.uniform.env_map = env_map;
+        self
+    }
+
+    pub fn add(&mut self, model: usize) -> &mut Self {
+        self.primitives
+            .append(&mut self.model_primitives.borrow()[model].clone());
+        self
     }
 
     pub fn build(
         &mut self,
         context: &RenderContext,
-        models: &[Model],
+        meshes: &Rc<RefCell<Meshes>>,
     ) -> encase::internal::Result<(wgpu::BindGroupLayout, wgpu::BindGroup)> {
         let device = context.device();
         let queue = context.queue();
@@ -57,30 +68,10 @@ impl Scene {
         });
         queue.write_buffer(&uniform_buffer, 0, &wgsl_bytes);
 
-        let mut vertices = Vec::new();
-        let mut primitives = Vec::new();
-        for model in models {
-            let offset = vertices.len() as u32;
-            vertices.append(&mut model.vertices());
-            primitives.append(&mut model.primitives(offset));
-        }
-
-        let bvh = Bvh::new(&vertices, &mut primitives);
+        let bvh = Bvh::new(meshes, &mut self.primitives);
 
         let mut wgsl_bytes = StorageBuffer::new(Vec::new());
-        wgsl_bytes.write(&vertices)?;
-        let wgsl_bytes = wgsl_bytes.into_inner();
-
-        let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: None,
-            size: wgsl_bytes.len() as u64,
-            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::STORAGE,
-            mapped_at_creation: false,
-        });
-        queue.write_buffer(&vertex_buffer, 0, &wgsl_bytes);
-
-        let mut wgsl_bytes = StorageBuffer::new(Vec::new());
-        wgsl_bytes.write(&primitives)?;
+        wgsl_bytes.write(&self.primitives)?;
         let wgsl_bytes = wgsl_bytes.into_inner();
 
         let primitive_buffer = device.create_buffer(&wgpu::BufferDescriptor {
@@ -136,16 +127,6 @@ impl Scene {
                     },
                     count: None,
                 },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 3,
-                    visibility: wgpu::ShaderStages::COMPUTE,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Storage { read_only: true },
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                },
             ],
         });
 
@@ -159,14 +140,10 @@ impl Scene {
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: vertex_buffer.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 2,
                     resource: primitive_buffer.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
-                    binding: 3,
+                    binding: 2,
                     resource: bvh_buffer.as_entire_binding(),
                 },
             ],

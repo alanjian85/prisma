@@ -8,10 +8,10 @@ impl UserData for Scene {
             this.set_env_map(env_map);
             Ok(())
         });
-        //        methods.add_method_mut("add", |_, this, triangle: Triangle| {
-        //            this.add(triangle);
-        //            Ok(())
-        //        });
+        methods.add_method_mut("add", |_, this, model: usize| {
+            this.add(model);
+            Ok(())
+        });
     }
 }
 
