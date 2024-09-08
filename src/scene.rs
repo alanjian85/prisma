@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use encase::{ShaderType, StorageBuffer, UniformBuffer};
 
-use crate::{core::Primitive, meshes::Meshes, render::RenderContext};
+use crate::{core::Primitive, models::Models, render::RenderContext};
 
 use self::bvh::Bvh;
 
@@ -18,16 +18,16 @@ struct Uniform {
 }
 
 pub struct Scene {
+    models: Rc<RefCell<Models>>,
     uniform: Uniform,
-    model_primitives: Rc<RefCell<Vec<Vec<Primitive>>>>,
     primitives: Vec<Primitive>,
 }
 
 impl Scene {
-    pub fn new(model_primitives: Rc<RefCell<Vec<Vec<Primitive>>>>) -> Self {
+    pub fn new(models: Rc<RefCell<Models>>) -> Self {
         Self {
+            models,
             uniform: Uniform::default(),
-            model_primitives,
             primitives: Vec::new(),
         }
     }
@@ -42,16 +42,15 @@ impl Scene {
         self
     }
 
-    pub fn add(&mut self, model: usize) -> &mut Self {
+    pub fn add(&mut self, idx: u32) -> &mut Self {
         self.primitives
-            .append(&mut self.model_primitives.borrow()[model].clone());
+            .append(&mut self.models.borrow().primitives(idx).clone());
         self
     }
 
     pub fn build(
         &mut self,
         context: &RenderContext,
-        meshes: &Rc<RefCell<Meshes>>,
     ) -> encase::internal::Result<(wgpu::BindGroupLayout, wgpu::BindGroup)> {
         let device = context.device();
         let queue = context.queue();
@@ -68,7 +67,7 @@ impl Scene {
         });
         queue.write_buffer(&uniform_buffer, 0, &wgsl_bytes);
 
-        let bvh = Bvh::new(meshes, &mut self.primitives);
+        let bvh = Bvh::new(self.models.borrow().meshes(), &mut self.primitives);
 
         let mut wgsl_bytes = StorageBuffer::new(Vec::new());
         wgsl_bytes.write(&self.primitives)?;

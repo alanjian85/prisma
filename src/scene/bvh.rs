@@ -1,10 +1,8 @@
-use std::{cell::RefCell, rc::Rc};
-
 use encase::ShaderType;
 
 use crate::{
     core::{Aabb3, Primitive},
-    meshes::Meshes,
+    models::Meshes,
 };
 
 struct BvhNode {
@@ -16,12 +14,7 @@ struct BvhNode {
 }
 
 impl BvhNode {
-    pub fn new(
-        meshes: &Rc<RefCell<Meshes>>,
-        primitives: &mut [Primitive],
-        start: usize,
-        end: usize,
-    ) -> Self {
+    pub fn new(meshes: &Meshes, primitives: &mut [Primitive], start: usize, end: usize) -> Self {
         if end - start == 1 {
             return Self {
                 left: None,
@@ -80,7 +73,7 @@ pub struct Bvh {
 }
 
 impl Bvh {
-    pub fn new(meshes: &Rc<RefCell<Meshes>>, primitives: &mut [Primitive]) -> Self {
+    pub fn new(meshes: &Meshes, primitives: &mut [Primitive]) -> Self {
         let len = primitives.len();
         let root = Box::new(BvhNode::new(meshes, primitives, 0, len));
         Self { root }

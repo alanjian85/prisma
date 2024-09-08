@@ -4,7 +4,7 @@ use clap::Parser;
 use console::Emoji;
 use prisma::{
     config::Config,
-    meshes::Meshes,
+    models::Models,
     render::{BindGroupLayoutSet, BindGroupSet, PostProcessor, RenderContext, Renderer},
     scripting::Scripting,
     textures::Textures,
@@ -15,15 +15,15 @@ fn build_scene(
     config: &Config,
 ) -> Result<(BindGroupLayoutSet, BindGroupSet), Box<dyn Error>> {
     let textures = Rc::new(RefCell::new(Textures::new(context.clone())));
-    let meshes = Rc::new(RefCell::new(Meshes::new()));
+    let models = Rc::new(RefCell::new(Models::new()));
 
     let script = fs::read_to_string(&config.script)?;
-    let scripting = Scripting::new(textures.clone(), meshes.clone())?;
+    let scripting = Scripting::new(textures.clone(), models.clone())?;
     let mut scene = scripting.load(config, &script)?;
 
     let (textures_bind_group_layout, textures_bind_group) = textures.borrow().build();
-    let (meshes_bind_group_layout, meshes_bind_group) = meshes.borrow().build(&context)?;
-    let (scene_bind_group_layout, scene_bind_group) = scene.build(&context.clone(), &meshes)?;
+    let (meshes_bind_group_layout, meshes_bind_group) = models.borrow().meshes().build(&context)?;
+    let (scene_bind_group_layout, scene_bind_group) = scene.build(&context.clone())?;
 
     let bind_group_layout_set = BindGroupLayoutSet {
         textures: textures_bind_group_layout,

@@ -2,10 +2,10 @@ use std::{cell::RefCell, rc::Rc};
 
 use mlua::prelude::*;
 
-use crate::{config::Config, meshes::Meshes, scene::Scene, textures::Textures};
+use crate::{config::Config, models::Models, scene::Scene, textures::Textures};
 
 mod camera;
-mod meshes;
+mod models;
 mod scene;
 mod textures;
 mod utils;
@@ -15,17 +15,16 @@ pub struct Scripting {
 }
 
 impl Scripting {
-    pub fn new(textures: Rc<RefCell<Textures>>, meshes: Rc<RefCell<Meshes>>) -> LuaResult<Self> {
+    pub fn new(textures: Rc<RefCell<Textures>>, models: Rc<RefCell<Models>>) -> LuaResult<Self> {
         let lua = Lua::new();
 
-        let model_primitives = Rc::new(RefCell::new(Vec::new()));
         textures::init(&lua, textures)?;
-        meshes::init(&lua, meshes, model_primitives.clone())?;
+        models::init(&lua, models.clone())?;
 
         let camera = lua.create_table()?;
         lua.globals().set("camera", camera)?;
 
-        let scene = Scene::new(model_primitives.clone());
+        let scene = Scene::new(models);
         lua.globals().set("scene", scene)?;
 
         Ok(Self { lua })

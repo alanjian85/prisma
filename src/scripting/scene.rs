@@ -8,7 +8,7 @@ impl UserData for Scene {
             this.set_env_map(env_map);
             Ok(())
         });
-        methods.add_method_mut("add", |_, this, model: usize| {
+        methods.add_method_mut("add", |_, this, model: u32| {
             this.add(model);
             Ok(())
         });

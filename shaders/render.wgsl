@@ -100,7 +100,7 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
             intersection_flip_normal(&intersection, ray);
 
             let dir = normalize(ray.dir);
-            let eta = select(1.5, 1.0 / 1.5, intersection.front);
+            let eta = select(1.52, 1.0 / 1.52, intersection.front);
 
             let cosine = dot(-dir, intersection.normal);
             let sine = sqrt(1.0 - cosine * cosine);
@@ -111,6 +111,24 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
             } else {
                 ray.dir = refract(dir, intersection.normal, eta);
             }
+            
+//            let dir = normalize(ray.dir);
+//            let eta = 2.5;
+//
+//            let cosine = dot(-dir, intersection.normal);
+//            let sine = sqrt(1.0 - cosine * cosine);
+//
+//            if eta * sine > 1.0 && rand(&rand_state) < reflectance(cosine, eta) {
+//                ray.dir = reflect(dir, intersection.normal);
+//                if dot(ray.dir, intersection.normal) < 0.0 {
+//                    color *= vec3(0.0, 0.0, 0.0);
+//                    break;
+//                }
+//            } else {
+//                ray.orig = ray_at(ray, intersection.t);
+//                ray.dir = intersection.normal + rand_sphere(&rand_state);
+//            }
+//            color *= vec3(0.0, 0.8, 0.8);
         } else {
             let texture_size = textureDimensions(textures[scene.env_map]);
 
