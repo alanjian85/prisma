@@ -16,9 +16,9 @@ pub struct Primitive {
 impl Primitive {
     pub fn aabb(&self, meshes: &Meshes) -> Aabb3 {
         Aabb3::new()
-            .union_point(meshes.get_vertex(self.idx, self.v0).pos)
-            .union_point(meshes.get_vertex(self.idx, self.v1).pos)
-            .union_point(meshes.get_vertex(self.idx, self.v2).pos)
+            .union_point(meshes.vertex(self.idx, self.v0).pos)
+            .union_point(meshes.vertex(self.idx, self.v1).pos)
+            .union_point(meshes.vertex(self.idx, self.v2).pos)
     }
 }
 

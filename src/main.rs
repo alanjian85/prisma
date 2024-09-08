@@ -21,18 +21,22 @@ fn build_scene(
     let scripting = Scripting::new(textures.clone(), models.clone())?;
     let mut scene = scripting.load(config, &script)?;
 
-    let (textures_bind_group_layout, textures_bind_group) = textures.borrow().build();
-    let (meshes_bind_group_layout, meshes_bind_group) = models.borrow().meshes().build(&context)?;
+    let (texture_bind_group_layout, texture_bind_group) = textures.borrow().build();
+    let (material_bind_group_layout, material_bind_group) =
+        models.borrow().materials().build(&context)?;
+    let (mesh_bind_group_layout, mesh_bind_group) = models.borrow().meshes().build(&context)?;
     let (scene_bind_group_layout, scene_bind_group) = scene.build(&context.clone())?;
 
     let bind_group_layout_set = BindGroupLayoutSet {
-        textures: textures_bind_group_layout,
-        meshes: meshes_bind_group_layout,
+        texture: texture_bind_group_layout,
+        material: material_bind_group_layout,
+        mesh: mesh_bind_group_layout,
         scene: scene_bind_group_layout,
     };
     let bind_group_set = BindGroupSet {
-        textures: textures_bind_group,
-        meshes: meshes_bind_group,
+        texture: texture_bind_group,
+        material: material_bind_group,
+        mesh: mesh_bind_group,
         scene: scene_bind_group,
     };
     Ok((bind_group_layout_set, bind_group_set))

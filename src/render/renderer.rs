@@ -17,14 +17,16 @@ pub struct Renderer {
 }
 
 pub struct BindGroupLayoutSet {
-    pub textures: wgpu::BindGroupLayout,
-    pub meshes: wgpu::BindGroupLayout,
+    pub texture: wgpu::BindGroupLayout,
+    pub material: wgpu::BindGroupLayout,
+    pub mesh: wgpu::BindGroupLayout,
     pub scene: wgpu::BindGroupLayout,
 }
 
 pub struct BindGroupSet {
-    pub textures: wgpu::BindGroup,
-    pub meshes: wgpu::BindGroup,
+    pub texture: wgpu::BindGroup,
+    pub material: wgpu::BindGroup,
+    pub mesh: wgpu::BindGroup,
     pub scene: wgpu::BindGroup,
 }
 
@@ -59,8 +61,9 @@ impl Renderer {
             label: None,
             bind_group_layouts: &[
                 &target_bind_group_layout,
-                &bind_group_layout_set.textures,
-                &bind_group_layout_set.meshes,
+                &bind_group_layout_set.texture,
+                &bind_group_layout_set.material,
+                &bind_group_layout_set.mesh,
                 &bind_group_layout_set.scene,
             ],
             push_constant_ranges: &[wgpu::PushConstantRange {
@@ -146,9 +149,10 @@ impl Renderer {
                 });
                 compute_pass.set_pipeline(&self.pipeline);
                 compute_pass.set_bind_group(0, &output_bind_group, &[]);
-                compute_pass.set_bind_group(1, &bind_group_set.textures, &[]);
-                compute_pass.set_bind_group(2, &bind_group_set.meshes, &[]);
-                compute_pass.set_bind_group(3, &bind_group_set.scene, &[]);
+                compute_pass.set_bind_group(1, &bind_group_set.texture, &[]);
+                compute_pass.set_bind_group(2, &bind_group_set.material, &[]);
+                compute_pass.set_bind_group(3, &bind_group_set.mesh, &[]);
+                compute_pass.set_bind_group(4, &bind_group_set.scene, &[]);
                 compute_pass.set_push_constants(0, &sample);
                 compute_pass.dispatch_workgroups(self.width / 16, self.height / 16, 1);
             }

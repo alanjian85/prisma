@@ -8,11 +8,22 @@ var render_target: texture_storage_2d<rgba32float, read_write>;
 @group(1) @binding(0)
 var textures: binding_array<texture_2d<f32>>;
 
+struct Material {
+    diffuse: vec3f,
+    emission: vec3f,
+}
+
 @group(2) @binding(0)
+var<storage, read> materials: array<Material>;
+
+@group(3) @binding(0)
 var<storage, read> vertices: array<Vertex>;
 
-@group(2) @binding(1)
+@group(3) @binding(1)
 var<storage, read> offsets: array<u32>;
+
+@group(3) @binding(2)
+var<storage, read> material_indices: array<u32>;
 
 struct Vertex {
     pos: vec3f,
@@ -33,7 +44,7 @@ struct SceneUniform {
     env_map: u32
 }
 
-@group(3) @binding(0)
+@group(4) @binding(0)
 var<uniform> scene: SceneUniform;
 
 struct Triangle {
@@ -43,7 +54,7 @@ struct Triangle {
     p2: u32,
 }
 
-@group(3) @binding(1)
+@group(4) @binding(1)
 var<storage, read> primitives: array<Triangle>;
 
 struct Aabb3 {
@@ -81,7 +92,7 @@ struct BvhNode {
     primitive_end: u32,
 }
 
-@group(3) @binding(2)
+@group(4) @binding(2)
 var<storage, read> bvh_nodes: array<BvhNode>;
 
 var<push_constant> sample: u32;
@@ -99,51 +110,30 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
         if scene_intersect(ray, &intersection) {
             intersection_flip_normal(&intersection, ray);
 
-            let dir = normalize(ray.dir);
-            let eta = select(1.52, 1.0 / 1.52, intersection.front);
-
-            let cosine = dot(-dir, intersection.normal);
-            let sine = sqrt(1.0 - cosine * cosine);
+            if materials[intersection.material].emission.x != 0.0 {
+                color *= materials[intersection.material].emission;
+                break;
+            }
 
             ray.orig = ray_at(ray, intersection.t);
-            if eta * sine > 1.0 || rand(&rand_state) < reflectance(cosine, eta) {
-                ray.dir = reflect(dir, intersection.normal);
-            } else {
-                ray.dir = refract(dir, intersection.normal, eta);
-            }
-            
-//            let dir = normalize(ray.dir);
-//            let eta = 2.5;
-//
-//            let cosine = dot(-dir, intersection.normal);
-//            let sine = sqrt(1.0 - cosine * cosine);
-//
-//            if eta * sine > 1.0 && rand(&rand_state) < reflectance(cosine, eta) {
-//                ray.dir = reflect(dir, intersection.normal);
-//                if dot(ray.dir, intersection.normal) < 0.0 {
-//                    color *= vec3(0.0, 0.0, 0.0);
-//                    break;
-//                }
-//            } else {
-//                ray.orig = ray_at(ray, intersection.t);
-//                ray.dir = intersection.normal + rand_sphere(&rand_state);
-//            }
-//            color *= vec3(0.0, 0.8, 0.8);
+            ray.dir = intersection.normal + rand_sphere(&rand_state);
+            color *= materials[intersection.material].diffuse;
         } else {
-            let texture_size = textureDimensions(textures[scene.env_map]);
-
-            let dir = normalize(ray.dir);
-            let theta = acos(-dir.y);
-
-            let phi = atan2(-dir.z, dir.x) + PI;
-
-            let u = phi / (2.0 * PI);
-            let v = theta / PI;
-
-            let x = u32(u * f32(texture_size.x - 1));
-            let y = u32((1.0 - v) * f32(texture_size.y - 1));
-
-            color *= textureLoad(textures[scene.env_map], vec2(x, y), 0).xyz;
+            //let texture_size = textureDimensions(textures[scene.env_map]);
+//
+            //let dir = normalize(ray.dir);
+            //let theta = acos(-dir.y);
+//
+            //let phi = atan2(-dir.z, dir.x) + PI;
+//
+            //let u = phi / (2.0 * PI);
+            //let v = theta / PI;
+//
+            //let x = u32(u * f32(texture_size.x - 1));
+            //let y = u32((1.0 - v) * f32(texture_size.y - 1));
+//
+            //color *= textureLoad(textures[scene.env_map], vec2(x, y), 0).xyz;
+            color *= vec3(0.0, 0.0, 0.0);
             break;
         }
     }
@@ -288,7 +278,8 @@ fn triangle_intersect(triangle: Triangle, ray: Ray, intersection: ptr<function, 
     }
 
     (*intersection).t = t;
-    (*intersection).normal = normalize((e0 * vertices[triangle.p0].normal + e1 * vertices[triangle.p1].normal + e2 * vertices[triangle.p2].normal) / det);
+    (*intersection).normal = normalize((e0 * vertices[triangle.p0 + offset].normal + e1 * vertices[triangle.p1 + offset].normal + e2 * vertices[triangle.p2 + offset].normal) / det);
+    (*intersection).material = material_indices[triangle.idx];
 
     return true;
 }
