@@ -110,36 +110,68 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
         if scene_intersect(ray, &intersection) {
             intersection_flip_normal(&intersection, ray);
 
-            if materials[intersection.material].emission.x != 0.0 {
-                color *= materials[intersection.material].emission;
-                break;
-            }
+            let wi = normalize(intersection.normal + rand_sphere(&rand_state));
+            let wo = -normalize(ray.dir);
 
             ray.orig = ray_at(ray, intersection.t);
-            ray.dir = intersection.normal + rand_sphere(&rand_state);
-            color *= materials[intersection.material].diffuse;
+            ray.dir = wi;
+
+            color *= brdf(intersection.normal, wi, wo) * PI;
         } else {
-            //let texture_size = textureDimensions(textures[scene.env_map]);
-//
-            //let dir = normalize(ray.dir);
-            //let theta = acos(-dir.y);
-//
-            //let phi = atan2(-dir.z, dir.x) + PI;
-//
-            //let u = phi / (2.0 * PI);
-            //let v = theta / PI;
-//
-            //let x = u32(u * f32(texture_size.x - 1));
-            //let y = u32((1.0 - v) * f32(texture_size.y - 1));
-//
-            //color *= textureLoad(textures[scene.env_map], vec2(x, y), 0).xyz;
-            color *= vec3(0.0, 0.0, 0.0);
+            let texture_size = textureDimensions(textures[scene.env_map]);
+
+            let dir = normalize(ray.dir);
+            let theta = acos(-dir.y);
+
+            let phi = atan2(-dir.z, dir.x) + PI;
+
+            let u = phi / (2.0 * PI);
+            let v = theta / PI;
+
+            let x = u32(u * f32(texture_size.x - 1));
+            let y = u32((1.0 - v) * f32(texture_size.y - 1));
+
+            color *= textureLoad(textures[scene.env_map], vec2(x, y), 0).xyz;
             break;
         }
     }
 
     let prev_color = textureLoad(render_target, id.xy);
     textureStore(render_target, id.xy, prev_color + vec4(color, 1.0));
+}
+
+fn brdf(normal: vec3f, wi: vec3f, wo: vec3f) -> vec3f {
+    let base_color = vec3(0.023, 0.023, 0.023);
+    let metallic = 0.0;
+    let roughness = 0.5;
+
+    let h = normalize(wi + wo);
+    let vdoth = dot(wo, h);
+    let ndoth = dot(normal, h);
+    let ndotl = dot(normal, wi);
+    let ndotv = dot(normal, wo);
+
+    let alpha = roughness * roughness;
+    let f0 = mix(vec3(0.04), base_color, metallic);
+    let f = f0 + (1.0 - f0) * pow(1.0 - vdoth, 5.0);
+
+    let alpha2 = alpha * alpha;
+    let diffuse = (1.0 - f) / PI * mix(base_color, vec3(0.0), metallic);
+    var specular = f * d(alpha2, ndoth) * g(alpha2, ndotl, ndotv) / (4.0 * ndotl * ndotv);
+
+    return diffuse + specular;
+}
+
+fn d(alpha2: f32, ndoth: f32) -> f32 {
+    var denom = ndoth * ndoth * (alpha2 - 1.0) + 1.0;
+    denom *= PI * denom;
+    return alpha2 / denom;
+}
+
+fn g(alpha2: f32, ndotl: f32, ndotv: f32) -> f32 {
+    let a = 2.0 * ndotl / (ndotl + sqrt(alpha2 + (1.0 - alpha2) * ndotl * ndotl));
+    let b = 2.0 * ndotv / (ndotv + sqrt(alpha2 + (1.0 - alpha2) * ndotv * ndotv));
+    return a * b;
 }
 
 struct Interval {

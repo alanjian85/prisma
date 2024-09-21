@@ -41,8 +41,7 @@ impl Meshes {
         }
 
         self.offsets.push(self.vertices.len() as u32);
-        self.material_indices
-            .push(material_idx_start + mesh.material_id.unwrap() as u32);
+        self.material_indices.push(material_idx_start); // + mesh.material_id.unwrap() as u32);
         self.vertices.append(&mut vertices);
         let idx = self.offsets.len() as u32 - 1;
 
