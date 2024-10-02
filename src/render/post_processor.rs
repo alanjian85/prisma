@@ -58,7 +58,7 @@ impl PostProcessor {
         });
 
         let shader_module =
-            device.create_shader_module(wgpu::include_wgsl!("../../shaders/post_process.wgsl"));
+            device.create_shader_module(wgpu::include_wgsl!("../../shaders-generated/post_process.wgsl"));
 
         let mut constants = HashMap::new();
         constants.insert(String::from("NUM_SAMPLES"), config.samples as f64);

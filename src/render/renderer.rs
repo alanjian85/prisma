@@ -73,7 +73,7 @@ impl Renderer {
         });
 
         let shader_module =
-            device.create_shader_module(wgpu::include_wgsl!("../../shaders/render.wgsl"));
+            device.create_shader_module(wgpu::include_wgsl!("../../shaders-generated/render.wgsl"));
 
         let mut constants = HashMap::new();
         constants.insert(String::from("MAX_DEPTH"), config.depth as f64);

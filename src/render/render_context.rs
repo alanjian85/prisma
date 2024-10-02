@@ -22,7 +22,8 @@ impl RenderContext {
                     label: None,
                     required_features: wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
                         | wgpu::Features::PUSH_CONSTANTS
-                        | wgpu::Features::TEXTURE_BINDING_ARRAY,
+                        | wgpu::Features::TEXTURE_BINDING_ARRAY
+                        | wgpu::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING,
                     required_limits: limits,
                     memory_hints: wgpu::MemoryHints::Performance,
                 },
