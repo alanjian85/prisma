@@ -1,10 +1,14 @@
 use std::{error::Error, num::NonZeroU32, rc::Rc};
 
-mod image_hdr;
-
-use image_hdr::ImageHdr;
+use gltf::image::Data;
+use image::ImageReader;
 
 use crate::render::RenderContext;
+
+mod texture;
+mod texture_hdr;
+
+use self::{texture::Texture, texture_hdr::TextureHdr};
 
 pub struct Textures {
     context: Rc<RenderContext>,
@@ -24,10 +28,42 @@ impl Textures {
         }
     }
 
-    pub fn create_image_hdr(&mut self, path: &str) -> Result<u32, Box<dyn Error>> {
-        self.registry
-            .push(Rc::new(ImageHdr::new(&self.context, path)?));
+    pub fn load_texture_hdr(&mut self, path: &str) -> Result<u32, Box<dyn Error>> {
+        let image = ImageReader::open(path)?.decode()?.into_rgba32f();
+        let width = image.width();
+        let height = image.height();
+        self.registry.push(Rc::new(TextureHdr::new(
+            &self.context,
+            &image.as_raw(),
+            width,
+            height,
+        )?));
         Ok(self.registry.len() as u32 - 1)
+    }
+
+    pub fn add_texture(&mut self, image: &Data) -> u32 {
+        let num_pixels = (image.width * image.height) as usize;
+        let mut data = Vec::with_capacity(num_pixels * 4);
+
+        match image.format {
+            gltf::image::Format::R8G8B8 => {
+                for i in 0..num_pixels {
+                    data.push(image.pixels[3 * i]);
+                    data.push(image.pixels[3 * i + 1]);
+                    data.push(image.pixels[3 * i + 2]);
+                    data.push(0xFF);
+                }
+            }
+            _ => todo!(),
+        }
+
+        self.registry.push(Rc::new(Texture::new(
+            &self.context,
+            &data,
+            image.width,
+            image.height,
+        )));
+        self.registry.len() as u32 - 1
     }
 
     pub fn build(&self) -> (wgpu::BindGroupLayout, wgpu::BindGroup) {

@@ -1,5 +1,5 @@
 use encase::StorageBuffer;
-use glam::Vec3;
+use glam::{Vec2, Vec3};
 use gltf::{buffer::Data, Primitive};
 
 use crate::{
@@ -27,11 +27,13 @@ impl Primitives {
 
         let positions: Vec<_> = reader.read_positions()?.collect();
         let normals: Vec<_> = reader.read_normals()?.collect();
+        let tex_coords: Vec<_> = reader.read_tex_coords(0)?.into_f32().collect();
         let mut vertices = Vec::with_capacity(positions.len());
         for i in 0..positions.len() {
             vertices.push(Vertex {
                 pos: Vec3::from_array(positions[i]),
                 normal: Vec3::from_array(normals[i]),
+                tex_coord: Vec2::from_array(tex_coords[i]),
             });
         }
 

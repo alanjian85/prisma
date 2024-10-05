@@ -1,7 +1,9 @@
+use std::rc::Rc;
+
 use encase::{ShaderType, StorageBuffer, UniformBuffer};
 use gltf::{buffer, image, Node};
 
-use crate::{core::Triangle, primitives::Primitives, render::RenderContext};
+use crate::{core::Triangle, primitives::Primitives, render::RenderContext, textures::Textures};
 
 use self::bvh::Bvh;
 
@@ -16,16 +18,22 @@ struct Uniform {
     hdri: u32,
 }
 
-#[derive(Default)]
 pub struct Scene {
     pub primitives: Primitives,
+    //pub materials: Materials,
+    pub textures: Textures,
     uniform: Uniform,
     triangles: Vec<Triangle>,
 }
 
 impl Scene {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(context: Rc<RenderContext>) -> Self {
+        Self {
+            primitives: Primitives::new(),
+            textures: Textures::new(context),
+            uniform: Uniform::default(),
+            triangles: Vec::new(),
+        }
     }
 
     pub fn set_camera(&mut self, camera: Camera) -> &mut Self {
@@ -39,6 +47,10 @@ impl Scene {
     }
 
     pub fn load(&mut self, scene: &gltf::Scene, buffers: &[buffer::Data], images: &[image::Data]) {
+        for image in images {
+            self.textures.add_texture(&image);
+        }
+
         for node in scene.nodes() {
             self.load_node(node, buffers, images);
         }

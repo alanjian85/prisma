@@ -7,32 +7,29 @@ use prisma::{
     config::Config,
     render::{BindGroupLayoutSet, BindGroupSet, PostProcessor, RenderContext, Renderer},
     scene::{CameraBuilder, Scene},
-    textures::Textures,
 };
 
 fn build_scene(
     context: Rc<RenderContext>,
     config: &Config,
 ) -> Result<(BindGroupLayoutSet, BindGroupSet), Box<dyn Error>> {
-    let mut textures = Textures::new(context.clone());
-
     let (document, buffers, images) = gltf::import(&config.scene)?;
 
-    let mut scene = Scene::new();
+    let mut scene = Scene::new(context.clone());
     scene.load(&document.scenes().next().unwrap(), &buffers, &images);
 
-    let hdri = textures.create_image_hdr(&config.hdri)?;
+    let hdri = scene.textures.load_texture_hdr(&config.hdri)?;
     scene.set_hdri(hdri);
 
     let camera = CameraBuilder::new()
-        .pos(Vec3::new(1.0, 2.0, 3.0))
+        .pos(Vec3::new(1.0, 3.0, 2.0).normalize() * 4.0)
         .fov(40.0_f32.to_radians())
         .build(config.size.width, config.size.height);
     scene.set_camera(camera);
 
     let (scene_bind_group_layout, scene_bind_group) = scene.build(&context.clone())?;
     let (primitive_bind_group_layout, primitive_bind_group) = scene.primitives.build(&context)?;
-    let (texture_bind_group_layout, texture_bind_group) = textures.build();
+    let (texture_bind_group_layout, texture_bind_group) = scene.textures.build();
 
     let bind_group_layout_set = BindGroupLayoutSet {
         scene: scene_bind_group_layout,

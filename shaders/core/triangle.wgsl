@@ -7,6 +7,7 @@ var<storage, read> offsets: array<u32>;
 struct Vertex {
     pos: vec3f,
     normal: vec3f,
+    tex_coord: vec2f
 }
 
 struct Triangle {
@@ -58,6 +59,7 @@ fn triangle_intersect(triangle: Triangle, ray: Ray,
 
     (*intersection).t = t;
     (*intersection).normal = normalize((e0 * vertices[triangle.v0 + offset].normal + e1 * vertices[triangle.v1 + offset].normal + e2 * vertices[triangle.v2 + offset].normal) / det);
+    (*intersection).tex_coord = (e0 * vertices[triangle.v0 + offset].tex_coord + e1 * vertices[triangle.v1 + offset].tex_coord + e2 * vertices[triangle.v2 + offset].tex_coord) / det;
     (*intersection).material = 0u; //material_indices[primitive.idx];
 
     return true;

@@ -2,6 +2,7 @@ struct Intersection {
     t: f32,
     normal: vec3f,
     front: bool,
+    tex_coord: vec2f,
     material: u32,
 }
 
