@@ -1,13 +1,13 @@
 struct SceneUniform {
     camera: Camera,
-    env_map: u32
+    hdri: u32
 }
 
 @group(1) @binding(0)
 var<uniform> scene: SceneUniform;
 
 @group(1) @binding(1)
-var<storage, read> primitives: array<Primitive>;
+var<storage, read> triangles: array<Triangle>;
 
 @group(1) @binding(2)
 var<storage, read> bvh_nodes: array<BvhNode>;
@@ -15,8 +15,8 @@ var<storage, read> bvh_nodes: array<BvhNode>;
 struct BvhNode {
     aabb: Aabb3,
     rigth_idx: u32,
-    primitive_start: u32,
-    primitive_end: u32,
+    triangle_start: u32,
+    triangle_end: u32,
 }
 
 fn scene_intersect(ray: Ray, intersection: ptr<function, Intersection>) -> bool {
@@ -35,8 +35,8 @@ fn scene_intersect(ray: Ray, intersection: ptr<function, Intersection>) -> bool 
 
         if right == 0 || !aabb_intersect(bvh_nodes[node].aabb, ray, interval) {
             if right == 0 {
-                for (var i = bvh_nodes[node].primitive_start; i < bvh_nodes[node].primitive_end; i++) {
-                    if primitive_intersect(primitives[i], ray, intersection, interval) {
+                for (var i = bvh_nodes[node].triangle_start; i < bvh_nodes[node].triangle_end; i++) {
+                    if triangle_intersect(triangles[i], ray, intersection, interval) {
                         intersected = true;
                         interval = Interval(0.001, (*intersection).t);
                     }

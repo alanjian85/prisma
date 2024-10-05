@@ -1,6 +1,6 @@
 ///#include "core/intersection.wgsl"
-///#include "core/primitive.wgsl"
 ///#include "core/ray.wgsl"
+///#include "core/triangle.wgsl"
 
 ///#include "scene/camera.wgsl"
 ///#include "scene/scene.wgsl"
@@ -41,7 +41,7 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
 
             color *= material_brdf(intersection.normal, wi, wo) * PI;
         } else {
-            color *= sample_panorama(scene.env_map, normalize(ray.dir));
+            color *= sample_panorama(scene.hdri, normalize(ray.dir));
             break;
         }
     }

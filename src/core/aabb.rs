@@ -1,7 +1,7 @@
 use encase::ShaderType;
 use glam::Vec3;
 
-#[derive(Default, ShaderType, Copy, Clone)]
+#[derive(ShaderType, Copy, Clone)]
 pub struct Aabb3 {
     pub min: Vec3,
     pub max: Vec3,
@@ -9,10 +9,7 @@ pub struct Aabb3 {
 
 impl Aabb3 {
     pub fn new() -> Self {
-        Self {
-            min: Vec3::INFINITY,
-            max: Vec3::NEG_INFINITY,
-        }
+        Self::default()
     }
 
     pub fn from_corners(a: Vec3, b: Vec3) -> Self {
@@ -47,5 +44,14 @@ impl Aabb3 {
 
     pub fn centroid(&self) -> Vec3 {
         (self.min + self.max) / 2.0
+    }
+}
+
+impl Default for Aabb3 {
+    fn default() -> Self {
+        Self {
+            min: Vec3::INFINITY,
+            max: Vec3::NEG_INFINITY,
+        }
     }
 }

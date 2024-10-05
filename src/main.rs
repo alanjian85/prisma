@@ -16,18 +16,19 @@ fn build_scene(
 ) -> Result<(BindGroupLayoutSet, BindGroupSet), Box<dyn Error>> {
     let mut textures = Textures::new(context.clone());
 
-    let (document, buffers, images) = gltf::import("scenes/damaged_helmet.glb")?;
+    let (document, buffers, images) = gltf::import(&config.scene)?;
 
     let mut scene = Scene::new();
     scene.load(&document.scenes().next().unwrap(), &buffers, &images);
+
+    let hdri = textures.create_image_hdr(&config.hdri)?;
+    scene.set_hdri(hdri);
 
     let camera = CameraBuilder::new()
         .pos(Vec3::new(1.0, 2.0, 3.0))
         .fov(40.0_f32.to_radians())
         .build(config.size.width, config.size.height);
-    let env_map = textures.create_image_hdr("textures/panorama.hdr")?;
     scene.set_camera(camera);
-    scene.set_env_map(env_map);
 
     let (scene_bind_group_layout, scene_bind_group) = scene.build(&context.clone())?;
     let (primitive_bind_group_layout, primitive_bind_group) = scene.primitives.build(&context)?;

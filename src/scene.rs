@@ -13,9 +13,10 @@ pub use camera::{Camera, CameraBuilder};
 #[derive(Default, ShaderType)]
 struct Uniform {
     camera: Camera,
-    env_map: u32,
+    hdri: u32,
 }
 
+#[derive(Default)]
 pub struct Scene {
     pub primitives: Primitives,
     uniform: Uniform,
@@ -24,11 +25,7 @@ pub struct Scene {
 
 impl Scene {
     pub fn new() -> Self {
-        Scene {
-            primitives: Primitives::new(),
-            uniform: Uniform::default(),
-            triangles: Vec::new(),
-        }
+        Self::default()
     }
 
     pub fn set_camera(&mut self, camera: Camera) -> &mut Self {
@@ -36,8 +33,8 @@ impl Scene {
         self
     }
 
-    pub fn set_env_map(&mut self, env_map: u32) -> &mut Self {
-        self.uniform.env_map = env_map;
+    pub fn set_hdri(&mut self, hdri: u32) -> &mut Self {
+        self.uniform.hdri = hdri;
         self
     }
 

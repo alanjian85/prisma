@@ -44,7 +44,7 @@ impl Primitives {
         for i in 0..indices.len() / 3 {
             triangles.push(Triangle {
                 primitive,
-                v0: indices[3 * i + 0],
+                v0: indices[3 * i],
                 v1: indices[3 * i + 1],
                 v2: indices[3 * i + 2],
             });

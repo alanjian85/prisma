@@ -5,7 +5,7 @@ use std::{
 };
 
 const SHADER_DIR: &str = "shaders-generated";
-const INCLUDE_DIRECTIVE: &str = "///#include";
+const INCLUDE_PREFIX: &str = "///#include";
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("cargo:rerun-if-changed=shaders/");
@@ -40,12 +40,12 @@ fn generate_shader(file_name: &str) -> Result<(), Box<dyn Error>> {
 
 fn preprocess_shader(source: &str, result: &mut String) {
     for line in source.lines() {
-        if line.starts_with(INCLUDE_DIRECTIVE) {
-            let include_file = line[INCLUDE_DIRECTIVE.len()..].trim().replace('"', "");
+        if let Some(stripped) = line.strip_prefix(INCLUDE_PREFIX) {
+            let include_file = stripped.trim().replace('"', "");
             let include_source = get_include_source(&include_file);
             preprocess_shader(&include_source, result);
         } else {
-            result.push_str(&line);
+            result.push_str(line);
             result.push('\n');
         }
     }

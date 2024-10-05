@@ -22,8 +22,12 @@ pub struct Config {
     #[arg(long, default_value_t = 1000)]
     pub samples: u32,
 
-    /// The path to the Lua scene description
-    pub script: String,
+    /// The environment map of the scene to be rendered
+    #[arg(long, default_value_t = String::from("textures/indoor.hdr"))]
+    pub hdri: String,
+
+    /// The path to the glTF scene description file
+    pub scene: String,
 }
 
 #[derive(Clone)]
