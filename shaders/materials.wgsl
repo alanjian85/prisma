@@ -1,5 +1,5 @@
-@group(2) @binding(0)
-var<storage, read> materials: array<Material>;
+//@group(2) @binding(0)
+//var<storage, read> materials: array<Material>;
 
 struct Material {
     diffuse: vec3f,

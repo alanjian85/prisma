@@ -9,10 +9,9 @@ console = "0.15.8"
 encase = { version = "0.9.0", features = ["glam"] }
 env_logger = "0.11.5"
 glam = "0.28.0"
+gltf = "1.4.1"
 image = "0.25.2"
 indicatif = "0.17.8"
 itertools = "0.13.0"
-mlua = { version = "0.9.9", features = ["lua54", "macros"] }
 pollster = "0.3.0"
-tobj = "4.0.2"
 wgpu = "22.1.0"

@@ -1,61 +1,66 @@
 use encase::ShaderType;
 
 use crate::{
-    core::{Aabb3, Primitive},
-    models::Meshes,
+    core::{Aabb3, Triangle},
+    primitives::Primitives,
 };
 
 struct BvhNode {
     left: Option<Box<BvhNode>>,
     right: Option<Box<BvhNode>>,
     aabb: Aabb3,
-    primitive_start: u32,
-    primitive_end: u32,
+    triangle_start: u32,
+    triangle_end: u32,
 }
 
 impl BvhNode {
-    pub fn new(meshes: &Meshes, primitives: &mut [Primitive], start: usize, end: usize) -> Self {
+    pub fn new(
+        primitives: &Primitives,
+        triangles: &mut [Triangle],
+        start: usize,
+        end: usize,
+    ) -> Self {
         if end - start == 1 {
             return Self {
                 left: None,
                 right: None,
-                aabb: primitives[start].aabb(meshes),
-                primitive_start: start as u32,
-                primitive_end: start as u32 + 1,
+                aabb: triangles[start].aabb(primitives),
+                triangle_start: start as u32,
+                triangle_end: start as u32 + 1,
             };
         }
 
         let mut centroid_aabb = Aabb3::new();
-        for primitive in &primitives[start..end] {
-            centroid_aabb = centroid_aabb.union_point(primitive.aabb(meshes).centroid());
+        for triangle in &triangles[start..end] {
+            centroid_aabb = centroid_aabb.union_point(triangle.aabb(primitives).centroid());
         }
 
         let dim = centroid_aabb.max_dim();
-        if centroid_aabb.min[dim] == centroid_aabb.max[dim] {
+        let mid = (centroid_aabb.min[dim] + centroid_aabb.max[dim]) / 2.0;
+        let split_idx = start
+            + itertools::partition(&mut triangles[start..end], |elem| {
+                elem.aabb(primitives).centroid()[dim] < mid
+            });
+
+        if split_idx == start {
             return Self {
                 left: None,
                 right: None,
-                aabb: primitives[start].aabb(meshes),
-                primitive_start: start as u32,
-                primitive_end: end as u32,
+                aabb: triangles[start].aabb(primitives),
+                triangle_start: start as u32,
+                triangle_end: end as u32,
             };
         }
 
-        let mid = (centroid_aabb.min[dim] + centroid_aabb.max[dim]) / 2.0;
-        let split_idx = start
-            + itertools::partition(&mut primitives[start..end], |elem| {
-                elem.aabb(meshes).centroid()[dim] < mid
-            });
-
-        let left = Box::new(Self::new(meshes, primitives, start, split_idx));
-        let right = Box::new(Self::new(meshes, primitives, split_idx, end));
+        let left = Box::new(Self::new(primitives, triangles, start, split_idx));
+        let right = Box::new(Self::new(primitives, triangles, split_idx, end));
         let aabb = left.aabb.union(&right.aabb);
         Self {
             left: Some(left),
             right: Some(right),
             aabb,
-            primitive_start: 0,
-            primitive_end: 0,
+            triangle_start: 0,
+            triangle_end: 0,
         }
     }
 }
@@ -64,8 +69,8 @@ impl BvhNode {
 pub struct FlatBvhNode {
     aabb: Aabb3,
     right_idx: u32,
-    primitive_start: u32,
-    primitive_end: u32,
+    triangle_start: u32,
+    triangle_end: u32,
 }
 
 pub struct Bvh {
@@ -73,9 +78,9 @@ pub struct Bvh {
 }
 
 impl Bvh {
-    pub fn new(meshes: &Meshes, primitives: &mut [Primitive]) -> Self {
-        let len = primitives.len();
-        let root = Box::new(BvhNode::new(meshes, primitives, 0, len));
+    pub fn new(primitives: &Primitives, triangles: &mut [Triangle]) -> Self {
+        let len = triangles.len();
+        let root = Box::new(BvhNode::new(primitives, triangles, 0, len));
         Self { root }
     }
 
@@ -90,8 +95,8 @@ impl Bvh {
         nodes.push(FlatBvhNode {
             aabb: node.aabb,
             right_idx: 0,
-            primitive_start: node.primitive_start,
-            primitive_end: node.primitive_end,
+            triangle_start: node.triangle_start,
+            triangle_end: node.triangle_end,
         });
 
         if node.left.is_none() {

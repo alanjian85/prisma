@@ -1,7 +1,7 @@
 mod aabb;
-mod primitive;
+mod triangle;
 mod vertex;
 
 pub use aabb::Aabb3;
-pub use primitive::Primitive;
+pub use triangle::Triangle;
 pub use vertex::Vertex;

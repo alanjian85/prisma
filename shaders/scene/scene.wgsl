@@ -3,13 +3,13 @@ struct SceneUniform {
     env_map: u32
 }
 
-@group(4) @binding(0)
+@group(1) @binding(0)
 var<uniform> scene: SceneUniform;
 
-@group(4) @binding(1)
+@group(1) @binding(1)
 var<storage, read> primitives: array<Primitive>;
 
-@group(4) @binding(2)
+@group(1) @binding(2)
 var<storage, read> bvh_nodes: array<BvhNode>;
 
 struct BvhNode {

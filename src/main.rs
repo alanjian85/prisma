@@ -1,12 +1,12 @@
-use std::{cell::RefCell, error::Error, fs, rc::Rc};
+use std::{error::Error, rc::Rc};
 
 use clap::Parser;
 use console::Emoji;
+use glam::Vec3;
 use prisma::{
     config::Config,
-    models::Models,
     render::{BindGroupLayoutSet, BindGroupSet, PostProcessor, RenderContext, Renderer},
-    scripting::Scripting,
+    scene::{CameraBuilder, Scene},
     textures::Textures,
 };
 
@@ -14,30 +14,34 @@ fn build_scene(
     context: Rc<RenderContext>,
     config: &Config,
 ) -> Result<(BindGroupLayoutSet, BindGroupSet), Box<dyn Error>> {
-    let textures = Rc::new(RefCell::new(Textures::new(context.clone())));
-    let models = Rc::new(RefCell::new(Models::new()));
+    let mut textures = Textures::new(context.clone());
 
-    let script = fs::read_to_string(&config.script)?;
-    let scripting = Scripting::new(textures.clone(), models.clone())?;
-    let mut scene = scripting.load(config, &script)?;
+    let (document, buffers, images) = gltf::import("scenes/damaged_helmet.glb")?;
 
-    let (texture_bind_group_layout, texture_bind_group) = textures.borrow().build();
-    let (material_bind_group_layout, material_bind_group) =
-        models.borrow().materials().build(&context)?;
-    let (mesh_bind_group_layout, mesh_bind_group) = models.borrow().meshes().build(&context)?;
+    let mut scene = Scene::new();
+    scene.load(&document.scenes().next().unwrap(), &buffers, &images);
+
+    let camera = CameraBuilder::new()
+        .pos(Vec3::new(1.0, 2.0, 3.0))
+        .fov(40.0_f32.to_radians())
+        .build(config.size.width, config.size.height);
+    let env_map = textures.create_image_hdr("textures/panorama.hdr")?;
+    scene.set_camera(camera);
+    scene.set_env_map(env_map);
+
     let (scene_bind_group_layout, scene_bind_group) = scene.build(&context.clone())?;
+    let (primitive_bind_group_layout, primitive_bind_group) = scene.primitives.build(&context)?;
+    let (texture_bind_group_layout, texture_bind_group) = textures.build();
 
     let bind_group_layout_set = BindGroupLayoutSet {
-        texture: texture_bind_group_layout,
-        material: material_bind_group_layout,
-        mesh: mesh_bind_group_layout,
         scene: scene_bind_group_layout,
+        primitive: primitive_bind_group_layout,
+        texture: texture_bind_group_layout,
     };
     let bind_group_set = BindGroupSet {
-        texture: texture_bind_group,
-        material: material_bind_group,
-        mesh: mesh_bind_group,
         scene: scene_bind_group,
+        primitive: primitive_bind_group,
+        texture: texture_bind_group,
     };
     Ok((bind_group_layout_set, bind_group_set))
 }

@@ -24,7 +24,7 @@ impl Textures {
         }
     }
 
-    pub fn create_image_hdr(&mut self, path: &str) -> Result<u32, Box<dyn Error + Send + Sync>> {
+    pub fn create_image_hdr(&mut self, path: &str) -> Result<u32, Box<dyn Error>> {
         self.registry
             .push(Rc::new(ImageHdr::new(&self.context, path)?));
         Ok(self.registry.len() as u32 - 1)

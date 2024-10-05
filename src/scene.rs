@@ -1,8 +1,7 @@
-use std::{cell::RefCell, rc::Rc};
-
 use encase::{ShaderType, StorageBuffer, UniformBuffer};
+use gltf::{buffer, image, Node};
 
-use crate::{core::Primitive, models::Models, render::RenderContext};
+use crate::{core::Triangle, primitives::Primitives, render::RenderContext};
 
 use self::bvh::Bvh;
 
@@ -18,17 +17,17 @@ struct Uniform {
 }
 
 pub struct Scene {
-    models: Rc<RefCell<Models>>,
+    pub primitives: Primitives,
     uniform: Uniform,
-    primitives: Vec<Primitive>,
+    triangles: Vec<Triangle>,
 }
 
 impl Scene {
-    pub fn new(models: Rc<RefCell<Models>>) -> Self {
-        Self {
-            models,
+    pub fn new() -> Self {
+        Scene {
+            primitives: Primitives::new(),
             uniform: Uniform::default(),
-            primitives: Vec::new(),
+            triangles: Vec::new(),
         }
     }
 
@@ -42,10 +41,23 @@ impl Scene {
         self
     }
 
-    pub fn add(&mut self, idx: u32) -> &mut Self {
-        self.primitives
-            .append(&mut self.models.borrow().primitives(idx).clone());
-        self
+    pub fn load(&mut self, scene: &gltf::Scene, buffers: &[buffer::Data], images: &[image::Data]) {
+        for node in scene.nodes() {
+            self.load_node(node, buffers, images);
+        }
+    }
+
+    fn load_node(&mut self, node: Node, buffers: &[buffer::Data], images: &[image::Data]) {
+        if let Some(mesh) = node.mesh() {
+            for primitive in mesh.primitives() {
+                self.triangles
+                    .append(&mut self.primitives.add(buffers, &primitive).unwrap());
+            }
+        }
+
+        for child in node.children() {
+            self.load_node(child, buffers, images);
+        }
     }
 
     pub fn build(
@@ -67,19 +79,19 @@ impl Scene {
         });
         queue.write_buffer(&uniform_buffer, 0, &wgsl_bytes);
 
-        let bvh = Bvh::new(self.models.borrow().meshes(), &mut self.primitives);
+        let bvh = Bvh::new(&self.primitives, &mut self.triangles);
 
         let mut wgsl_bytes = StorageBuffer::new(Vec::new());
-        wgsl_bytes.write(&self.primitives)?;
+        wgsl_bytes.write(&self.triangles)?;
         let wgsl_bytes = wgsl_bytes.into_inner();
 
-        let primitive_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        let triangle_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
             size: wgsl_bytes.len() as u64,
             usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::STORAGE,
             mapped_at_creation: false,
         });
-        queue.write_buffer(&primitive_buffer, 0, &wgsl_bytes);
+        queue.write_buffer(&triangle_buffer, 0, &wgsl_bytes);
 
         let mut wgsl_bytes = StorageBuffer::new(Vec::new());
         wgsl_bytes.write(&bvh.flatten())?;
@@ -139,7 +151,7 @@ impl Scene {
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: primitive_buffer.as_entire_binding(),
+                    resource: triangle_buffer.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 2,

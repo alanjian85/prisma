@@ -1,11 +1,11 @@
-@group(3) @binding(0)
+@group(2) @binding(0)
 var<storage, read> vertices: array<Vertex>;
 
-@group(3) @binding(1)
+@group(2) @binding(1)
 var<storage, read> offsets: array<u32>;
 
-@group(3) @binding(2)
-var<storage, read> material_indices: array<u32>;
+//@group(2) @binding(2)
+//var<storage, read> material_indices: array<u32>;
 
 struct Vertex {
     pos: vec3f,
@@ -61,7 +61,7 @@ fn primitive_intersect(primitive: Primitive, ray: Ray,
 
     (*intersection).t = t;
     (*intersection).normal = normalize((e0 * vertices[primitive.p0 + offset].normal + e1 * vertices[primitive.p1 + offset].normal + e2 * vertices[primitive.p2 + offset].normal) / det);
-    (*intersection).material = material_indices[primitive.idx];
+    (*intersection).material = 0u; //material_indices[primitive.idx];
 
     return true;
 }
