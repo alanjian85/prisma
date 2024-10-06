@@ -2,11 +2,10 @@ use std::{error::Error, rc::Rc};
 
 use clap::Parser;
 use console::Emoji;
-use glam::Vec3;
 use prisma::{
     config::Config,
     render::{BindGroupLayoutSet, BindGroupSet, PostProcessor, RenderContext, Renderer},
-    scene::{CameraBuilder, Scene},
+    scene::Scene,
 };
 
 fn build_scene(
@@ -16,17 +15,15 @@ fn build_scene(
     let (document, buffers, images) = gltf::import(&config.scene)?;
 
     let mut scene = Scene::new(context.clone());
-    scene.load(&document.scenes().next().unwrap(), &buffers, &images);
+    scene.load(
+        config,
+        &document.scenes().next().unwrap(),
+        &buffers,
+        &images,
+    );
 
     let hdri = scene.textures.load_texture_hdr(&config.hdri)?;
     scene.set_hdri(hdri);
-
-    let camera = CameraBuilder::new()
-        .pos(Vec3::new(3.5, 2.3, 3.3))
-        .center(Vec3::new(0.0, 0.0, 0.0))
-        .fov(25.0_f32.to_radians())
-        .build(config.size.width, config.size.height);
-    scene.set_camera(camera);
 
     let (scene_bind_group_layout, scene_bind_group) = scene.build(&context.clone())?;
     let (primitive_bind_group_layout, primitive_bind_group) = scene.primitives.build(&context)?;

@@ -31,7 +31,7 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
     let size = textureDimensions(render_target);
     var rand_state = rand_init(id.xy, size, sample);
 
-    var ray = camera_gen_ray(scene.camera, size, id.xy, &rand_state);
+    var ray = camera_gen_ray(scene.camera, id.xy, &rand_state);
     var paths = array<Path, 50>();
     var depth = 0u;
     for (; depth < MAX_DEPTH; depth++) {

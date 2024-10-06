@@ -2,11 +2,11 @@ use std::rc::Rc;
 
 use encase::{ShaderType, StorageBuffer, UniformBuffer};
 use glam::{Mat4, Quat, Vec3};
-use gltf::{buffer, image, scene, Node};
+use gltf::{buffer, camera::Projection, image, scene, Node};
 
 use crate::{
-    core::Triangle, materials::Materials, primitives::Primitives, render::RenderContext,
-    textures::Textures,
+    config::Config, core::Triangle, materials::Materials, primitives::Primitives,
+    render::RenderContext, textures::Textures,
 };
 
 use self::bvh::Bvh;
@@ -55,27 +55,34 @@ impl Scene {
         }
     }
 
-    pub fn set_camera(&mut self, camera: Camera) -> &mut Self {
-        self.uniform.camera = camera;
-        self
-    }
-
     pub fn set_hdri(&mut self, hdri: u32) -> &mut Self {
         self.uniform.hdri = hdri;
         self
     }
 
-    pub fn load(&mut self, scene: &gltf::Scene, buffers: &[buffer::Data], images: &[image::Data]) {
+    pub fn load(
+        &mut self,
+        config: &Config,
+        scene: &gltf::Scene,
+        buffers: &[buffer::Data],
+        images: &[image::Data],
+    ) {
         for image in images {
             self.textures.add_texture(image);
         }
 
         for node in scene.nodes() {
-            self.load_node(node, buffers, &Mat4::IDENTITY);
+            self.load_node(node, config, buffers, &Mat4::IDENTITY);
         }
     }
 
-    fn load_node(&mut self, node: Node, buffers: &[buffer::Data], parent_transform: &Mat4) {
+    fn load_node(
+        &mut self,
+        node: Node,
+        config: &Config,
+        buffers: &[buffer::Data],
+        parent_transform: &Mat4,
+    ) {
         let transform_matrix = *parent_transform * transform_to_matrix(&node.transform());
         let transform = Transform::new(transform_matrix);
 
@@ -91,8 +98,25 @@ impl Scene {
             }
         }
 
+        if let Some(camera) = node.camera() {
+            match camera.projection() {
+                Projection::Perspective(perspective) => {
+                    let mut camera_builder = CameraBuilder::new();
+                    camera_builder
+                        .transform(transform_matrix)
+                        .yfov(perspective.yfov());
+                    if let Some(aspect_ratio) = perspective.aspect_ratio() {
+                        camera_builder.aspect_ratio(aspect_ratio);
+                    }
+                    self.uniform.camera =
+                        camera_builder.build(config.size.width, config.size.height);
+                }
+                _ => todo!(),
+            }
+        }
+
         for child in node.children() {
-            self.load_node(child, buffers, &transform_matrix);
+            self.load_node(child, config, buffers, &transform_matrix);
         }
     }
 
