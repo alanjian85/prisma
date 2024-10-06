@@ -1,10 +1,11 @@
 use encase::StorageBuffer;
-use glam::{Mat4, Vec2, Vec3};
+use glam::{Vec2, Vec3};
 use gltf::{buffer::Data, Primitive};
 
 use crate::{
     core::{Triangle, Vertex},
     render::RenderContext,
+    scene::Transform,
 };
 
 #[derive(Default)]
@@ -28,8 +29,7 @@ impl Primitives {
         &mut self,
         buffers: &[Data],
         primitive: &Primitive,
-        transform: &Mat4,
-        transform_idx: u32,
+        transform: &Transform,
         material_idx: u32,
     ) -> Option<Vec<Triangle>> {
         let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
@@ -38,11 +38,14 @@ impl Primitives {
         let normals: Vec<_> = reader.read_normals()?.collect();
         let tex_coords: Vec<_> = reader.read_tex_coords(0)?.into_f32().collect();
         let mut vertices = Vec::with_capacity(positions.len());
-        let inv_trans = transform.inverse().transpose();
         for i in 0..positions.len() {
             vertices.push(Vertex {
-                pos: transform.transform_point3(Vec3::from_array(positions[i])),
-                normal: inv_trans.transform_vector3(Vec3::from_array(normals[i])),
+                pos: transform
+                    .transform
+                    .transform_point3(Vec3::from_array(positions[i])),
+                normal: transform
+                    .inv_trans
+                    .transform_vector3(Vec3::from_array(normals[i])),
                 tex_coord: Vec2::from_array(tex_coords[i]),
             });
         }
@@ -51,7 +54,6 @@ impl Primitives {
         let offset = self.vertices.len() as u32;
         self.vertices.append(&mut vertices);
         self.offsets.push(offset);
-        self.transform_indices.push(transform_idx);
         self.material_indices.push(material_idx);
 
         let indices: Vec<_> = reader.read_indices()?.into_u32().collect();

@@ -39,14 +39,18 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
         if scene_intersect(ray, &intersection) {
             intersection_flip_normal(&intersection, ray);
             let material = materials[intersection.material];
+            let normal_in_tangent = sample_texture(material.normal_texture, intersection.tex_coord);
+            let normal = normalize(normal_in_tangent.x * intersection.tangent +
+                         normal_in_tangent.y * intersection.bitangent +
+                         normal_in_tangent.z * intersection.normal);
 
-            let wi = normalize(intersection.normal + rand_sphere(&rand_state));
+            let wi = normalize(normal + rand_sphere(&rand_state));
             let wo = -normalize(ray.dir);
 
             ray.orig = ray_at(ray, intersection.t);
             ray.dir = wi;
 
-            paths[depth].coefficient = material_brdf(intersection, wi, wo) * PI;
+            paths[depth].coefficient = material_brdf(intersection, normal, wi, wo) * PI;
             paths[depth].constant = sample_texture(material.emissive_texture, intersection.tex_coord);
         } else {
             paths[depth].coefficient = sample_panorama(scene.hdri, normalize(ray.dir));

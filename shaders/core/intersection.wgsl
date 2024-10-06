@@ -1,6 +1,8 @@
 struct Intersection {
     t: f32,
     normal: vec3f,
+    tangent: vec3f,
+    bitangent: vec3f,
     front: bool,
     tex_coord: vec2f,
     transform: u32,

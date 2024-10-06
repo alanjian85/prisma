@@ -7,9 +7,6 @@ var<storage, read> triangles: array<Triangle>;
 @group(1) @binding(2)
 var<storage, read> bvh_nodes: array<BvhNode>;
 
-@group(1) @binding(3)
-var<storage, read> transforms: array<Transform>;
-
 struct SceneUniform {
     camera: Camera,
     hdri: u32

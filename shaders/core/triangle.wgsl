@@ -63,13 +63,28 @@ fn triangle_intersect(triangle: Triangle, ray: Ray,
         return false;
     }
 
+    let tangent = tangent(triangle);
     (*intersection).t = t;
     (*intersection).normal = normalize((e0 * vertices[triangle.v0 + offset].normal + e1 * vertices[triangle.v1 + offset].normal + e2 * vertices[triangle.v2 + offset].normal) / det);
+    (*intersection).tangent = normalize(tangent - dot(tangent, (*intersection).normal) * (*intersection).normal);
+    (*intersection).bitangent = cross((*intersection).normal, (*intersection).tangent);
     (*intersection).tex_coord = (e0 * vertices[triangle.v0 + offset].tex_coord + e1 * vertices[triangle.v1 + offset].tex_coord + e2 * vertices[triangle.v2 + offset].tex_coord) / det;
     (*intersection).transform = transform_indices[triangle.primitive];
     (*intersection).material = material_indices[triangle.primitive];
 
     return true;
+}
+
+fn tangent(triangle: Triangle) -> vec3f {
+    let offset = offsets[triangle.primitive];
+    let e0 = vertices[triangle.v1 + offset].pos - vertices[triangle.v0 + offset].pos;
+    let e1 = vertices[triangle.v2 + offset].pos - vertices[triangle.v1 + offset].pos;
+
+    let duv0 = vertices[triangle.v1 + offset].tex_coord - vertices[triangle.v0 + offset].tex_coord;
+    let duv1 = vertices[triangle.v2 + offset].tex_coord - vertices[triangle.v1 + offset].tex_coord;
+
+    let det = duv0.x * duv1.y - duv0.y * duv1.x;
+    return (duv1.y * e0 - duv0.y * e1) / det;
 }
 
 fn max_dim(v: vec3f) -> u32 {

@@ -22,7 +22,6 @@ pub struct Scene {
     pub textures: Textures,
     uniform: Uniform,
     triangles: Vec<Triangle>,
-    transforms: Vec<Transform>,
 }
 
 #[derive(Default, ShaderType)]
@@ -31,10 +30,9 @@ struct Uniform {
     hdri: u32,
 }
 
-#[derive(ShaderType)]
-struct Transform {
-    transform: Mat4,
-    inv_trans: Mat4,
+pub struct Transform {
+    pub transform: Mat4,
+    pub inv_trans: Mat4,
 }
 
 impl Transform {
@@ -54,7 +52,6 @@ impl Scene {
             textures: Textures::new(context),
             uniform: Uniform::default(),
             triangles: Vec::new(),
-            transforms: Vec::new(),
         }
     }
 
@@ -79,24 +76,23 @@ impl Scene {
     }
 
     fn load_node(&mut self, node: Node, buffers: &[buffer::Data], parent_transform: &Mat4) {
-        let transform = *parent_transform * transform_to_matrix(&node.transform());
-        self.transforms.push(Transform::new(transform));
+        let transform_matrix = *parent_transform * transform_to_matrix(&node.transform());
+        let transform = Transform::new(transform_matrix);
 
         if let Some(mesh) = node.mesh() {
-            let transform_idx = self.transforms.len() as u32 - 1;
             for primitive in mesh.primitives() {
                 let material_idx = self.materials.add(&primitive.material()).unwrap();
                 self.triangles.append(
                     &mut self
                         .primitives
-                        .add(buffers, &primitive, &transform, transform_idx, material_idx)
+                        .add(buffers, &primitive, &transform, material_idx)
                         .unwrap(),
                 );
             }
         }
 
         for child in node.children() {
-            self.load_node(child, buffers, &transform);
+            self.load_node(child, buffers, &transform_matrix);
         }
     }
 
@@ -145,18 +141,6 @@ impl Scene {
         });
         queue.write_buffer(&bvh_buffer, 0, &wgsl_bytes);
 
-        let mut wgsl_bytes = StorageBuffer::new(Vec::new());
-        wgsl_bytes.write(&self.transforms)?;
-        let wgsl_bytes = wgsl_bytes.into_inner();
-
-        let transform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: None,
-            size: wgsl_bytes.len() as u64,
-            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::STORAGE,
-            mapped_at_creation: false,
-        });
-        queue.write_buffer(&transform_buffer, 0, &wgsl_bytes);
-
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: None,
             entries: &[
@@ -190,16 +174,6 @@ impl Scene {
                     },
                     count: None,
                 },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 3,
-                    visibility: wgpu::ShaderStages::COMPUTE,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Storage { read_only: true },
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                },
             ],
         });
 
@@ -218,10 +192,6 @@ impl Scene {
                 wgpu::BindGroupEntry {
                     binding: 2,
                     resource: bvh_buffer.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 3,
-                    resource: transform_buffer.as_entire_binding(),
                 },
             ],
         });

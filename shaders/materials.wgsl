@@ -8,15 +8,13 @@ struct Material {
     emissive_texture: u32
 }
 
-fn material_brdf(intersection: Intersection, wi: vec3f, wo: vec3f) -> vec3f {
+fn material_brdf(intersection: Intersection, n: vec3f, wi: vec3f, wo: vec3f) -> vec3f {
     let material = materials[intersection.material];
     let base_color = sample_texture(material.base_color_texture, intersection.tex_coord);
     let metallic_roughness = sample_texture(material.metallic_roughness_texture, intersection.tex_coord);
     let metallic = metallic_roughness.b;
     let roughness = metallic_roughness.g;
 
-    let normal_transform = transforms[intersection.transform].inv_trans;
-    let n = (vec4(intersection.normal, 0.0)).xyz;
     let h = normalize(wi + wo);
     let vdoth = dot(wo, h);
     let ndoth = dot(n, h);
