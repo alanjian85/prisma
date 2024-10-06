@@ -45,7 +45,7 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
 
             ray.orig = ray_at(ray, intersection.t);
             ray.dir = wi;
-            
+
             paths[depth].coefficient = material_brdf(intersection, wi, wo) * PI;
             paths[depth].constant = sample_texture(material.emissive_texture, intersection.tex_coord);
         } else {
@@ -63,5 +63,5 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
     }
 
     let prev_color = textureLoad(render_target, id.xy);
-    textureStore(render_target, id.xy, prev_color + vec4(color, 1.0) / 100.0);
+    textureStore(render_target, id.xy, prev_color + vec4(color, 1.0));
 }

@@ -68,15 +68,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
     renderer.render(bind_group_set);
 
-    //    println!(
-    //        "{} {} Applying post-processing effects...",
-    //        console::style("[3/4]").bold().dim(),
-    //        Emoji("🌟 ", "")
-    //    );
-    //    let post_processor = PostProcessor::new(context.clone(), &config);
-    //    post_processor.post_process(renderer.render_target());
+    println!(
+        "{} {} Applying post-processing effects...",
+        console::style("[3/4]").bold().dim(),
+        Emoji("🌟 ", "")
+    );
+    let post_processor = PostProcessor::new(context.clone(), &config);
+    post_processor.post_process(renderer.render_target());
 
-    let image = pollster::block_on(renderer.retrieve_result())?.unwrap();
+    let image = pollster::block_on(post_processor.retrieve_result())?.unwrap();
     println!(
         "{} {} Exporting the image...",
         console::style("[4/4]").bold().dim(),
