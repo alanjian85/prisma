@@ -22,23 +22,27 @@ fn build_scene(
     scene.set_hdri(hdri);
 
     let camera = CameraBuilder::new()
-        .pos(Vec3::new(1.0, 3.0, 2.0).normalize() * 4.0)
-        .fov(40.0_f32.to_radians())
+        .pos(Vec3::new(0.0, 6.0, 2.0))
+        .center(Vec3::new(0.0, 0.0, 0.0))
+        .fov(20.0_f32.to_radians())
         .build(config.size.width, config.size.height);
     scene.set_camera(camera);
 
     let (scene_bind_group_layout, scene_bind_group) = scene.build(&context.clone())?;
     let (primitive_bind_group_layout, primitive_bind_group) = scene.primitives.build(&context)?;
+    let (material_bind_group_layout, material_bind_group) = scene.materials.build(&context)?;
     let (texture_bind_group_layout, texture_bind_group) = scene.textures.build();
 
     let bind_group_layout_set = BindGroupLayoutSet {
         scene: scene_bind_group_layout,
         primitive: primitive_bind_group_layout,
+        material: material_bind_group_layout,
         texture: texture_bind_group_layout,
     };
     let bind_group_set = BindGroupSet {
         scene: scene_bind_group,
         primitive: primitive_bind_group,
+        material: material_bind_group,
         texture: texture_bind_group,
     };
     Ok((bind_group_layout_set, bind_group_set))

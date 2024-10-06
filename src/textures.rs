@@ -34,7 +34,7 @@ impl Textures {
         let height = image.height();
         self.registry.push(Rc::new(TextureHdr::new(
             &self.context,
-            &image.as_raw(),
+            image.as_raw(),
             width,
             height,
         )?));

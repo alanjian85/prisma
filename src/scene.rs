@@ -3,7 +3,10 @@ use std::rc::Rc;
 use encase::{ShaderType, StorageBuffer, UniformBuffer};
 use gltf::{buffer, image, Node};
 
-use crate::{core::Triangle, primitives::Primitives, render::RenderContext, textures::Textures};
+use crate::{
+    core::Triangle, materials::Materials, primitives::Primitives, render::RenderContext,
+    textures::Textures,
+};
 
 use self::bvh::Bvh;
 
@@ -20,7 +23,7 @@ struct Uniform {
 
 pub struct Scene {
     pub primitives: Primitives,
-    //pub materials: Materials,
+    pub materials: Materials,
     pub textures: Textures,
     uniform: Uniform,
     triangles: Vec<Triangle>,
@@ -30,6 +33,7 @@ impl Scene {
     pub fn new(context: Rc<RenderContext>) -> Self {
         Self {
             primitives: Primitives::new(),
+            materials: Materials::new(),
             textures: Textures::new(context),
             uniform: Uniform::default(),
             triangles: Vec::new(),
@@ -48,24 +52,32 @@ impl Scene {
 
     pub fn load(&mut self, scene: &gltf::Scene, buffers: &[buffer::Data], images: &[image::Data]) {
         for image in images {
-            self.textures.add_texture(&image);
+            self.textures.add_texture(image);
         }
 
         for node in scene.nodes() {
-            self.load_node(node, buffers, images);
+            self.load_node(node, buffers);
         }
     }
 
-    fn load_node(&mut self, node: Node, buffers: &[buffer::Data], images: &[image::Data]) {
+    fn load_node(&mut self, node: Node, buffers: &[buffer::Data]) {
         if let Some(mesh) = node.mesh() {
             for primitive in mesh.primitives() {
-                self.triangles
-                    .append(&mut self.primitives.add(buffers, &primitive).unwrap());
+                self.triangles.append(
+                    &mut self
+                        .primitives
+                        .add(
+                            buffers,
+                            &primitive,
+                            self.materials.add(&primitive.material()).unwrap(),
+                        )
+                        .unwrap(),
+                );
             }
         }
 
         for child in node.children() {
-            self.load_node(child, buffers, images);
+            self.load_node(child, buffers);
         }
     }
 

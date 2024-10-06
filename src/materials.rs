@@ -1,4 +1,3 @@
-/*
 use encase::{ShaderType, StorageBuffer};
 
 use crate::render::RenderContext;
@@ -7,6 +6,7 @@ use crate::render::RenderContext;
 pub struct Material {
     base_color_texture: u32,
     metallic_roughness_texture: u32,
+    emissive_texture: u32,
 }
 
 #[derive(Default)]
@@ -20,7 +20,25 @@ impl Materials {
     }
 
     pub fn add(&mut self, material: &gltf::Material) -> Option<u32> {
-        Some(0)
+        let pbr_metallic_roughness = material.pbr_metallic_roughness();
+        let base_color_texture = pbr_metallic_roughness
+            .base_color_texture()?
+            .texture()
+            .source()
+            .index() as u32;
+        let metallic_roughness_texture = pbr_metallic_roughness
+            .metallic_roughness_texture()?
+            .texture()
+            .source()
+            .index() as u32;
+        let emissive_texture = material.emissive_texture()?.texture().source().index() as u32;
+
+        self.registry.push(Material {
+            base_color_texture,
+            metallic_roughness_texture,
+            emissive_texture,
+        });
+        Some(self.registry.len() as u32 - 1)
     }
 
     pub fn build(
@@ -68,4 +86,3 @@ impl Materials {
         Ok((bind_group_layout, bind_group))
     }
 }
-*/

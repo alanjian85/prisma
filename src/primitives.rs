@@ -11,6 +11,7 @@ use crate::{
 pub struct Primitives {
     vertices: Vec<Vertex>,
     offsets: Vec<u32>,
+    material_indices: Vec<u32>,
 }
 
 impl Primitives {
@@ -22,7 +23,12 @@ impl Primitives {
         self.vertices[(vertex + self.offsets[primitive as usize]) as usize]
     }
 
-    pub fn add(&mut self, buffers: &[Data], primitive: &Primitive) -> Option<Vec<Triangle>> {
+    pub fn add(
+        &mut self,
+        buffers: &[Data],
+        primitive: &Primitive,
+        material_idx: u32,
+    ) -> Option<Vec<Triangle>> {
         let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
 
         let positions: Vec<_> = reader.read_positions()?.collect();
@@ -38,8 +44,10 @@ impl Primitives {
         }
 
         let primitive = self.offsets.len() as u32;
-        self.offsets.push(self.vertices.len() as u32);
+        let offset = self.vertices.len() as u32;
         self.vertices.append(&mut vertices);
+        self.offsets.push(offset);
+        self.material_indices.push(material_idx);
 
         let indices: Vec<_> = reader.read_indices()?.into_u32().collect();
         let mut triangles = Vec::new();
@@ -86,6 +94,18 @@ impl Primitives {
         });
         queue.write_buffer(&offset_buffer, 0, &wgsl_bytes);
 
+        let mut wgsl_bytes = StorageBuffer::new(Vec::new());
+        wgsl_bytes.write(&self.material_indices)?;
+        let wgsl_bytes = wgsl_bytes.into_inner();
+
+        let material_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: wgsl_bytes.len() as u64,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::STORAGE,
+            mapped_at_creation: false,
+        });
+        queue.write_buffer(&material_buffer, 0, &wgsl_bytes);
+
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: None,
             entries: &[
@@ -109,6 +129,16 @@ impl Primitives {
                     },
                     count: None,
                 },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 2,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
             ],
         });
 
@@ -123,6 +153,10 @@ impl Primitives {
                 wgpu::BindGroupEntry {
                     binding: 1,
                     resource: offset_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: material_buffer.as_entire_binding(),
                 },
             ],
         });

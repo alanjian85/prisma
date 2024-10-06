@@ -33,16 +33,13 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
         if scene_intersect(ray, &intersection) {
             intersection_flip_normal(&intersection, ray);
 
-            color = sample_texture(3u, intersection.tex_coord);
-            break;
+            let wi = normalize(intersection.normal + rand_sphere(&rand_state));
+            let wo = -normalize(ray.dir);
 
-//            let wi = normalize(intersection.normal + rand_sphere(&rand_state));
-//            let wo = -normalize(ray.dir);
-//
-//            ray.orig = ray_at(ray, intersection.t);
-//            ray.dir = wi;
-//
-//            color *= material_brdf(intersection.normal, wi, wo) * PI;
+            ray.orig = ray_at(ray, intersection.t);
+            ray.dir = wi;
+
+            color *= material_brdf(intersection, wi, wo) * PI;
         } else {
             color *= sample_panorama(scene.hdri, normalize(ray.dir));
             break;

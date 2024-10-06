@@ -1,4 +1,4 @@
-@group(3) @binding(0)
+@group(4) @binding(0)
 var textures: binding_array<texture_2d<f32>>;
 
 fn sample_panorama(idx: u32, uvw: vec3f) -> vec3f {

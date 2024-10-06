@@ -1,31 +1,36 @@
-//@group(2) @binding(0)
-//var<storage, read> materials: array<Material>;
+@group(3) @binding(0)
+var<storage, read> materials: array<Material>;
 
 struct Material {
-    diffuse: vec3f,
-    emission: vec3f,
+    base_color_texture: u32,
+    metallic_roughness_texture: u32,
+    emissive_texture: u32
 }
 
-fn material_brdf(normal: vec3f, wi: vec3f, wo: vec3f) -> vec3f {
-    let base_color = vec3(0.023, 0.023, 0.023);
-    let metallic = 0.0;
-    let roughness = 0.5;
+fn material_brdf(intersection: Intersection, wi: vec3f, wo: vec3f) -> vec3f {
+    let material = materials[intersection.material];
+    let base_color = sample_texture(material.base_color_texture, intersection.tex_coord);
+    let metallic_roughness = sample_texture(material.metallic_roughness_texture, intersection.tex_coord);
+    let metallic = metallic_roughness.b;
+    let roughness = metallic_roughness.g;
 
+    let n = intersection.normal;
     let h = normalize(wi + wo);
     let vdoth = dot(wo, h);
-    let ndoth = dot(normal, h);
-    let ndotl = dot(normal, wi);
-    let ndotv = dot(normal, wo);
+    let ndoth = dot(n, h);
+    let ndotl = dot(n, wi);
+    let ndotv = dot(n, wo);
 
     let alpha = roughness * roughness;
     let f0 = mix(vec3(0.04), base_color, metallic);
     let f = f0 + (1.0 - f0) * pow(1.0 - vdoth, 5.0);
 
     let alpha2 = alpha * alpha;
-    let diffuse = (1.0 - f) / PI * mix(base_color, vec3(0.0), metallic);
+    let emissive = sample_texture(material.emissive_texture, intersection.tex_coord);
+    let diffuse = (1.0 - f) / PI * mix(base_color, vec3(0.0), metallic) * base_color;
     var specular = f * microfacet_dist(alpha2, ndoth) * masking_shadowing(alpha2, ndotl, ndotv) / (4.0 * ndotl * ndotv);
 
-    return diffuse + specular;
+    return emissive + diffuse + specular;
 }
 
 fn microfacet_dist(alpha2: f32, ndoth: f32) -> f32 {
