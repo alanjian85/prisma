@@ -1,5 +1,5 @@
 use encase::StorageBuffer;
-use glam::{Vec2, Vec3};
+use glam::{Mat4, Vec2, Vec3};
 use gltf::{buffer::Data, Primitive};
 
 use crate::{
@@ -11,6 +11,7 @@ use crate::{
 pub struct Primitives {
     vertices: Vec<Vertex>,
     offsets: Vec<u32>,
+    transform_indices: Vec<u32>,
     material_indices: Vec<u32>,
 }
 
@@ -27,6 +28,8 @@ impl Primitives {
         &mut self,
         buffers: &[Data],
         primitive: &Primitive,
+        transform: &Mat4,
+        transform_idx: u32,
         material_idx: u32,
     ) -> Option<Vec<Triangle>> {
         let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
@@ -35,10 +38,11 @@ impl Primitives {
         let normals: Vec<_> = reader.read_normals()?.collect();
         let tex_coords: Vec<_> = reader.read_tex_coords(0)?.into_f32().collect();
         let mut vertices = Vec::with_capacity(positions.len());
+        let inv_trans = transform.inverse().transpose();
         for i in 0..positions.len() {
             vertices.push(Vertex {
-                pos: Vec3::from_array(positions[i]),
-                normal: Vec3::from_array(normals[i]),
+                pos: transform.transform_point3(Vec3::from_array(positions[i])),
+                normal: inv_trans.transform_vector3(Vec3::from_array(normals[i])),
                 tex_coord: Vec2::from_array(tex_coords[i]),
             });
         }
@@ -47,6 +51,7 @@ impl Primitives {
         let offset = self.vertices.len() as u32;
         self.vertices.append(&mut vertices);
         self.offsets.push(offset);
+        self.transform_indices.push(transform_idx);
         self.material_indices.push(material_idx);
 
         let indices: Vec<_> = reader.read_indices()?.into_u32().collect();
@@ -95,6 +100,18 @@ impl Primitives {
         queue.write_buffer(&offset_buffer, 0, &wgsl_bytes);
 
         let mut wgsl_bytes = StorageBuffer::new(Vec::new());
+        wgsl_bytes.write(&self.transform_indices)?;
+        let wgsl_bytes = wgsl_bytes.into_inner();
+
+        let transform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: wgsl_bytes.len() as u64,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::STORAGE,
+            mapped_at_creation: false,
+        });
+        queue.write_buffer(&transform_buffer, 0, &wgsl_bytes);
+
+        let mut wgsl_bytes = StorageBuffer::new(Vec::new());
         wgsl_bytes.write(&self.material_indices)?;
         let wgsl_bytes = wgsl_bytes.into_inner();
 
@@ -139,6 +156,16 @@ impl Primitives {
                     },
                     count: None,
                 },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 3,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
             ],
         });
 
@@ -156,6 +183,10 @@ impl Primitives {
                 },
                 wgpu::BindGroupEntry {
                     binding: 2,
+                    resource: transform_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 3,
                     resource: material_buffer.as_entire_binding(),
                 },
             ],

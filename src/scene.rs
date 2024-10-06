@@ -1,7 +1,8 @@
 use std::rc::Rc;
 
 use encase::{ShaderType, StorageBuffer, UniformBuffer};
-use gltf::{buffer, image, Node};
+use glam::{Mat4, Quat, Vec3};
+use gltf::{buffer, image, scene, Node};
 
 use crate::{
     core::Triangle, materials::Materials, primitives::Primitives, render::RenderContext,
@@ -15,18 +16,34 @@ mod camera;
 
 pub use camera::{Camera, CameraBuilder};
 
-#[derive(Default, ShaderType)]
-struct Uniform {
-    camera: Camera,
-    hdri: u32,
-}
-
 pub struct Scene {
     pub primitives: Primitives,
     pub materials: Materials,
     pub textures: Textures,
     uniform: Uniform,
     triangles: Vec<Triangle>,
+    transforms: Vec<Transform>,
+}
+
+#[derive(Default, ShaderType)]
+struct Uniform {
+    camera: Camera,
+    hdri: u32,
+}
+
+#[derive(ShaderType)]
+struct Transform {
+    transform: Mat4,
+    inv_trans: Mat4,
+}
+
+impl Transform {
+    pub fn new(transform: Mat4) -> Self {
+        Self {
+            transform,
+            inv_trans: transform.inverse().transpose(),
+        }
+    }
 }
 
 impl Scene {
@@ -37,6 +54,7 @@ impl Scene {
             textures: Textures::new(context),
             uniform: Uniform::default(),
             triangles: Vec::new(),
+            transforms: Vec::new(),
         }
     }
 
@@ -56,28 +74,29 @@ impl Scene {
         }
 
         for node in scene.nodes() {
-            self.load_node(node, buffers);
+            self.load_node(node, buffers, &Mat4::IDENTITY);
         }
     }
 
-    fn load_node(&mut self, node: Node, buffers: &[buffer::Data]) {
+    fn load_node(&mut self, node: Node, buffers: &[buffer::Data], parent_transform: &Mat4) {
+        let transform = *parent_transform * transform_to_matrix(&node.transform());
+        self.transforms.push(Transform::new(transform));
+
         if let Some(mesh) = node.mesh() {
+            let transform_idx = self.transforms.len() as u32 - 1;
             for primitive in mesh.primitives() {
+                let material_idx = self.materials.add(&primitive.material()).unwrap();
                 self.triangles.append(
                     &mut self
                         .primitives
-                        .add(
-                            buffers,
-                            &primitive,
-                            self.materials.add(&primitive.material()).unwrap(),
-                        )
+                        .add(buffers, &primitive, &transform, transform_idx, material_idx)
                         .unwrap(),
                 );
             }
         }
 
         for child in node.children() {
-            self.load_node(child, buffers);
+            self.load_node(child, buffers, &transform);
         }
     }
 
@@ -126,6 +145,18 @@ impl Scene {
         });
         queue.write_buffer(&bvh_buffer, 0, &wgsl_bytes);
 
+        let mut wgsl_bytes = StorageBuffer::new(Vec::new());
+        wgsl_bytes.write(&self.transforms)?;
+        let wgsl_bytes = wgsl_bytes.into_inner();
+
+        let transform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: wgsl_bytes.len() as u64,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::STORAGE,
+            mapped_at_creation: false,
+        });
+        queue.write_buffer(&transform_buffer, 0, &wgsl_bytes);
+
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: None,
             entries: &[
@@ -159,6 +190,16 @@ impl Scene {
                     },
                     count: None,
                 },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 3,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
             ],
         });
 
@@ -178,9 +219,28 @@ impl Scene {
                     binding: 2,
                     resource: bvh_buffer.as_entire_binding(),
                 },
+                wgpu::BindGroupEntry {
+                    binding: 3,
+                    resource: transform_buffer.as_entire_binding(),
+                },
             ],
         });
 
         Ok((bind_group_layout, bind_group))
+    }
+}
+
+fn transform_to_matrix(transform: &scene::Transform) -> Mat4 {
+    match transform {
+        scene::Transform::Matrix { matrix } => Mat4::from_cols_array_2d(&matrix),
+        scene::Transform::Decomposed {
+            translation,
+            rotation,
+            scale,
+        } => Mat4::from_scale_rotation_translation(
+            Vec3::from_array(*scale),
+            Quat::from_array(*rotation),
+            Vec3::from_array(*translation),
+        ),
     }
 }

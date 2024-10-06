@@ -6,6 +6,7 @@ use crate::render::RenderContext;
 pub struct Material {
     base_color_texture: u32,
     metallic_roughness_texture: u32,
+    normal_texture: u32,
     emissive_texture: u32,
 }
 
@@ -31,11 +32,13 @@ impl Materials {
             .texture()
             .source()
             .index() as u32;
+        let normal_texture = material.normal_texture()?.texture().source().index() as u32;
         let emissive_texture = material.emissive_texture()?.texture().source().index() as u32;
 
         self.registry.push(Material {
             base_color_texture,
             metallic_roughness_texture,
+            normal_texture,
             emissive_texture,
         });
         Some(self.registry.len() as u32 - 1)

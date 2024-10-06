@@ -1,8 +1,3 @@
-struct SceneUniform {
-    camera: Camera,
-    hdri: u32
-}
-
 @group(1) @binding(0)
 var<uniform> scene: SceneUniform;
 
@@ -11,6 +6,19 @@ var<storage, read> triangles: array<Triangle>;
 
 @group(1) @binding(2)
 var<storage, read> bvh_nodes: array<BvhNode>;
+
+@group(1) @binding(3)
+var<storage, read> transforms: array<Transform>;
+
+struct SceneUniform {
+    camera: Camera,
+    hdri: u32
+}
+
+struct Transform {
+    transform: mat4x4f,
+    inv_trans: mat4x4f,
+}
 
 struct BvhNode {
     aabb: Aabb3,

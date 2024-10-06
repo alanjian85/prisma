@@ -20,6 +20,11 @@ var render_target: texture_storage_2d<rgba32float, read_write>;
 
 var<push_constant> sample: u32;
 
+struct Path {
+    coefficient: vec3f,
+    constant: vec3f,
+}
+
 @compute
 @workgroup_size(16, 16, 1)
 fn main(@builtin(global_invocation_id) id: vec3<u32>) {
@@ -27,25 +32,36 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
     var rand_state = rand_init(id.xy, size, sample);
 
     var ray = camera_gen_ray(scene.camera, size, id.xy, &rand_state);
-    var color = vec3(1.0, 1.0, 1.0);
-    for (var i = 0u; i < MAX_DEPTH; i++) {
+    var paths = array<Path, 50>();
+    var depth = 0u;
+    for (; depth < MAX_DEPTH; depth++) {
         var intersection = Intersection();
         if scene_intersect(ray, &intersection) {
             intersection_flip_normal(&intersection, ray);
+            let material = materials[intersection.material];
 
             let wi = normalize(intersection.normal + rand_sphere(&rand_state));
             let wo = -normalize(ray.dir);
 
             ray.orig = ray_at(ray, intersection.t);
             ray.dir = wi;
-
-            color *= material_brdf(intersection, wi, wo) * PI;
+            
+            paths[depth].coefficient = material_brdf(intersection, wi, wo) * PI;
+            paths[depth].constant = sample_texture(material.emissive_texture, intersection.tex_coord);
         } else {
-            color *= sample_panorama(scene.hdri, normalize(ray.dir));
+            paths[depth].coefficient = sample_panorama(scene.hdri, normalize(ray.dir));
+            paths[depth].constant = vec3(0.0, 0.0, 0.0);
             break;
         }
     }
 
+    depth++;
+    var color = vec3(1.0, 1.0, 1.0);
+    for (; depth > 0; depth--) {
+        let path = paths[depth - 1];
+        color = path.coefficient * color + path.constant;
+    }
+
     let prev_color = textureLoad(render_target, id.xy);
-    textureStore(render_target, id.xy, prev_color + vec4(color, 1.0));
+    textureStore(render_target, id.xy, prev_color + vec4(color, 1.0) / 100.0);
 }

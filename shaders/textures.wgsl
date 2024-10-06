@@ -13,7 +13,7 @@ fn sample_panorama(idx: u32, uvw: vec3f) -> vec3f {
     let x = u32(u * f32(texture_size.x - 1));
     let y = u32((1.0 - v) * f32(texture_size.y - 1));
 
-    return textureLoad(textures[idx], vec2(x, y), 0).xyz;
+    return textureLoad(textures[idx], vec2(x, y), 0).rgb;
 }
 
 fn sample_texture(idx: u32, uv: vec2f) -> vec3f {
@@ -22,5 +22,5 @@ fn sample_texture(idx: u32, uv: vec2f) -> vec3f {
     let x = u32(fract(uv.x) * f32(texture_size.x - 1));
     let y = u32(fract(uv.y) * f32(texture_size.y - 1));
 
-    return textureLoad(textures[idx], vec2(x, y), 0).xyz;
+    return textureLoad(textures[idx], vec2(x, y), 0).rgb;
 }

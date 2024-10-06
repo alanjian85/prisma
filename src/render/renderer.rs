@@ -1,5 +1,11 @@
-use std::{collections::HashMap, rc::Rc, sync::Arc};
+use std::{
+    collections::HashMap,
+    error::Error,
+    rc::Rc,
+    sync::{mpsc, Arc},
+};
 
+use image::Rgba32FImage;
 use indicatif::ProgressBar;
 
 use crate::config::{Config, Size};
@@ -102,7 +108,7 @@ impl Renderer {
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format: wgpu::TextureFormat::Rgba32Float,
-            usage: wgpu::TextureUsages::STORAGE_BINDING,
+            usage: wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::COPY_SRC,
             view_formats: &[],
         });
 
@@ -168,5 +174,65 @@ impl Renderer {
 
     pub fn render_target(&self) -> &wgpu::Texture {
         &self.render_target
+    }
+
+    pub async fn retrieve_result(&self) -> Result<Option<Rgba32FImage>, Box<dyn Error>> {
+        let device = self.context.device();
+        let queue = self.context.queue();
+
+        let padded_width = (self.width + 15) / 16 * 16;
+        let staging_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: (padded_width * self.height * 16) as u64,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
+
+        let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
+
+        encoder.copy_texture_to_buffer(
+            wgpu::ImageCopyTexture {
+                texture: &self.render_target,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+            },
+            wgpu::ImageCopyBuffer {
+                buffer: &staging_buffer,
+                layout: wgpu::ImageDataLayout {
+                    offset: 0,
+                    bytes_per_row: Some(padded_width * 16),
+                    rows_per_image: None,
+                },
+            },
+            wgpu::Extent3d {
+                width: self.width,
+                height: self.height,
+                depth_or_array_layers: 1,
+            },
+        );
+
+        queue.submit(Some(encoder.finish()));
+
+        let (tx, rx) = mpsc::channel();
+        let slice = staging_buffer.slice(..);
+        slice.map_async(wgpu::MapMode::Read, move |result| tx.send(result).unwrap());
+        device.poll(wgpu::Maintain::Wait).panic_on_timeout();
+        rx.recv()??;
+
+        let mut buffer = Vec::new();
+        {
+            let view = slice.get_mapped_range();
+            buffer.extend_from_slice(&view[..]);
+        }
+        staging_buffer.unmap();
+
+        let buffer: Vec<_> = buffer
+            .chunks_exact(4)
+            .map(TryInto::try_into)
+            .map(Result::unwrap)
+            .map(f32::from_le_bytes)
+            .collect();
+        Ok(Rgba32FImage::from_raw(self.width, self.height, buffer))
     }
 }

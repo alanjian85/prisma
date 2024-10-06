@@ -22,9 +22,9 @@ fn build_scene(
     scene.set_hdri(hdri);
 
     let camera = CameraBuilder::new()
-        .pos(Vec3::new(0.0, 6.0, 2.0))
+        .pos(Vec3::new(3.5, 2.3, 3.3))
         .center(Vec3::new(0.0, 0.0, 0.0))
-        .fov(20.0_f32.to_radians())
+        .fov(25.0_f32.to_radians())
         .build(config.size.width, config.size.height);
     scene.set_camera(camera);
 
@@ -68,15 +68,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
     renderer.render(bind_group_set);
 
-    println!(
-        "{} {} Applying post-processing effects...",
-        console::style("[3/4]").bold().dim(),
-        Emoji("🌟 ", "")
-    );
-    let post_processor = PostProcessor::new(context.clone(), &config);
-    post_processor.post_process(renderer.render_target());
+    //    println!(
+    //        "{} {} Applying post-processing effects...",
+    //        console::style("[3/4]").bold().dim(),
+    //        Emoji("🌟 ", "")
+    //    );
+    //    let post_processor = PostProcessor::new(context.clone(), &config);
+    //    post_processor.post_process(renderer.render_target());
 
-    let image = pollster::block_on(post_processor.retrieve_result())?.unwrap();
+    let image = pollster::block_on(renderer.retrieve_result())?.unwrap();
     println!(
         "{} {} Exporting the image...",
         console::style("[4/4]").bold().dim(),

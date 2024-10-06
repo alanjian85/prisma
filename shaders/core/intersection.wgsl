@@ -3,6 +3,7 @@ struct Intersection {
     normal: vec3f,
     front: bool,
     tex_coord: vec2f,
+    transform: u32,
     material: u32,
 }
 

@@ -5,6 +5,9 @@ var<storage, read> vertices: array<Vertex>;
 var<storage, read> offsets: array<u32>;
 
 @group(2) @binding(2)
+var<storage, read> transform_indices: array<u32>;
+
+@group(2) @binding(3)
 var<storage, read> material_indices: array<u32>;
 
 struct Vertex {
@@ -63,6 +66,7 @@ fn triangle_intersect(triangle: Triangle, ray: Ray,
     (*intersection).t = t;
     (*intersection).normal = normalize((e0 * vertices[triangle.v0 + offset].normal + e1 * vertices[triangle.v1 + offset].normal + e2 * vertices[triangle.v2 + offset].normal) / det);
     (*intersection).tex_coord = (e0 * vertices[triangle.v0 + offset].tex_coord + e1 * vertices[triangle.v1 + offset].tex_coord + e2 * vertices[triangle.v2 + offset].tex_coord) / det;
+    (*intersection).transform = transform_indices[triangle.primitive];
     (*intersection).material = material_indices[triangle.primitive];
 
     return true;
