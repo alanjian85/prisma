@@ -1,12 +1,10 @@
-use wgpu::RequestDeviceError;
-
 pub struct RenderContext {
     device: wgpu::Device,
     queue: wgpu::Queue,
 }
 
 impl RenderContext {
-    pub async fn new() -> Result<Self, RequestDeviceError> {
+    pub async fn new() -> Result<Self, wgpu::RequestDeviceError> {
         let instance = wgpu::Instance::default();
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions::default())
