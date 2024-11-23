@@ -10,7 +10,7 @@ pub struct TextureHdr {
 }
 
 impl TextureHdr {
-    pub fn new(
+    pub fn try_new(
         context: &RenderContext,
         data: &[f32],
         width: u32,

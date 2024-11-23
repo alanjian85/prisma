@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     env_logger::init();
     let config = Config::parse();
 
-    let context = Rc::new(pollster::block_on(RenderContext::new())?);
+    let context = Rc::new(pollster::block_on(RenderContext::try_new())?);
     println!(
         "{} {} Parsing and loading the scene...",
         console::style("[1/4]").bold().dim(),

@@ -32,8 +32,8 @@ impl Textures {
         let image = ImageReader::open(path)?.decode()?.into_rgba32f();
         let width = image.width();
         let height = image.height();
-        self.registry.push(Rc::new(TextureHdr::new(
-            &self.context,
+        self.registry.push(Rc::new(TextureHdr::try_new(
+            self.context,
             image.as_raw(),
             width,
             height,
