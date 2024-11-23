@@ -55,9 +55,9 @@ impl Scene {
         }
     }
 
-    pub fn set_hdri(&mut self, hdri: u32) -> &mut Self {
+    // Why return &mut Self?
+    pub fn set_hdri(&mut self, hdri: u32) {
         self.uniform.hdri = hdri;
-        self
     }
 
     pub fn load(
