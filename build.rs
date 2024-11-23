@@ -12,7 +12,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let shader_files = ["render.wgsl", "post_process.wgsl"];
 
-    std::fs::create_dir_all(SHADER_DIR)?;
+    // Path prefix is not necessary
+    fs::create_dir_all(SHADER_DIR)?;
     for file in shader_files {
         generate_shader(file)?;
     }
