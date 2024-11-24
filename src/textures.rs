@@ -1,4 +1,4 @@
-use std::{error::Error, num::NonZeroU32, rc::Rc};
+use std::{error::Error, num::NonZeroU32};
 
 use gltf::image::Data;
 use image::ImageReader;
@@ -12,7 +12,7 @@ use self::{texture::Texture, texture_hdr::TextureHdr};
 
 pub struct Textures<'a> {
     context: &'a RenderContext,
-    registry: Vec<Rc<dyn TextureTrait>>,
+    registry: Vec<Box<dyn TextureTrait>>,
 }
 
 // At lease, use `Trait` instead of just a `2`
@@ -34,7 +34,7 @@ impl<'a> Textures<'a> {
         let image = ImageReader::open(path)?.decode()?.into_rgba32f();
         let width = image.width();
         let height = image.height();
-        self.registry.push(Rc::new(TextureHdr::try_new(
+        self.registry.push(Box::new(TextureHdr::try_new(
             self.context,
             image.as_raw(),
             width,
@@ -59,7 +59,7 @@ impl<'a> Textures<'a> {
             _ => todo!(),
         }
 
-        self.registry.push(Rc::new(Texture::new(
+        self.registry.push(Box::new(Texture::new(
             self.context,
             &data,
             image.width,
@@ -85,7 +85,9 @@ impl<'a> Textures<'a> {
             }],
         });
 
-        let view_array: Vec<_> = self.registry.iter().map(|texture| texture.view()).collect();
+        let view_array: Vec<&wgpu::TextureView> = self.registry.iter()
+            .map(|texture| texture.view())
+            .collect();
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: None,
             layout: &bind_group_layout,
