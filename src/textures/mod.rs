@@ -1,4 +1,4 @@
-use std::{error::Error, num::NonZeroU32, rc::Rc};
+use std::{error::Error, num::NonZeroU32};
 
 use gltf::image::Data;
 use image::ImageReader;
@@ -10,18 +10,20 @@ mod texture_hdr;
 
 use self::{texture::Texture, texture_hdr::TextureHdr};
 
-pub struct Textures {
-    context: Rc<RenderContext>,
-    registry: Vec<Rc<dyn Texture2>>,
+pub struct Textures<'a> {
+    context: &'a RenderContext,
+    registry: Vec<Box<dyn TextureTrait>>,
 }
 
-pub trait Texture2 {
+// At lease, use `Trait` instead of just a `2`
+// or I got to guess it's a `Trait` or `Struct` or `Enum`
+pub trait TextureTrait {
     fn texture(&self) -> &wgpu::Texture;
     fn view(&self) -> &wgpu::TextureView;
 }
 
-impl Textures {
-    pub fn new(context: Rc<RenderContext>) -> Self {
+impl<'a> Textures<'a> {
+    pub fn new(context: &'a RenderContext) -> Self {
         Self {
             context,
             registry: Vec::new(),
@@ -32,8 +34,8 @@ impl Textures {
         let image = ImageReader::open(path)?.decode()?.into_rgba32f();
         let width = image.width();
         let height = image.height();
-        self.registry.push(Rc::new(TextureHdr::new(
-            &self.context,
+        self.registry.push(Box::new(TextureHdr::try_new(
+            self.context,
             image.as_raw(),
             width,
             height,
@@ -57,8 +59,8 @@ impl Textures {
             _ => todo!(),
         }
 
-        self.registry.push(Rc::new(Texture::new(
-            &self.context,
+        self.registry.push(Box::new(Texture::new(
+            self.context,
             &data,
             image.width,
             image.height,
@@ -83,7 +85,9 @@ impl Textures {
             }],
         });
 
-        let view_array: Vec<_> = self.registry.iter().map(|texture| texture.view()).collect();
+        let view_array: Vec<&wgpu::TextureView> = self.registry.iter()
+            .map(|texture| texture.view())
+            .collect();
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: None,
             layout: &bind_group_layout,

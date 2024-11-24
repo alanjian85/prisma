@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error, rc::Rc, sync::mpsc};
+use std::{collections::HashMap, error::Error, sync::mpsc};
 
 use image::RgbaImage;
 
@@ -6,8 +6,8 @@ use crate::config::{Config, Size};
 
 use super::RenderContext;
 
-pub struct PostProcessor {
-    context: Rc<RenderContext>,
+pub struct PostProcessor<'a> {
+    context: &'a RenderContext,
     width: u32,
     height: u32,
     aligned_width: u32,
@@ -17,8 +17,8 @@ pub struct PostProcessor {
     dst_texture: wgpu::Texture,
 }
 
-impl PostProcessor {
-    pub fn new(context: Rc<RenderContext>, config: &Config) -> Self {
+impl<'a> PostProcessor<'a> {
+    pub fn new(context: &'a RenderContext, config: &Config) -> Self {
         let device = context.device();
 
         let Size { width, height } = config.size;

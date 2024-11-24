@@ -4,7 +4,8 @@ pub struct RenderContext {
 }
 
 impl RenderContext {
-    pub async fn new() -> Result<Self, wgpu::RequestDeviceError> {
+    // Constructor which may fail should add a `try_` prefix to the function name
+    pub async fn try_new() -> Result<Self, wgpu::RequestDeviceError> {
         let instance = wgpu::Instance::default();
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions::default())
