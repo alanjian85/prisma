@@ -54,6 +54,14 @@ impl Textures {
                     data.push(0xFF);
                 }
             }
+            gltf::image::Format::R8G8B8A8 => {
+                for i in 0..num_pixels {
+                    data.push(image.pixels[4 * i]);
+                    data.push(image.pixels[4 * i + 1]);
+                    data.push(image.pixels[4 * i + 2]);
+                    data.push(image.pixels[4 * i + 3]);
+                }
+            }
             _ => todo!(),
         }
 

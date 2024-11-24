@@ -51,7 +51,7 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
             ray.dir = wi;
 
             paths[depth].coefficient = material_brdf(intersection, normal, wi, wo) * PI;
-            paths[depth].constant = sample_texture(material.emissive_texture, intersection.tex_coord);
+            paths[depth].constant = vec3(0.0, 0.0, 0.0); // sample_texture(material.emissive_texture, intersection.tex_coord);
         } else {
             paths[depth].coefficient = sample_panorama(scene.hdri, normalize(ray.dir));
             paths[depth].constant = vec3(0.0, 0.0, 0.0);
