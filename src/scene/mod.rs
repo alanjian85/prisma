@@ -20,8 +20,6 @@ pub struct Scene<'a> {
     pub textures: Textures<'a>,
     uniform: Uniform,
     triangles: Vec<Triangle>,
-    
- 
 }
 
 #[derive(Default, ShaderType)]
