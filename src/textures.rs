@@ -12,10 +12,12 @@ use self::{texture::Texture, texture_hdr::TextureHdr};
 
 pub struct Textures {
     context: Rc<RenderContext>,
-    registry: Vec<Rc<dyn Texture2>>,
+    registry: Vec<Rc<dyn TextureTrait>>,
 }
 
-pub trait Texture2 {
+// At lease, use `Trait` instead of just a `2`
+// or I got to guess it's a `Trait` or `Struct` or `Enum`
+pub trait TextureTrait {
     fn texture(&self) -> &wgpu::Texture;
     fn view(&self) -> &wgpu::TextureView;
 }

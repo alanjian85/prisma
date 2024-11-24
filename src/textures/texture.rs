@@ -1,6 +1,6 @@
 use crate::render::RenderContext;
 
-use super::Texture2;
+use super::TextureTrait;
 
 pub struct Texture {
     texture: wgpu::Texture,
@@ -51,7 +51,7 @@ impl Texture {
     }
 }
 
-impl Texture2 for Texture {
+impl TextureTrait for Texture {
     fn texture(&self) -> &wgpu::Texture {
         &self.texture
     }

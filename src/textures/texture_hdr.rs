@@ -2,7 +2,7 @@ use std::{error::Error, slice};
 
 use crate::render::RenderContext;
 
-use super::Texture2;
+use super::TextureTrait;
 
 pub struct TextureHdr {
     texture: wgpu::Texture,
@@ -58,7 +58,7 @@ impl TextureHdr {
     }
 }
 
-impl Texture2 for TextureHdr {
+impl TextureTrait for TextureHdr {
     fn texture(&self) -> &wgpu::Texture {
         &self.texture
     }
