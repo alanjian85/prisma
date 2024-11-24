@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use encase::{ShaderType, StorageBuffer, UniformBuffer};
 use glam::{Mat4, Quat, Vec3};
 use gltf::{buffer, camera::Projection, image, scene, Node};
@@ -16,12 +14,14 @@ mod camera;
 
 pub use camera::{Camera, CameraBuilder};
 
-pub struct Scene {
+pub struct Scene<'a> {
     pub primitives: Primitives,
     pub materials: Materials,
-    pub textures: Textures,
+    pub textures: Textures<'a>,
     uniform: Uniform,
     triangles: Vec<Triangle>,
+    
+ 
 }
 
 #[derive(Default, ShaderType)]
@@ -44,8 +44,8 @@ impl Transform {
     }
 }
 
-impl Scene {
-    pub fn new(context: Rc<RenderContext>) -> Self {
+impl<'a> Scene<'a> {
+    pub fn new(context: &'a RenderContext) -> Self {
         Self {
             primitives: Primitives::new(),
             materials: Materials::new(),

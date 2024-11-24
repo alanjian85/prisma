@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Rc, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 
 use indicatif::ProgressBar;
 
@@ -6,8 +6,8 @@ use crate::config::{Config, Size};
 
 use super::RenderContext;
 
-pub struct Renderer {
-    context: Rc<RenderContext>,
+pub struct Renderer<'a> {
+    context: &'a RenderContext,
     width: u32,
     height: u32,
     samples: u32,
@@ -30,9 +30,9 @@ pub struct BindGroupSet {
     pub texture: wgpu::BindGroup,
 }
 
-impl Renderer {
+impl<'a> Renderer<'a> {
     pub fn new(
-        context: Rc<RenderContext>,
+        context: &'a RenderContext,
         config: &Config,
         bind_group_layout_set: BindGroupLayoutSet,
     ) -> Self {

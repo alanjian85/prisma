@@ -10,8 +10,8 @@ mod texture_hdr;
 
 use self::{texture::Texture, texture_hdr::TextureHdr};
 
-pub struct Textures {
-    context: Rc<RenderContext>,
+pub struct Textures<'a> {
+    context: &'a RenderContext,
     registry: Vec<Rc<dyn TextureTrait>>,
 }
 
@@ -22,8 +22,8 @@ pub trait TextureTrait {
     fn view(&self) -> &wgpu::TextureView;
 }
 
-impl Textures {
-    pub fn new(context: Rc<RenderContext>) -> Self {
+impl<'a> Textures<'a> {
+    pub fn new(context: &'a RenderContext) -> Self {
         Self {
             context,
             registry: Vec::new(),
@@ -60,7 +60,7 @@ impl Textures {
         }
 
         self.registry.push(Rc::new(Texture::new(
-            &self.context,
+            self.context,
             &data,
             image.width,
             image.height,
