@@ -3,7 +3,13 @@
 # Prisma
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/license/mit)
 
-Prisma is a high-performance, cross-platform offline ray tracer designed for rendering photorealistic images. Built with the Rust WGPU framework for GPGPU acceleration, Prisma leverages advanced rendering techniques including microfacet-based BSDF models for physical material representation, bounding volume hierarchy (BVH) with surface area heuristic (SAH) for efficient scene traversal, and multiple importance sampling (MIS) for improved sampling efficiency. The renderer also parses glTF files, enabling the generation of detailed and lifelike imagery directly from complex 3D scenes with PBR material attributes, without the need for manual intervention after export from 3D modeling software.
+Prisma is a high-performance, cross-platform offline ray tracer designed for rendering photorealistic images. Built with the Rust WGPU framework for GPGPU acceleration, Prisma leverages advanced rendering techniques, including:
+
+* microfacet-based BSDF models for physical material representation
+* bounding volume hierarchy (BVH) with surface area heuristic (SAH) for efficient scene traversal
+* multiple importance sampling (MIS) for improved sampling efficiency
+
+The renderer also parses glTF files, enabling the generation of detailed and lifelike imagery directly from complex 3D scenes with PBR material attributes, without the need for manual intervention after export from 3D modeling software.
 
 <img src="rtiow.png">
 <p float="left">
