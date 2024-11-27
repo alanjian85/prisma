@@ -34,10 +34,10 @@ The renderer also parses glTF files, enabling the generation of detailed and lif
 * [KHR_materials_transmission](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_transmission)
 
 ## Usage
-To get started with Prisma, simply clone the repository and run the program with a glTF scene file. Note that the program should be executed in release mode, otherwise it might take more than a minute to parse the scene.
+To get started with Prisma, simply clone the repository and run the program with a glTF scene file provided (remember to install a [Rust toolchain](https://rustup.rs/) first). Note that the program should be executed in release mode, otherwise it might take more than a minute to parse the scene.
 ```sh
 git clone https://github.com/alanjian85/prisma.git && cd prisma
-cargo run --release scenes/damaged_helmet.glb
+cargo run --release scenes/SciFiHelmet.glb
 ```
 
 Prisma also provides a set of options to customize the rendering process, including:
