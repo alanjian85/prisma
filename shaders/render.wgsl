@@ -46,19 +46,22 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
 
             let wo = -normalize(ray.dir);
             var wi: vec3f;
-            //if rand(&rand_state) < 0.0 {
-            //    wi = normalize(normal + rand_sphere(&rand_state));
-            //} else {
-                let h = material_sample_h(intersection, &rand_state, normal);
+            if rand(&rand_state) < 0.5 {
+                wi = normalize(normal + rand_sphere(&rand_state));
+            } else {
+                var h = material_sample_h(intersection, &rand_state, normal);
+                //if dot(wo, h) <= 0.0 {
+                //    h = -h;
+                //}
                 wi = reflect(-wo, h);
-                if dot(wo, wi) < 0.0 || dot(wo, h) < 0.0 {
+                if dot(wo, h) <= 0.0 || dot(wo, wi) <= 0.0 {
                     paths[depth].coefficient = vec3(0.0, 0.0, 0.0);
                     paths[depth].constant = vec3(0.0, 0.0, 0.0);
                     break;
                 }
-            //}
-            //let h = normalize(wo + wi);
-            let pdf = material_pdf(intersection, normal, wo, h);
+            }
+            let h = normalize(wo + wi);
+            let pdf = 0.5 * (1.0 / PI + material_pdf(intersection, normal, wo, h));
 
             ray.orig = ray_at(ray, intersection.t);
             ray.dir = wi;
@@ -78,6 +81,18 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
         let path = paths[depth - 1];
         color = path.coefficient * color + path.constant;
     }
+
+    if !(color.r < 0.0 || 0.0 < color.r || color.r == 0.0) { color.r = 0.0; }
+    if !(color.g < 0.0 || 0.0 < color.g || color.g == 0.0) { color.g = 0.0; }
+    if !(color.b < 0.0 || 0.0 < color.b || color.b == 0.0) { color.b = 0.0; }
+
+    if color.r == bitcast<f32>(0x7F800000) { color.r = 0.0; }
+    if color.g == bitcast<f32>(0x7F800000) { color.g = 0.0; }
+    if color.b == bitcast<f32>(0x7F800000) { color.b = 0.0; }
+
+    if color.r == -bitcast<f32>(0x7F800000) { color.r = 0.0; }
+    if color.g == -bitcast<f32>(0x7F800000) { color.g = 0.0; }
+    if color.b == -bitcast<f32>(0x7F800000) { color.b = 0.0; }
 
     let prev_color = textureLoad(render_target, id.xy);
     textureStore(render_target, id.xy, prev_color + vec4(color, 1.0));

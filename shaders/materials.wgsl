@@ -54,9 +54,8 @@ fn material_sample_h(intersection: Intersection, state: ptr<function, u32>, n: v
     let y = cosine_theta;
     let z = sine_phi * sine_theta;
 
-    let up = vec3(0.0, 1.0, 0.0);
-    let t = normalize(cross(n, up));
-    let b = cross(n, t);
+    let t = normalize(cross(n, intersection.bitangent));
+    let b = cross(t, n);
     let h = normalize(x * t + y * n + z * b);
     return h;
 }
