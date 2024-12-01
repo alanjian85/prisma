@@ -105,9 +105,6 @@ impl Scene {
                     camera_builder
                         .transform(transform_matrix)
                         .yfov(perspective.yfov());
-                    if let Some(aspect_ratio) = perspective.aspect_ratio() {
-                        camera_builder.aspect_ratio(aspect_ratio);
-                    }
                     self.uniform.camera =
                         camera_builder.build(config.size.width, config.size.height);
                 }

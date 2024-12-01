@@ -44,14 +44,27 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
                          normal_in_tangent.y * intersection.bitangent +
                          normal_in_tangent.z * intersection.normal);
 
-            let wi = normalize(normal + rand_sphere(&rand_state));
             let wo = -normalize(ray.dir);
+            var wi: vec3f;
+            //if rand(&rand_state) < 0.0 {
+            //    wi = normalize(normal + rand_sphere(&rand_state));
+            //} else {
+                let h = material_sample_h(intersection, &rand_state, normal);
+                wi = reflect(-wo, h);
+                if dot(wo, wi) < 0.0 || dot(wo, h) < 0.0 {
+                    paths[depth].coefficient = vec3(0.0, 0.0, 0.0);
+                    paths[depth].constant = vec3(0.0, 0.0, 0.0);
+                    break;
+                }
+            //}
+            //let h = normalize(wo + wi);
+            let pdf = material_pdf(intersection, normal, wo, h);
 
             ray.orig = ray_at(ray, intersection.t);
             ray.dir = wi;
 
-            paths[depth].coefficient = material_brdf(intersection, normal, wi, wo) * PI;
-            paths[depth].constant = vec3(0.0, 0.0, 0.0); // sample_texture(material.emissive_texture, intersection.tex_coord);
+            paths[depth].coefficient = material_brdf(intersection, normal, wi, wo) / pdf;
+            paths[depth].constant = vec3(0.0, 0.0, 0.0); //sample_texture(material.emissive_texture, intersection.tex_coord);
         } else {
             paths[depth].coefficient = sample_panorama(scene.hdri, normalize(ray.dir));
             paths[depth].constant = vec3(0.0, 0.0, 0.0);

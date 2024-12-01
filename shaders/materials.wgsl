@@ -26,10 +26,52 @@ fn material_brdf(intersection: Intersection, n: vec3f, wi: vec3f, wo: vec3f) -> 
     let f = f0 + (1.0 - f0) * pow(1.0 - vdoth, 5.0);
 
     let alpha2 = alpha * alpha;
-    let diffuse = (1.0 - f) / PI * mix(base_color, vec3(0.0), metallic) * base_color;
+    let diffuse = (1.0 - f) / PI * mix(base_color, vec3(0.0), metallic);
     var specular = f * microfacet_dist(alpha2, ndoth) * masking_shadowing(alpha2, ndotl, ndotv) / (4.0 * ndotl * ndotv);
 
     return diffuse + specular;
+}
+
+fn material_sample_h(intersection: Intersection, state: ptr<function, u32>, n: vec3f) -> vec3f {
+    let material = materials[intersection.material];
+    let metallic_roughness = sample_texture(material.metallic_roughness_texture, intersection.tex_coord);
+    let roughness = metallic_roughness.g;
+
+    let alpha = roughness * roughness;
+    let alpha2 = alpha * alpha;
+
+    let rx = rand(state);
+    let ry = rand(state);
+
+    let phi = 2.0 * PI * rx;
+    let cosine_phi = cos(phi);
+    let sine_phi = sin(phi);
+
+    let cosine_theta = sqrt((1.0 - ry) / (ry * (alpha2 - 1.0) + 1.0));
+    let sine_theta = sqrt(1.0 - cosine_theta * cosine_theta);
+
+    let x = cosine_phi * sine_theta;
+    let y = cosine_theta;
+    let z = sine_phi * sine_theta;
+
+    let up = vec3(0.0, 1.0, 0.0);
+    let t = normalize(cross(n, up));
+    let b = cross(n, t);
+    let h = normalize(x * t + y * n + z * b);
+    return h;
+}
+
+fn material_pdf(intersection: Intersection, n: vec3f, wo: vec3f, h: vec3f) -> f32 {
+    let material = materials[intersection.material];
+    let metallic_roughness = sample_texture(material.metallic_roughness_texture, intersection.tex_coord);
+    let roughness = metallic_roughness.g;
+
+    let alpha = roughness * roughness;
+    let alpha2 = alpha * alpha;
+    let vdoth = dot(wo, h);
+    let ndoth = dot(n, h);
+
+    return microfacet_dist(alpha2, ndoth) / (4.0 * vdoth);
 }
 
 fn microfacet_dist(alpha2: f32, ndoth: f32) -> f32 {
