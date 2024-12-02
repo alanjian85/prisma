@@ -11,11 +11,11 @@ Prisma is a high-performance, cross-platform offline ray tracer designed for ren
 
 The renderer also parses glTF files, enabling the generation of detailed and lifelike imagery directly from complex 3D scenes with PBR material attributes, without the need for manual intervention after export from 3D modeling software.
 
-<img src="rtiow.png">
+<img src="Cerburus.jpg">
 <p float="left">
-    <img src="diamond.png" width="32.9%">
-    <img src="cornell.png" width="32.9%">
-    <img src="dragon.png" width="32.9%">
+    <img src="DamagedHelmet.jpg" width="32.9%">
+    <img src="SciFiHelmet.jpg" width="32.9%">
+    <img src="AntiqueCamera.jpg" width="32.9%">
 </p>
 
 ## Features
