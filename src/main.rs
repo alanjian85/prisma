@@ -77,7 +77,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!(
         "{} {} Exporting the image...",
         console::style("[4/4]").bold().dim(),
-        Emoji("🎞️  ", "")
+        Emoji("🎞️ ", "")
     );
     image.save(config.output)?;
     Ok(())
