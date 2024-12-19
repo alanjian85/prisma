@@ -7,7 +7,7 @@ Prisma is a high-performance, cross-platform offline ray tracer designed for ren
 
 * microfacet-based BSDF models for physical material representation
 * bounding volume hierarchy (BVH) with surface area heuristic (SAH) for efficient scene traversal
-* multiple importance sampling (MIS) for improved sampling efficiency
+* importance sampling of material models for improved sampling efficiency
 
 The renderer also parses glTF files, enabling the generation of detailed and lifelike imagery directly from complex 3D scenes with PBR material attributes, without the need for manual intervention after export from 3D modeling software.
 
@@ -22,16 +22,10 @@ The renderer also parses glTF files, enabling the generation of detailed and lif
 * GPU-accelerated parallel computing powered by WGPU
 * PBR materials with microfacet-based BSDF models
 * BVH tree construction with SAH and optimized tree traversal
-* Importance light sampling using MIS (Multiple Importance Sampling)
+* Importance light sampling based on microfacet distribution
 * HDRI environment mapping and automatic tone mapping
-* Built-in glTF loader supporting multiple extensions
+* Built-in glTF loader supporting core features
 * Scene node hierarchy and object transformations
-
-### glTF Extensions
-* [KHR_materials_emissive_strength](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_emissive_strength/README.md)
-* [KHR_materials_ior](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_ior)
-* [KHR_materials_specular](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_specular)
-* [KHR_materials_transmission](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_transmission)
 
 ## Usage
 To get started with Prisma, simply clone the repository and run the program with a glTF scene file provided (remember to install a [Rust toolchain](https://rustup.rs/) first). Note that the program should be executed in release mode, otherwise it might take more than a minute to parse the scene.
