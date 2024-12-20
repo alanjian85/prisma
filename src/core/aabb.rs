@@ -45,6 +45,11 @@ impl Aabb3 {
     pub fn centroid(&self) -> Vec3 {
         (self.min + self.max) / 2.0
     }
+
+    pub fn area(&self) -> f32 {
+        let extent = self.max - self.min;
+        2.0 * (extent.x * extent.y + extent.y * extent.z + extent.x * extent.z)
+    }
 }
 
 impl Default for Aabb3 {

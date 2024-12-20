@@ -223,7 +223,7 @@ impl Scene {
 
 fn transform_to_matrix(transform: &scene::Transform) -> Mat4 {
     match transform {
-        scene::Transform::Matrix { matrix } => Mat4::from_cols_array_2d(&matrix),
+        scene::Transform::Matrix { matrix } => Mat4::from_cols_array_2d(matrix),
         scene::Transform::Decomposed {
             translation,
             rotation,

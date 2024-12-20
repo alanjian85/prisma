@@ -13,6 +13,12 @@ struct BvhNode {
     triangle_end: u32,
 }
 
+#[derive(Clone)]
+struct Bucket {
+    aabb: Aabb3,
+    count: u32,
+}
+
 impl BvhNode {
     pub fn new(
         primitives: &Primitives,
@@ -30,16 +36,81 @@ impl BvhNode {
             };
         }
 
+        if end - start <= 4 {
+            let split_idx = (end + start) / 2;
+            let left = Box::new(Self::new(primitives, triangles, start, split_idx));
+            let right = Box::new(Self::new(primitives, triangles, split_idx, end));
+            let aabb = left.aabb.union(&right.aabb);
+            return Self {
+                left: Some(left),
+                right: Some(right),
+                aabb,
+                triangle_start: 0,
+                triangle_end: 0,
+            };
+        }
+
         let mut centroid_aabb = Aabb3::new();
         for triangle in &triangles[start..end] {
             centroid_aabb = centroid_aabb.union_point(triangle.aabb(primitives).centroid());
         }
-
         let dim = centroid_aabb.max_dim();
-        let mid = (centroid_aabb.min[dim] + centroid_aabb.max[dim]) / 2.0;
+
+        let mut buckets = vec![
+            Bucket {
+                aabb: Aabb3::new(),
+                count: 0,
+            };
+            12
+        ];
+        for triangle in &triangles[start..end] {
+            let dim_extent = centroid_aabb.max[dim] - centroid_aabb.min[dim];
+            let mut bucket_idx = (buckets.len() as f32
+                * ((triangle.aabb(primitives).centroid()[dim] - centroid_aabb.min[dim])
+                    / dim_extent)) as usize;
+            if bucket_idx == buckets.len() {
+                bucket_idx = buckets.len() - 1;
+            }
+
+            buckets[bucket_idx].aabb = buckets[bucket_idx].aabb.union(&triangle.aabb(primitives));
+            buckets[bucket_idx].count += 1;
+        }
+
+        let mut costs = Vec::new();
+        for i in 0..(buckets.len() - 1) {
+            let mut aabb0 = Aabb3::new();
+            let mut count0 = 0;
+            for bucket in buckets.iter().take(i + 1) {
+                aabb0 = aabb0.union(&bucket.aabb);
+                count0 += bucket.count;
+            }
+
+            let mut aabb1 = Aabb3::new();
+            let mut count1 = 0;
+            for bucket in buckets.iter().skip(i + 1) {
+                aabb1 = aabb1.union(&bucket.aabb);
+                count1 += bucket.count;
+            }
+
+            costs.push(0.125 + aabb0.area() * count0 as f32 + aabb1.area() * count1 as f32);
+        }
+
+        let split_bucket = costs
+            .iter()
+            .enumerate()
+            .min_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+            .unwrap()
+            .0;
         let split_idx = start
-            + itertools::partition(&mut triangles[start..end], |elem| {
-                elem.aabb(primitives).centroid()[dim] < mid
+            + itertools::partition(&mut triangles[start..end], |triangle| {
+                let dim_extent = centroid_aabb.max[dim] - centroid_aabb.min[dim];
+                let mut bucket_idx = (buckets.len() as f32
+                    * ((triangle.aabb(primitives).centroid()[dim] - centroid_aabb.min[dim])
+                        / dim_extent)) as usize;
+                if bucket_idx == buckets.len() {
+                    bucket_idx = buckets.len() - 1;
+                }
+                bucket_idx <= split_bucket
             });
 
         if split_idx == start {

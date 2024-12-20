@@ -14,7 +14,9 @@
     devShells."${system}".default = pkgs.mkShell rec {
       packages = with pkgs; [
         cargo
+	clippy
         fbida
+	rustfmt
         vulkan-loader
       ];
       shellHook = ''
