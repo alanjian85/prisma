@@ -1,9 +1,5 @@
+use crate::{core::Aabb3, primitives::Primitives, scene::TriangleInfo};
 use encase::ShaderType;
-
-use crate::{
-    core::{Aabb3, Triangle},
-    primitives::Primitives,
-};
 
 struct BvhNode {
     left: Option<Box<BvhNode>>,
@@ -21,8 +17,8 @@ struct Bucket {
 
 impl BvhNode {
     pub fn new(
-        primitives: &Primitives,
-        triangles: &mut [Triangle],
+        _primitives: &Primitives,
+        triangle_infos: &mut [TriangleInfo],
         start: usize,
         end: usize,
     ) -> Self {
@@ -30,7 +26,7 @@ impl BvhNode {
             return Self {
                 left: None,
                 right: None,
-                aabb: triangles[start].aabb(primitives),
+                aabb: triangle_infos[start].aabb,
                 triangle_start: start as u32,
                 triangle_end: start as u32 + 1,
             };
@@ -38,8 +34,8 @@ impl BvhNode {
 
         if end - start <= 4 {
             let split_idx = (end + start) / 2;
-            let left = Box::new(Self::new(primitives, triangles, start, split_idx));
-            let right = Box::new(Self::new(primitives, triangles, split_idx, end));
+            let left = Box::new(Self::new(_primitives, triangle_infos, start, split_idx));
+            let right = Box::new(Self::new(_primitives, triangle_infos, split_idx, end));
             let aabb = left.aabb.union(&right.aabb);
             return Self {
                 left: Some(left),
@@ -51,10 +47,11 @@ impl BvhNode {
         }
 
         let mut centroid_aabb = Aabb3::new();
-        for triangle in &triangles[start..end] {
-            centroid_aabb = centroid_aabb.union_point(triangle.aabb(primitives).centroid());
+        for triangle_info in &triangle_infos[start..end] {
+            centroid_aabb = centroid_aabb.union_point(triangle_info.aabb.centroid());
         }
         let dim = centroid_aabb.max_dim();
+        let dim_extent = centroid_aabb.max[dim] - centroid_aabb.min[dim];
 
         let mut buckets = vec![
             Bucket {
@@ -63,16 +60,15 @@ impl BvhNode {
             };
             12
         ];
-        for triangle in &triangles[start..end] {
-            let dim_extent = centroid_aabb.max[dim] - centroid_aabb.min[dim];
+        for triangle_info in &triangle_infos[start..end] {
             let mut bucket_idx = (buckets.len() as f32
-                * ((triangle.aabb(primitives).centroid()[dim] - centroid_aabb.min[dim])
-                    / dim_extent)) as usize;
+                * ((triangle_info.centroid[dim] - centroid_aabb.min[dim]) / dim_extent))
+                as usize;
             if bucket_idx == buckets.len() {
                 bucket_idx = buckets.len() - 1;
             }
 
-            buckets[bucket_idx].aabb = buckets[bucket_idx].aabb.union(&triangle.aabb(primitives));
+            buckets[bucket_idx].aabb = buckets[bucket_idx].aabb.union(&triangle_info.aabb);
             buckets[bucket_idx].count += 1;
         }
 
@@ -102,29 +98,18 @@ impl BvhNode {
             .unwrap()
             .0;
         let split_idx = start
-            + itertools::partition(&mut triangles[start..end], |triangle| {
-                let dim_extent = centroid_aabb.max[dim] - centroid_aabb.min[dim];
+            + itertools::partition(&mut triangle_infos[start..end], |triangle_info| {
                 let mut bucket_idx = (buckets.len() as f32
-                    * ((triangle.aabb(primitives).centroid()[dim] - centroid_aabb.min[dim])
-                        / dim_extent)) as usize;
+                    * ((triangle_info.centroid[dim] - centroid_aabb.min[dim]) / dim_extent))
+                    as usize;
                 if bucket_idx == buckets.len() {
                     bucket_idx = buckets.len() - 1;
                 }
                 bucket_idx <= split_bucket
             });
 
-        if split_idx == start {
-            return Self {
-                left: None,
-                right: None,
-                aabb: triangles[start].aabb(primitives),
-                triangle_start: start as u32,
-                triangle_end: end as u32,
-            };
-        }
-
-        let left = Box::new(Self::new(primitives, triangles, start, split_idx));
-        let right = Box::new(Self::new(primitives, triangles, split_idx, end));
+        let left = Box::new(Self::new(_primitives, triangle_infos, start, split_idx));
+        let right = Box::new(Self::new(_primitives, triangle_infos, split_idx, end));
         let aabb = left.aabb.union(&right.aabb);
         Self {
             left: Some(left),
@@ -149,9 +134,9 @@ pub struct Bvh {
 }
 
 impl Bvh {
-    pub fn new(primitives: &Primitives, triangles: &mut [Triangle]) -> Self {
-        let len = triangles.len();
-        let root = Box::new(BvhNode::new(primitives, triangles, 0, len));
+    pub fn new(primitives: &Primitives, triangle_infos: &mut [TriangleInfo]) -> Self {
+        let len = triangle_infos.len();
+        let root = Box::new(BvhNode::new(primitives, triangle_infos, 0, len));
         Self { root }
     }
 

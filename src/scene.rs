@@ -5,8 +5,12 @@ use glam::{Mat4, Quat, Vec3};
 use gltf::{buffer, camera::Projection, image, scene, Node};
 
 use crate::{
-    config::Config, core::Triangle, materials::Materials, primitives::Primitives,
-    render::RenderContext, textures::Textures,
+    config::Config,
+    core::{Aabb3, Triangle},
+    materials::Materials,
+    primitives::Primitives,
+    render::RenderContext,
+    textures::Textures,
 };
 
 use self::bvh::Bvh;
@@ -21,7 +25,7 @@ pub struct Scene {
     pub materials: Materials,
     pub textures: Textures,
     uniform: Uniform,
-    triangles: Vec<Triangle>,
+    triangle_infos: Vec<TriangleInfo>,
 }
 
 #[derive(Default, ShaderType)]
@@ -33,6 +37,12 @@ struct Uniform {
 pub struct Transform {
     pub transform: Mat4,
     pub inv_trans: Mat4,
+}
+
+pub struct TriangleInfo {
+    pub triangle: Triangle,
+    pub aabb: Aabb3,
+    pub centroid: Vec3,
 }
 
 impl Transform {
@@ -51,7 +61,7 @@ impl Scene {
             materials: Materials::new(),
             textures: Textures::new(context),
             uniform: Uniform::default(),
-            triangles: Vec::new(),
+            triangle_infos: Vec::new(),
         }
     }
 
@@ -89,11 +99,21 @@ impl Scene {
         if let Some(mesh) = node.mesh() {
             for primitive in mesh.primitives() {
                 let material_idx = self.materials.add(&primitive.material()).unwrap();
-                self.triangles.append(
+                self.triangle_infos.append(
                     &mut self
                         .primitives
                         .add(buffers, &primitive, &transform, material_idx)
-                        .unwrap(),
+                        .unwrap()
+                        .into_iter()
+                        .map(|triangle| {
+                            let aabb = triangle.aabb(&self.primitives);
+                            TriangleInfo {
+                                triangle,
+                                aabb,
+                                centroid: aabb.centroid(),
+                            }
+                        })
+                        .collect(),
                 );
             }
         }
@@ -136,10 +156,15 @@ impl Scene {
         });
         queue.write_buffer(&uniform_buffer, 0, &wgsl_bytes);
 
-        let bvh = Bvh::new(&self.primitives, &mut self.triangles);
+        let bvh = Bvh::new(&self.primitives, &mut self.triangle_infos);
+        let triangles: Vec<_> = self
+            .triangle_infos
+            .iter()
+            .map(|triangle_info| triangle_info.triangle)
+            .collect();
 
         let mut wgsl_bytes = StorageBuffer::new(Vec::new());
-        wgsl_bytes.write(&self.triangles)?;
+        wgsl_bytes.write(&triangles)?;
         let wgsl_bytes = wgsl_bytes.into_inner();
 
         let triangle_buffer = device.create_buffer(&wgpu::BufferDescriptor {
